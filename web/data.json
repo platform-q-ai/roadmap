@@ -1,0 +1,3561 @@
+{
+  "generated_at": "2026-02-10T09:34:13.698Z",
+  "layers": [
+    {
+      "id": "observability-dashboard",
+      "name": "Observability Dashboard",
+      "type": "layer",
+      "layer": null,
+      "color": "sky",
+      "icon": "📊",
+      "description": "Runtime Visibility — read-only web UI that observes but never mutates.",
+      "sort_order": 10,
+      "children": [
+        {
+          "id": "live-dashboard",
+          "name": "Live Dashboard",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "📊",
+          "description": "Real-time view of the entire runtime. Read-only — it observes but never mutates. Built as a simple web app that polls the State Store + Supervisor health API.",
+          "sort_order": 11,
+          "versions": {
+            "mvp": {
+              "content": "Single-page web app showing process status (up/down) and current goal. Polls Supervisor health API every 5s. Basic goal queue display from State Store. Static HTML + vanilla JS.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Real-time view of the entire runtime. Read-only — it observes but never mutates. Built as a simple web app that polls the State Store + Supervisor health API.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Full process tree view with live status. Goal & task feed with click-to-inspect. Tool call timeline with filtering. Security events panel. Escalation queue with response actions.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "SSE/WebSocket for real-time push updates. Entity Explorer for User KG. Repo Map for Code Graph. Embedded Human Gate approval UI. Performance metrics and resource graphs.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-dashboard.feature",
+                "title": "Live Dashboard (MVP)",
+                "content": "Feature: Live Dashboard (MVP)\n  A read-only web UI showing process status and current goal.\n  Polls the Supervisor health API and State Store.\n\n  Background:\n    Given the Dashboard web app is running\n\n  Scenario: Display process status\n    Given the Supervisor health API reports Meta-Agent as \"running\" and Worker as \"running\"\n    When the Dashboard polls the health API\n    Then both processes are shown with \"running\" status indicators\n\n  Scenario: Display current goal\n    Given the State Store contains a goal \"Build user auth\" with status \"in-progress\"\n    When the Dashboard polls the State Store\n    Then the current goal \"Build user auth\" is displayed\n    And its status shows \"in-progress\"\n\n  Scenario: Auto-refresh on interval\n    Given the Dashboard is displaying process status\n    When 5 seconds have elapsed\n    Then the Dashboard polls the health API again\n    And the display updates with fresh data\n\n  Scenario: Show offline state\n    Given the Supervisor health API is unreachable\n    When the Dashboard polls the health API\n    Then a \"Supervisor Unreachable\" indicator is shown\n\n  Scenario: Read-only — no mutation endpoints\n    Given the Dashboard is running\n    Then it exposes no POST, PUT, or DELETE endpoints\n    And all data access is via GET requests\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "live-process-view",
+          "name": "Live Process View",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "🔴",
+          "description": "Process tree with real-time status: running, recovering, crashed, paused. Uptime, restart count, current model, memory usage per instance.",
+          "sort_order": 12,
+          "versions": {
+            "overview": {
+              "content": "Process tree with real-time status: running, recovering, crashed, paused for every child. Uptime, restart count, current model, memory usage per instance.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "goal-task-feed",
+          "name": "Goal & Task Feed",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "📋",
+          "description": "Live stream of the Goal Queue. Current goal, decomposed sub-tasks, completion status. Clickable to inspect full task payloads.",
+          "sort_order": 13,
+          "versions": {
+            "overview": {
+              "content": "Live stream of the Goal Queue. Current goal, decomposed sub-tasks, completion status. Clickable to inspect full task payloads.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "tool-call-timeline",
+          "name": "Tool Call Timeline",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "🔧",
+          "description": "Chronological feed of every tool call. Shows tool name, args, response status, latency, sanitiser verdict. Filterable by instance, tool, and status.",
+          "sort_order": 14,
+          "versions": {
+            "overview": {
+              "content": "Chronological feed of every tool call. Shows tool name, args, response status, latency, sanitiser verdict. Filterable.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "security-events",
+          "name": "Security Events",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "🛡",
+          "description": "Sanitiser verdicts, blocked injections with raw payload preview, injection frequency per tool, auto-disable events.",
+          "sort_order": 15,
+          "versions": {
+            "overview": {
+              "content": "Sanitiser verdicts, blocked injections with raw payload preview, injection frequency per tool, auto-disable events.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "escalation-queue",
+          "name": "Escalation Queue",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "⏸",
+          "description": "Worker escalation requests waiting for Meta-Agent or human review. Shows question, context snapshot, and available actions.",
+          "sort_order": 16,
+          "versions": {
+            "overview": {
+              "content": "Worker escalation requests waiting for Meta-Agent or human review. Shows question, context, and available actions.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "entity-explorer",
+          "name": "Entity Explorer",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "👤",
+          "description": "Browse the User Knowledge Graph. See people, projects, preferences, and their relationships.",
+          "sort_order": 17,
+          "versions": {
+            "overview": {
+              "content": "Browse the User Knowledge Graph. See people, projects, preferences, and their relationships.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "repo-map",
+          "name": "Repo Map",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "🗺",
+          "description": "Visualise the Code Graph. Module hierarchy, file deps, data flows.",
+          "sort_order": 18,
+          "versions": {
+            "overview": {
+              "content": "Visualise the Code Graph. Module hierarchy, file deps, data flows.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "human-gate-dashboard",
+          "name": "Human Gate (Dashboard)",
+          "type": "component",
+          "layer": "observability-dashboard",
+          "color": "sky",
+          "icon": "⛳",
+          "description": "Approval queue + escalation responses. Gate actions embeddable in dashboard UI.",
+          "sort_order": 19,
+          "versions": {
+            "overview": {
+              "content": "Approval queue + escalation responses. Gate actions embeddable in dashboard UI.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "Read-only web UI. Process view, goal feed, tool timeline, security events, graph explorers. The single pane of glass for both observation and control.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "supervisor-layer",
+      "name": "Supervisor",
+      "type": "layer",
+      "layer": null,
+      "color": "purple",
+      "icon": "👁",
+      "description": "The Only Immortal Process — process management, signal handling, recovery.",
+      "sort_order": 20,
+      "children": [
+        {
+          "id": "supervisor",
+          "name": "Supervisor",
+          "type": "component",
+          "layer": "supervisor-layer",
+          "color": "purple",
+          "icon": "👁",
+          "description": "Manages all child processes. Heartbeat + crash recovery with tiered priority. No LLM, no planning — just process management, signal handling, and the recovery state machine. Exposes a health API (HTTP) for the dashboard.",
+          "sort_order": 21,
+          "versions": {
+            "mvp": {
+              "content": "Spawn and monitor two child processes (meta-agent, worker). Detect crashes via waitpid(). Restart crashed children with basic retry logic. Expose /health HTTP endpoint returning JSON process status. Handle SIGTERM for graceful shutdown of all children.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Manages all child processes. Heartbeat + crash recovery with tiered priority. No LLM, no planning — just process management, signal handling, and the recovery state machine. Exposes a health API (HTTP) for the dashboard.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Add exponential backoff on repeated crashes. Liveness probe (hang detection via output timeout). Recovery state machine with tiered priority (meta-agent first). Checkpoint-aware recovery — read last checkpoint before respawn. Human Gate alerting after max retries.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Full config-as-code DSL for spawn configuration. Resource monitoring (memory, CPU per child). Kill switch HTTP endpoint. Dashboard SSE push for process events. Per-instance gate policies. Runtime flag switching for gate modes.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-process-management.feature",
+                "title": "Supervisor Process Management (MVP)",
+                "content": "Feature: Supervisor Process Management (MVP)\n  The Supervisor spawns and monitors child processes.\n  It detects crashes and restarts children with basic retry logic.\n\n  Background:\n    Given the Supervisor process is running\n\n  Scenario: Spawn child processes on startup\n    When the Supervisor starts\n    Then it spawns the Meta-Agent process\n    And it spawns the Worker process\n    And both processes are in \"running\" state\n\n  Scenario: Detect child crash via waitpid\n    Given the Meta-Agent process is running\n    When the Meta-Agent process exits unexpectedly\n    Then the Supervisor detects the exit within 100ms\n    And the exit is logged with the process ID and exit code\n\n  Scenario: Restart crashed child\n    Given the Worker process has crashed\n    When the Supervisor detects the crash\n    Then it restarts the Worker process\n    And the new process is in \"running\" state\n    And the restart count is incremented\n\n  Scenario: Respect maximum retry limit\n    Given the Worker has crashed 5 times consecutively\n    When the Worker crashes again\n    Then the Supervisor does not restart the Worker\n    And the Worker state is set to \"failed\"\n    And an alert is logged\n\n  Scenario: Health API returns process status\n    Given both child processes are running\n    When a GET request is made to /health\n    Then the response status is 200\n    And the response body contains status for each child process\n    And each status includes \"pid\", \"state\", and \"uptime\"\n\n  Scenario: Graceful shutdown on SIGTERM\n    Given both child processes are running\n    When the Supervisor receives SIGTERM\n    Then it sends SIGTERM to all child processes\n    And it waits for children to exit\n    And it exits with code 0\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "dual-heartbeat",
+          "name": "Dual Heartbeat",
+          "type": "component",
+          "layer": "supervisor-layer",
+          "color": "purple",
+          "icon": "💓",
+          "description": "Monitors both OpenCode instances via waitpid() + liveness probes. Instant crash detection. Periodic liveness probe for hang detection. Exponential backoff, max 5 retries.",
+          "sort_order": 22,
+          "versions": {
+            "mvp": {
+              "content": "waitpid() loop for crash detection. Basic restart on exit. Retry counter with max limit. Log crash events.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Monitors both OpenCode instances via waitpid() + liveness probes. Instant crash detection. Exponential backoff, max 5 retries.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "human-gate",
+          "name": "Human Gate",
+          "type": "component",
+          "layer": "supervisor-layer",
+          "color": "pink",
+          "icon": "⛳",
+          "description": "Three modes: full-auto, approve-goals, approve-all. Plus write fence for dangerous ops. Gate mode is a runtime flag — switch without restarting.",
+          "sort_order": 23,
+          "versions": {
+            "mvp": {
+              "content": "Basic approval queue. CLI-based approve/reject. Write fence for destructive operations (hardcoded list). Block until approved or timeout.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Three modes: full-auto, approve-goals, approve-all. Plus write fence for dangerous ops. Gate mode is a runtime flag.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Runtime mode switching (full-auto, approve-goals, approve-all). Per-instance gate policies. Escalation forwarding from Meta-Agent. Dashboard-embeddable approval UI.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Configurable write fence per tool category. Approval delegation rules. Audit trail of all gate decisions. Timeout policies with configurable fallback actions.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-human-gate.feature",
+                "title": "Human Gate (MVP)",
+                "content": "Feature: Human Gate (MVP)\n  The Human Gate provides an approval queue for dangerous\n  operations and a write fence for destructive actions.\n\n  Background:\n    Given the Human Gate is running\n\n  Scenario: Block destructive operation for approval\n    Given the write fence includes \"database drop\" operations\n    When a task requests a database drop\n    Then the task is paused with status \"awaiting_approval\"\n    And the approval request is added to the queue\n\n  Scenario: Approve pending request\n    Given a task is paused awaiting approval\n    When a human approves the request\n    Then the task status changes to \"approved\"\n    And execution resumes\n\n  Scenario: Reject pending request\n    Given a task is paused awaiting approval\n    When a human rejects the request\n    Then the task status changes to \"rejected\"\n    And the task is aborted\n\n  Scenario: Timeout on unanswered request\n    Given a task has been awaiting approval for longer than the timeout\n    When the timeout expires\n    Then the task is aborted\n    And the timeout event is logged\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "fast-path-router",
+          "name": "Fast Path Router",
+          "type": "component",
+          "layer": "supervisor-layer",
+          "color": "lime",
+          "icon": "⚡",
+          "description": "Rule engine (no LLM). Classifies tasks as fast, full, or gated. Can query User KG for context.",
+          "sort_order": 24,
+          "versions": {
+            "mvp": {
+              "content": "Simple rule engine: match task text against patterns (single verb, no conditionals, target file exists). Three outputs: fast, full, gated. Configurable threshold.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Rule engine (no LLM). Classifies tasks as fast, full, or gated. Can query User KG for context.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "The only immortal process. No LLM. Process manager + crash recovery + heartbeat. Exposes health API. Kill switch. If it dies, systemd restarts it.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "task-router-layer",
+      "name": "Task Router",
+      "type": "layer",
+      "layer": null,
+      "color": "lime",
+      "icon": "⚡",
+      "description": "Fast Path Decision Point — routes tasks by complexity.",
+      "sort_order": 30,
+      "children": [
+        {
+          "id": "fast-path",
+          "name": "Fast Path",
+          "type": "component",
+          "layer": "task-router-layer",
+          "color": "lime",
+          "icon": "⚡",
+          "description": "Rule engine says: single-step, unambiguous, existing tools suffice. Task goes directly to Worker. Meta-Agent notified post-completion.",
+          "sort_order": 31,
+          "versions": {
+            "overview": {
+              "content": "Rule engine says: single-step, unambiguous, existing tools suffice. Task goes directly to Worker. Meta-Agent notified post-completion.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "full-path",
+          "name": "Full Path",
+          "type": "component",
+          "layer": "task-router-layer",
+          "color": "orange",
+          "icon": "🧠",
+          "description": "Classifier says: multi-step, ambiguous, or needs tool changes. Task goes to Meta-Agent for decomposition.",
+          "sort_order": 32,
+          "versions": {
+            "overview": {
+              "content": "Classifier says: multi-step, ambiguous, or needs tool changes. Task goes to Meta-Agent for decomposition.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "gated-path",
+          "name": "Gated Path",
+          "type": "component",
+          "layer": "task-router-layer",
+          "color": "purple",
+          "icon": "⛳",
+          "description": "Classifier or Human Gate flags: destructive, high-cost, or security-sensitive. Task pauses for human approval.",
+          "sort_order": 33,
+          "versions": {
+            "overview": {
+              "content": "Classifier or Human Gate flags: destructive, high-cost, or security-sensitive. Task pauses for human approval.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "Fast path decision point. Rule engine (no LLM) routes tasks by complexity: trivial goes direct to Worker, complex goes to Meta-Agent, dangerous requires human approval.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "knowledge-graphs",
+      "name": "Knowledge Graphs",
+      "type": "layer",
+      "layer": null,
+      "color": "gold",
+      "icon": "🧠",
+      "description": "Dual graph stores: User Knowledge Graph + RPG Code Graph.",
+      "sort_order": 40,
+      "children": [
+        {
+          "id": "user-knowledge-graph",
+          "name": "User Knowledge Graph",
+          "type": "store",
+          "layer": "knowledge-graphs",
+          "color": "gold",
+          "icon": "👤",
+          "description": "A persistent graph of the user's world. Nodes are domain entities — people, projects, clients, teams, products, preferences, business rules, conventions, deadlines.",
+          "sort_order": 41,
+          "versions": {
+            "mvp": {
+              "content": "SQLite-backed entity store. Add/query entities with typed relationships. Basic traversal (1-hop neighbours). Manual entity creation via CLI or dashboard. Simple text search across entities.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "A persistent graph of the user's world. Nodes are domain entities — people, projects, clients, teams, products, preferences, business rules, conventions, deadlines. Edges are typed relationships with metadata.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Meta-Agent write access for inferred entities. Confidence layering (user-explicit 1.0 > meta-inferred 0.8). Multi-hop traversal queries. Convention enforcement lookups. Deadline awareness queries.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Full graph query language. Temporal awareness (when was this preference set?). Conflict resolution for contradictory preferences. Export/import for portability. Dashboard entity editor.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-user-kg.feature",
+                "title": "User Knowledge Graph (MVP)",
+                "content": "Feature: User Knowledge Graph (MVP)\n  A persistent entity-relationship store for domain context:\n  people, projects, preferences, conventions, deadlines.\n\n  Background:\n    Given the User Knowledge Graph SQLite database exists\n\n  Scenario: Add an entity\n    When an entity is added with type \"person\" and name \"Alice\"\n    Then the entity exists in the graph with a unique ID\n    And it has type \"person\" and name \"Alice\"\n\n  Scenario: Add a relationship between entities\n    Given entities \"Alice\" (person) and \"acme-saas\" (project) exist\n    When a relationship \"OWNS\" is added from \"Alice\" to \"acme-saas\"\n    Then the edge exists with type \"OWNS\"\n    And it references both entities\n\n  Scenario: Query 1-hop neighbours\n    Given \"Alice\" has relationships to \"acme-saas\", \"Bob\", and \"minimal-comments\"\n    When querying neighbours of \"Alice\"\n    Then all 3 connected entities are returned\n    And each result includes the relationship type\n\n  Scenario: Search entities by text\n    Given entities \"Alice\", \"Bob\", and \"acme-saas\" exist\n    When searching for \"alice\"\n    Then the entity \"Alice\" is returned\n\n  Scenario: Add entity with metadata\n    When an entity is added with type \"preference\" name \"no-orms\" and metadata '{\"reason\": \"team decision\"}'\n    Then the entity exists with the metadata attached\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "rpg-code-graph",
+          "name": "RPG Code Graph",
+          "type": "store",
+          "layer": "knowledge-graphs",
+          "color": "emerald",
+          "icon": "🗺",
+          "description": "An RPG-style structural graph of the current codebase. Encodes file hierarchy, module boundaries, inter-module data flows, function signatures, class inheritance, and import dependencies.",
+          "sort_order": 42,
+          "versions": {
+            "mvp": {
+              "content": "Static analysis on repo load using tree-sitter. Build initial graph from imports, exports, class hierarchy. Basic queries: list files in module, show imports for file. SQLite-backed.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "An RPG-style structural graph of the current codebase. Encodes file hierarchy, module boundaries, inter-module data flows, function signatures, class inheritance, and import dependencies.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Incremental updates via Checkpointer (re-parse only changed files). Dependency traversal (topo_order, dependents). Data flow edges between modules. Pattern queries (existing patterns in a directory).",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Full where_to_add capability suggestions. Blast radius estimation for edits. Meta-Agent annotations (module boundaries, data flow intentions). Multi-language AST support. Visualization for dashboard Repo Map.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-code-graph.feature",
+                "title": "RPG Code Graph (MVP)",
+                "content": "Feature: RPG Code Graph (MVP)\n  Static analysis on repo load builds a structural graph of the\n  codebase: files, imports, exports, classes, functions.\n\n  Background:\n    Given a repository with source files exists\n\n  Scenario: Build initial graph from repo\n    When the Code Graph builder runs on the repository\n    Then nodes are created for each source file\n    And edges are created for import relationships\n    And the graph is stored in SQLite\n\n  Scenario: Extract function exports\n    Given a file \"auth/handler.ts\" exports function \"verifyToken\"\n    When the AST parser processes the file\n    Then a function node \"verifyToken\" exists\n    And an EXPORTS edge connects the file to the function\n\n  Scenario: Extract import relationships\n    Given \"api/routes.ts\" imports from \"auth/handler.ts\"\n    When the AST parser processes both files\n    Then an IMPORTS edge connects \"api/routes.ts\" to \"auth/handler.ts\"\n\n  Scenario: Infer modules from directory structure\n    Given the repository has directories \"auth/\", \"api/\", \"db/\"\n    When the Code Graph builder runs\n    Then module nodes are created for \"auth\", \"api\", \"db\"\n    And CONTAINS edges connect modules to their files\n\n  Scenario: Query files in a module\n    Given the module \"auth\" contains \"handler.ts\" and \"middleware.ts\"\n    When querying files in module \"auth\"\n    Then both files are returned\n"
+              }
+            ]
+          }
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "Dual graph stores. User Knowledge Graph holds domain context (people, projects, preferences). RPG Code Graph holds repo structure (files, modules, deps, data flows).",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "dual-agents",
+      "name": "Dual OpenCode Instances",
+      "type": "layer",
+      "layer": null,
+      "color": "orange",
+      "icon": "🧠",
+      "description": "Meta-Agent (Planner) + Worker (Executor) — two stock OpenCode instances.",
+      "sort_order": 50,
+      "children": [
+        {
+          "id": "meta-agent",
+          "name": "Meta-Agent (Planner)",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "orange",
+          "icon": "🧠",
+          "description": "Stock OpenCode, planning system prompt, cheap/fast model. Plans, evaluates, dispatches. Never touches codebase or external APIs directly. Tier-0: recovered first.",
+          "sort_order": 51,
+          "versions": {
+            "mvp": {
+              "content": "Single OpenCode instance with planning system prompt. Read goal queue, decompose into sub-tasks, dispatch to Worker via State Store. Read Worker progress from checkpoints. Basic goal → task decomposition.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Stock OpenCode, planning system prompt, cheap/fast model. Plans, evaluates, dispatches. Never touches codebase or external APIs directly. Tier-0: recovered first.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Phase-locked BDD/TDD dispatch pipeline. Gate verification between phases. Escalation response handling. User KG reads for planning context. Code Graph reads for repo-aware decomposition.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Self-evolution: tool discovery + hot-swap via proxy_admin. Config mutation via DSL. Prompt evolution based on observed results. Knowledge curation — write inferred preferences to User KG. Budget and scope guardrails.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-planning-loop.feature",
+                "title": "Meta-Agent Planning Loop (MVP)",
+                "content": "Feature: Meta-Agent Planning Loop (MVP)\n  The Meta-Agent reads goals, decomposes them into tasks,\n  and dispatches work to the Worker via the State Store.\n\n  Background:\n    Given the Meta-Agent is running with a planning system prompt\n    And the State Store is accessible\n\n  Scenario: Read next goal from queue\n    Given the goal queue contains \"Build user authentication\"\n    When the Meta-Agent checks the goal queue\n    Then it receives the goal \"Build user authentication\"\n    And the goal status is set to \"in-progress\"\n\n  Scenario: Decompose goal into tasks\n    Given the Meta-Agent has received the goal \"Build user authentication\"\n    When it decomposes the goal\n    Then the State Store contains at least 2 sub-tasks\n    And each sub-task has a description and ordering\n\n  Scenario: Dispatch task to Worker\n    Given a sub-task \"Create login endpoint\" exists in the State Store\n    When the Meta-Agent dispatches the task\n    Then the task status is set to \"dispatched\"\n    And the task includes a description and success criteria\n\n  Scenario: Read Worker progress\n    Given a task has been dispatched to the Worker\n    When the Meta-Agent checks Worker progress\n    Then it receives the latest checkpoint for that task\n    And the checkpoint includes tool calls made and their results\n\n  Scenario: Complete goal when all tasks done\n    Given all sub-tasks for a goal are in \"complete\" status\n    When the Meta-Agent evaluates the goal\n    Then the goal status is set to \"complete\"\n    And the Meta-Agent reads the next goal from the queue\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "worker",
+          "name": "Worker (Executor)",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "cyan",
+          "icon": "⚡",
+          "description": "Stock OpenCode, execution system prompt, strong model. Executes one phase at a time. Ephemeral and replaceable. Tier-1: recovered second.",
+          "sort_order": 52,
+          "versions": {
+            "mvp": {
+              "content": "Single OpenCode instance with execution system prompt. Receive task from State Store, execute with available tools, report results. Basic tool access via MCP proxy.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Stock OpenCode, execution system prompt, strong model. Executes one phase at a time. Ephemeral and replaceable. Tier-1: recovered second.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Phase-locked execution (single phase per dispatch, forbidden_actions enforcement). Escalation tools (request_clarification, check_escalation_response). User KG reads for preference-aware execution. Code Graph reads for structural coherence.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Context-aware resume after crash (transparent to the agent). Dynamic tool manifest — handles hot-swap mid-session. Confidence scoring on outputs. Full sanitiser integration on all external I/O.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-task-execution.feature",
+                "title": "Worker Task Execution (MVP)",
+                "content": "Feature: Worker Task Execution (MVP)\n  The Worker receives tasks from the State Store and executes\n  them using available tools via the MCP proxy.\n\n  Background:\n    Given the Worker is running with an execution system prompt\n    And the MCP proxy is accessible with at least one tool\n\n  Scenario: Receive dispatched task\n    Given a task \"Create login endpoint\" is in \"dispatched\" status\n    When the Worker checks for pending tasks\n    Then it receives the task with description and constraints\n\n  Scenario: Execute task with tools\n    Given the Worker has received a task\n    When it executes the task\n    Then it makes at least one tool call via the MCP proxy\n    And each tool call is logged to the State Store\n\n  Scenario: Report task completion\n    Given the Worker has finished executing a task\n    When it reports results\n    Then the task status is set to \"complete\"\n    And the result summary is written to the State Store\n\n  Scenario: Handle tool call failure\n    Given the Worker is executing a task\n    When a tool call returns an error\n    Then the Worker logs the error\n    And it attempts an alternative approach or reports failure\n\n  Scenario: Operate within provided constraints\n    Given the Worker receives a task with forbidden_actions [\"delete files\"]\n    When it executes the task\n    Then it does not call any tool that would delete files\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "goal-queue",
+          "name": "goal_queue",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "orange",
+          "icon": "📋",
+          "description": "push, pop, peek, reprioritise — manages the persistent goal queue.",
+          "sort_order": 53,
+          "versions": {
+            "overview": {
+              "content": "push, pop, peek, reprioritise — manages the persistent goal queue.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "state-reader",
+          "name": "state_reader",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "orange",
+          "icon": "📖",
+          "description": "get_checkpoint, get_task_log, get_escalations — reads Worker's progress.",
+          "sort_order": 54,
+          "versions": {
+            "overview": {
+              "content": "get_checkpoint, get_task_log, get_escalations — reads Worker's progress.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "worker-control",
+          "name": "worker_control",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "orange",
+          "icon": "🔧",
+          "description": "dispatch, abort, respond_escalation — sends phase-locked work to Worker.",
+          "sort_order": 55,
+          "versions": {
+            "overview": {
+              "content": "dispatch, abort, respond_escalation — sends phase-locked work to Worker.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "proxy-admin",
+          "name": "proxy_admin",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "orange",
+          "icon": "📡",
+          "description": "register, deregister, list — mutates Worker's tool manifest.",
+          "sort_order": 56,
+          "versions": {
+            "overview": {
+              "content": "register, deregister, list — mutates Worker's tool manifest.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "config-mutator",
+          "name": "config_mutator",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "orange",
+          "icon": "⚙",
+          "description": "update_prompt, update_model, update_agents — evolves Worker's config via DSL.",
+          "sort_order": 57,
+          "versions": {
+            "overview": {
+              "content": "update_prompt, update_model, update_agents — evolves Worker's config via DSL.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "tool-registry",
+          "name": "tool_registry",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "orange",
+          "icon": "🔍",
+          "description": "search, inspect, install — discovers new MCP servers from catalogue.",
+          "sort_order": 58,
+          "versions": {
+            "overview": {
+              "content": "search, inspect, install — discovers new MCP servers from catalogue.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "user-kg-read-meta",
+          "name": "user_kg_read (Meta)",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "gold",
+          "icon": "👤",
+          "description": "query, traverse, search — Meta-Agent reads User KG.",
+          "sort_order": 59,
+          "versions": {
+            "overview": {
+              "content": "query, traverse, search — Meta-Agent reads User KG.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "user-kg-write-meta",
+          "name": "user_kg_write (Meta)",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "gold",
+          "icon": "✏",
+          "description": "add_entity, add_edge, annotate — Meta-Agent writes to User KG.",
+          "sort_order": 60,
+          "versions": {
+            "overview": {
+              "content": "add_entity, add_edge, annotate — Meta-Agent writes to User KG.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "code-graph-read-meta",
+          "name": "code_graph_read (Meta)",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "emerald",
+          "icon": "🗺",
+          "description": "expand, path, topo_order — Meta-Agent reads Code Graph.",
+          "sort_order": 61,
+          "versions": {
+            "overview": {
+              "content": "expand, path, topo_order — Meta-Agent reads Code Graph.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "code-graph-write-meta",
+          "name": "code_graph_write (Meta)",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "emerald",
+          "icon": "✏",
+          "description": "annotate_module, set_data_flow — Meta-Agent writes to Code Graph.",
+          "sort_order": 62,
+          "versions": {
+            "overview": {
+              "content": "annotate_module, set_data_flow — Meta-Agent writes to Code Graph.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "request-clarification",
+          "name": "request_clarification",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "teal",
+          "icon": "🙋",
+          "description": "Writes question + context snapshot to State Store. Sets task status to paused:awaiting_guidance.",
+          "sort_order": 63,
+          "versions": {
+            "overview": {
+              "content": "Writes question + context snapshot to State Store. Sets task status to paused:awaiting_guidance.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "check-escalation-response",
+          "name": "check_escalation_response",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "teal",
+          "icon": "📨",
+          "description": "Polls State Store for Meta-Agent's response. Returns guidance or still_pending.",
+          "sort_order": 64,
+          "versions": {
+            "overview": {
+              "content": "Polls State Store for Meta-Agent's response. Returns guidance or still_pending.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "user-kg-read-worker",
+          "name": "user_kg_read (Worker)",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "gold",
+          "icon": "👤",
+          "description": "Read-only. No writes (injection safety).",
+          "sort_order": 65,
+          "versions": {
+            "overview": {
+              "content": "Read-only. No writes (injection safety).",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "code-graph-read-worker",
+          "name": "code_graph_read (Worker)",
+          "type": "component",
+          "layer": "dual-agents",
+          "color": "emerald",
+          "icon": "🗺",
+          "description": "Read-only. Checkpointer writes on its behalf.",
+          "sort_order": 66,
+          "versions": {
+            "overview": {
+              "content": "Read-only. Checkpointer writes on its behalf.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "Two stock OpenCode instances. Meta-Agent (Planner) uses cheap model, plans and dispatches. Worker (Executor) uses strong model, executes one phase at a time.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "escalation-flow",
+      "name": "Escalation Flow",
+      "type": "layer",
+      "layer": null,
+      "color": "teal",
+      "icon": "🙋",
+      "description": "Worker ↔ Meta-Agent communication via shared state.",
+      "sort_order": 60,
+      "children": [],
+      "versions": {
+        "overview": {
+          "content": "Worker ↔ Meta-Agent communication via shared state. Worker writes question to State Store, Meta-Agent responds on its own cycle. Async, no blocking RPC.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "shared-state",
+      "name": "Shared State Store",
+      "type": "layer",
+      "layer": null,
+      "color": "blue",
+      "icon": "💾",
+      "description": "The Bridge — SQLite WAL / Postgres shared by both instances.",
+      "sort_order": 70,
+      "children": [
+        {
+          "id": "state-store",
+          "name": "State Store",
+          "type": "store",
+          "layer": "shared-state",
+          "color": "blue",
+          "icon": "💾",
+          "description": "Append-only log that both instances read/write. Goals, tasks, tool logs, checkpoints, escalations. The bridge between both OpenCode instances — they share a database, not a connection.",
+          "sort_order": 71,
+          "versions": {
+            "mvp": {
+              "content": "SQLite WAL database with tables for goals, tasks, and tool_logs. Basic CRUD operations. Both agents read/write via simple SQL. No pruning, no optimization.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Append-only log that both instances read/write. Goals, tasks, tool logs, checkpoints, escalations. The bridge between both OpenCode instances.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Add checkpoints table, escalation records, fast-path completion records. Context rebuilder queries. Pruning policy (keep last N days). Indexes for common query patterns.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "SSE/WebSocket push for live dashboard updates. Postgres option for multi-machine deployments. Full audit trail with retention policies. Query optimization for dashboard views.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-shared-state.feature",
+                "title": "Shared State Store (MVP)",
+                "content": "Feature: Shared State Store (MVP)\n  The State Store is a SQLite WAL database that both agents\n  read and write. It stores goals, tasks, and tool logs.\n\n  Background:\n    Given the State Store SQLite database exists\n\n  Scenario: Create a goal\n    When a goal \"Build user authentication\" is inserted\n    Then the goal exists with status \"pending\"\n    And the goal has a created_at timestamp\n\n  Scenario: Create tasks for a goal\n    Given a goal exists with id \"goal-1\"\n    When tasks are inserted for goal \"goal-1\"\n    Then each task references the parent goal\n    And each task has status \"pending\" and an ordering index\n\n  Scenario: Log a tool call\n    Given a task exists with id \"task-1\"\n    When a tool call log is inserted with tool \"filesystem\", args hash, and result hash\n    Then the tool log exists with a timestamp\n    And the tool log references \"task-1\"\n\n  Scenario: Both agents can read/write concurrently\n    Given the Meta-Agent is writing a goal\n    And the Worker is writing a tool log\n    Then both writes succeed without conflict\n    And the WAL journal mode handles concurrent access\n\n  Scenario: Query task status by goal\n    Given a goal has 3 tasks with statuses \"complete\", \"in-progress\", \"pending\"\n    When querying tasks for that goal\n    Then all 3 tasks are returned with their statuses\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "checkpointer",
+          "name": "Checkpointer",
+          "type": "component",
+          "layer": "shared-state",
+          "color": "blue",
+          "icon": "📸",
+          "description": "Taps Worker's Proxy. Writes after every tool response: task ID, tool name, args, result hash, timestamp. Async — doesn't block the agent. Also triggers Code Graph updates on file edits.",
+          "sort_order": 72,
+          "versions": {
+            "mvp": {
+              "content": "Intercept tool responses from Worker proxy. Write task_id, tool_name, args_hash, result_hash, timestamp to State Store. Fire-and-forget (async, non-blocking).",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Taps Worker's Proxy. Writes after every tool response: task ID, tool name, args, result hash, timestamp. Async — doesn't block the agent.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Escalation state snapshots. File-edit detection triggering Code Graph AST re-parse. Plan summary snapshots for context rebuilder. Idempotency markers for crash recovery.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Configurable checkpoint granularity. Compressed checkpoint storage. Checkpoint pruning with retention policy. Metrics on checkpoint write latency.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-checkpointing.feature",
+                "title": "Checkpointer (MVP)",
+                "content": "Feature: Checkpointer (MVP)\n  The Checkpointer taps the Worker's MCP proxy and records\n  every tool call for crash recovery and progress tracking.\n\n  Background:\n    Given the Checkpointer is attached to the Worker's MCP proxy\n    And the State Store is accessible\n\n  Scenario: Record tool call after response\n    Given the Worker calls the \"filesystem\" tool with args \"read file.ts\"\n    When the tool returns a successful response\n    Then the Checkpointer writes a record to the State Store\n    And the record includes task_id, tool_name, args_hash, result_hash, and timestamp\n\n  Scenario: Non-blocking operation\n    Given the Worker is executing a task\n    When a tool call completes\n    Then the Checkpointer writes asynchronously\n    And the Worker does not wait for the checkpoint write\n\n  Scenario: Maintain ordering of tool calls\n    Given the Worker makes 3 sequential tool calls\n    When all 3 are checkpointed\n    Then the records are ordered by timestamp\n    And each has a sequential index within the task\n\n  Scenario: Handle write failure gracefully\n    Given the State Store is temporarily unavailable\n    When the Checkpointer attempts to write\n    Then it retries with backoff\n    And the Worker execution is not affected\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "context-rebuilder",
+          "name": "Context Rebuilder",
+          "type": "component",
+          "layer": "shared-state",
+          "color": "blue",
+          "icon": "📝",
+          "description": "On crash recovery: generates resume prompt from compressed checkpoint + relevant graph context. Lossy by design — like a save game, not a VM snapshot.",
+          "sort_order": 73,
+          "versions": {
+            "mvp": {
+              "content": "Read last checkpoint from State Store. Generate basic resume prompt: \"you were doing X, completed Y, next step Z\". Inject as system prompt on respawn.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "On crash recovery: generates resume prompt from compressed checkpoint + relevant graph context. Lossy by design — like a save game, not a VM snapshot.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Include relevant User KG context in resume prompt. Include Code Graph context for coding tasks. Handle paused:awaiting_guidance state (include escalation question + response).",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Compressed multi-checkpoint summaries. Relevance-ranked context selection. Token budget management for resume prompts. A/B testing of resume prompt strategies.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-context-rebuild.feature",
+                "title": "Context Rebuilder (MVP)",
+                "content": "Feature: Context Rebuilder (MVP)\n  On crash recovery, the Context Rebuilder generates a resume\n  prompt from the last checkpoint so the agent can continue.\n\n  Background:\n    Given the State Store contains checkpoints for a crashed agent\n\n  Scenario: Generate resume prompt for Worker\n    Given the Worker crashed mid-task on task \"Create login endpoint\"\n    And the last checkpoint shows 3 completed tool calls\n    When the Context Rebuilder generates a resume prompt\n    Then the prompt includes \"you were doing: Create login endpoint\"\n    And it lists the 3 completed tool calls with their results\n    And it states the next expected action\n\n  Scenario: Generate resume prompt for Meta-Agent\n    Given the Meta-Agent crashed while processing goal \"Build auth\"\n    And the goal has 5 tasks, 2 completed and 1 in-progress\n    When the Context Rebuilder generates a resume prompt\n    Then the prompt includes the current goal state\n    And it lists completed and pending tasks\n    And it states the current Worker status\n\n  Scenario: Handle empty checkpoint\n    Given no checkpoints exist for the crashed agent\n    When the Context Rebuilder generates a resume prompt\n    Then it produces a minimal prompt with no prior context\n    And the agent starts fresh\n"
+              }
+            ]
+          }
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "SQLite WAL / Postgres. Goals, tasks, tool logs, checkpoints, escalations. The bridge between both instances — they share a database, not a connection.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "mcp-proxies",
+      "name": "MCP Proxies",
+      "type": "layer",
+      "layer": null,
+      "color": "orange",
+      "icon": "⇄",
+      "description": "Tool proxy layer for both agent instances.",
+      "sort_order": 80,
+      "children": [
+        {
+          "id": "mcp-proxy-meta",
+          "name": "MCP Proxy — Meta-Agent",
+          "type": "component",
+          "layer": "mcp-proxies",
+          "color": "orange",
+          "icon": "⇄",
+          "description": "Hosts 10 planning tools (6 planning + 4 graph). Static manifest. No external API calls, no injection risk. No sanitiser needed.",
+          "sort_order": 81,
+          "versions": {
+            "mvp": {
+              "content": "Static MCP server hosting goal_queue, state_reader, worker_control tools. Simple stdio transport. No hot-swap needed.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Hosts 10 planning tools (6 planning + 4 graph). Static manifest. No external API calls, no injection risk.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "mcp-proxy-worker",
+          "name": "MCP Proxy — Worker",
+          "type": "component",
+          "layer": "mcp-proxies",
+          "color": "cyan",
+          "icon": "⇄",
+          "description": "Hosts all external-facing tools + escalation + graph reads. Dynamic manifest — hot-swappable. All responses pass through Sanitiser. Circuit breaker on downstream health.",
+          "sort_order": 82,
+          "versions": {
+            "mvp": {
+              "content": "MCP proxy with configurable tool list. Route tool calls to downstream servers. Pass responses through sanitiser. Basic health check on downstream servers.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Hosts all external-facing tools + escalation + graph reads. Dynamic manifest — hot-swappable. All responses pass through Sanitiser. Circuit breaker.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "Tool proxy layer. Meta-Agent gets static manifest (10 internal tools). Worker gets dynamic manifest (hot-swappable, sanitiser required).",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "security-sandbox",
+      "name": "Security Sandbox",
+      "type": "layer",
+      "layer": null,
+      "color": "red",
+      "icon": "🛡",
+      "description": "Sanitiser — Worker proxy only. 3-stage pipeline.",
+      "sort_order": 90,
+      "children": [
+        {
+          "id": "sanitiser",
+          "name": "3-Stage Sanitiser",
+          "type": "component",
+          "layer": "security-sandbox",
+          "color": "red",
+          "icon": "🛡",
+          "description": "Sits between Worker's Proxy and downstream servers. ① Heuristic regex → ② Structural strip → ③ Optional LLM classifier. Fail-closed. Scans inbound + outbound.",
+          "sort_order": 91,
+          "versions": {
+            "mvp": {
+              "content": "Regex-based heuristic scanner for common injection patterns. Structural strip (remove role tags, cap response length). Pass/block verdict on each tool response. Logging to State Store.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "overview": {
+              "content": "Sits between Worker's Proxy and downstream servers. ① Heuristic regex → ② Structural strip → ③ Optional LLM classifier. Fail-closed. Scans inbound + outbound.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v1": {
+              "content": "Outbound scanning (prevent data exfiltration via tool args). Configurable rule sets per tool. Injection frequency tracking. Auto-disable tools exceeding threshold. Dashboard integration for Security Events.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            },
+            "v2": {
+              "content": "Optional LLM classifier stage for sophisticated injection detection. Adaptive rules based on observed attack patterns. Per-tool confidence scoring. Full audit trail with payload samples.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {
+            "mvp": [
+              {
+                "filename": "mvp-sanitiser.feature",
+                "title": "3-Stage Sanitiser (MVP)",
+                "content": "Feature: 3-Stage Sanitiser (MVP)\n  The Sanitiser sits between the Worker's MCP proxy and downstream\n  tool servers. It scans tool responses for injection attempts.\n\n  Background:\n    Given the Sanitiser is running as an isolated subprocess\n\n  Scenario: Pass clean tool response\n    Given a tool response contains normal text content\n    When the Sanitiser processes the response\n    Then the verdict is \"pass\"\n    And the response is forwarded to the Worker unchanged\n\n  Scenario: Block response with injection pattern\n    Given a tool response contains \"ignore previous instructions\"\n    When the Sanitiser processes the response\n    Then the verdict is \"block\"\n    And the response is not forwarded to the Worker\n    And the injection event is logged to the State Store\n\n  Scenario: Strip role tags from response\n    Given a tool response contains \"<system>\" tags\n    When the Sanitiser applies structural stripping\n    Then the role tags are removed from the response\n    And the cleaned response is forwarded\n\n  Scenario: Cap response length\n    Given a tool response exceeds the maximum allowed length\n    When the Sanitiser processes the response\n    Then the response is truncated to the maximum length\n    And the truncation is noted in the log\n\n  Scenario: Fail closed on processing error\n    Given the Sanitiser encounters an internal error during processing\n    When processing a tool response\n    Then the response is blocked (not forwarded)\n    And the error is logged\n"
+              }
+            ]
+          }
+        },
+        {
+          "id": "alert-pipeline",
+          "name": "Alert Pipeline",
+          "type": "component",
+          "layer": "security-sandbox",
+          "color": "red",
+          "icon": "📋",
+          "description": "Blocked injections logged to State Store. Meta-Agent can auto-disable compromised tools. Dashboard shows real-time security events.",
+          "sort_order": 92,
+          "versions": {
+            "overview": {
+              "content": "Blocked injections logged to State Store. Meta-Agent can auto-disable compromised tools. Dashboard shows real-time security events.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "3-stage sanitiser: regex heuristics → structural strip → optional LLM classifier. Fail-closed. Scans inbound + outbound. Worker proxy only.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "downstream-tools",
+      "name": "Downstream MCP Tool Servers",
+      "type": "layer",
+      "layer": null,
+      "color": "amber",
+      "icon": "🔧",
+      "description": "External tool servers — hot-swappable.",
+      "sort_order": 100,
+      "children": [
+        {
+          "id": "tool-search",
+          "name": "Search",
+          "type": "external",
+          "layer": "downstream-tools",
+          "color": "amber",
+          "icon": "🔍",
+          "description": "External search MCP server.",
+          "sort_order": 101,
+          "versions": {
+            "overview": {
+              "content": "External search MCP server.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "tool-email",
+          "name": "Email",
+          "type": "external",
+          "layer": "downstream-tools",
+          "color": "amber",
+          "icon": "✉",
+          "description": "External email MCP server.",
+          "sort_order": 102,
+          "versions": {
+            "overview": {
+              "content": "External email MCP server.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "tool-database",
+          "name": "Database",
+          "type": "external",
+          "layer": "downstream-tools",
+          "color": "amber",
+          "icon": "🗄",
+          "description": "External database MCP server.",
+          "sort_order": 103,
+          "versions": {
+            "overview": {
+              "content": "External database MCP server.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "tool-filesystem",
+          "name": "Filesystem",
+          "type": "external",
+          "layer": "downstream-tools",
+          "color": "amber",
+          "icon": "📂",
+          "description": "External filesystem MCP server.",
+          "sort_order": 104,
+          "versions": {
+            "overview": {
+              "content": "External filesystem MCP server.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "tool-code-exec",
+          "name": "Code Exec",
+          "type": "external",
+          "layer": "downstream-tools",
+          "color": "amber",
+          "icon": "💻",
+          "description": "External code execution MCP server.",
+          "sort_order": 105,
+          "versions": {
+            "overview": {
+              "content": "External code execution MCP server.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "tool-custom",
+          "name": "Custom",
+          "type": "external",
+          "layer": "downstream-tools",
+          "color": "amber",
+          "icon": "🧩",
+          "description": "Custom MCP servers — hot-swappable.",
+          "sort_order": 106,
+          "versions": {
+            "overview": {
+              "content": "Custom MCP servers — hot-swappable.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "External MCP tool servers. Search, email, database, filesystem, code execution, custom. Hot-swappable — Meta-Agent adds/removes at runtime.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    },
+    {
+      "id": "bdd-tdd-pipeline",
+      "name": "BDD/TDD Phase Pipeline",
+      "type": "layer",
+      "layer": null,
+      "color": "teal",
+      "icon": "🔄",
+      "description": "Strict phase pipeline enforced by Meta-Agent, executed by Worker.",
+      "sort_order": 110,
+      "children": [
+        {
+          "id": "phase-feature",
+          "name": "① Feature",
+          "type": "phase",
+          "layer": "bdd-tdd-pipeline",
+          "color": "gold",
+          "icon": "📝",
+          "description": "Write the .feature file. Describe the behaviour in Gherkin. DO NOT write any tests or code.",
+          "sort_order": 111,
+          "versions": {
+            "overview": {
+              "content": "Write the .feature file. Describe the behaviour in Gherkin. DO NOT write any tests or code. Gate: .feature file exists.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "phase-steps",
+          "name": "② Step Tests",
+          "type": "phase",
+          "layer": "bdd-tdd-pipeline",
+          "color": "cyan",
+          "icon": "🧪",
+          "description": "Write failing step definitions for this feature file. DO NOT implement any production code.",
+          "sort_order": 112,
+          "versions": {
+            "overview": {
+              "content": "Write failing step definitions for this feature file. DO NOT implement any production code. Gate: step files exist.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "phase-units",
+          "name": "③ Unit Tests",
+          "type": "phase",
+          "layer": "bdd-tdd-pipeline",
+          "color": "purple",
+          "icon": "🧪",
+          "description": "Write failing unit tests for the components you'll need. DO NOT implement any production code.",
+          "sort_order": 113,
+          "versions": {
+            "overview": {
+              "content": "Write failing unit tests for the components you'll need. DO NOT implement any production code. Gate: test files exist.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "phase-red",
+          "name": "④ Red",
+          "type": "phase",
+          "layer": "bdd-tdd-pipeline",
+          "color": "red",
+          "icon": "🔴",
+          "description": "Run all tests. Confirm they fail. Report which tests fail and why. DO NOT fix anything.",
+          "sort_order": 114,
+          "versions": {
+            "overview": {
+              "content": "Run all tests. Confirm they fail. Report which tests fail and why. DO NOT fix anything. Gate: tests fail.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "phase-green",
+          "name": "⑤ Green",
+          "type": "phase",
+          "layer": "bdd-tdd-pipeline",
+          "color": "green",
+          "icon": "🟢",
+          "description": "Write the minimum production code to make all tests pass. DO NOT refactor or optimise.",
+          "sort_order": 115,
+          "versions": {
+            "overview": {
+              "content": "Write the minimum production code to make all tests pass. DO NOT refactor or optimise. Gate: tests pass.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "phase-refactor",
+          "name": "⑥ Refactor",
+          "type": "phase",
+          "layer": "bdd-tdd-pipeline",
+          "color": "sky",
+          "icon": "🔧",
+          "description": "Refactor for clarity, DRY, naming. All tests must still pass. DO NOT add new functionality.",
+          "sort_order": 116,
+          "versions": {
+            "overview": {
+              "content": "Refactor for clarity, DRY, naming. All tests must still pass. DO NOT add new functionality. Gate: tests still pass.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "phase-arch-review",
+          "name": "⑦ Arch Review",
+          "type": "phase",
+          "layer": "bdd-tdd-pipeline",
+          "color": "orange",
+          "icon": "🏛",
+          "description": "Audit against Clean Architecture standards. Report violations. DO NOT fix — only report.",
+          "sort_order": 117,
+          "versions": {
+            "overview": {
+              "content": "Audit against Clean Architecture standards. Report violations: dependency direction, layer leaks, abstraction gaps. DO NOT fix — only report. Gate: 0 violations.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        },
+        {
+          "id": "phase-sec-review",
+          "name": "⑧ Sec Review",
+          "type": "phase",
+          "layer": "bdd-tdd-pipeline",
+          "color": "rose",
+          "icon": "🔒",
+          "description": "Run security analysis. Check injection vectors, auth gaps, secrets exposure. DO NOT fix — only report.",
+          "sort_order": 118,
+          "versions": {
+            "overview": {
+              "content": "Run security analysis. Check: injection vectors, auth gaps, secrets exposure, unsafe dependencies. DO NOT fix — only report. Gate: 0 findings.",
+              "progress": 0,
+              "status": "planned",
+              "updated_at": "2026-02-10 09:34:13"
+            }
+          },
+          "features": {}
+        }
+      ],
+      "versions": {
+        "overview": {
+          "content": "Strict 8-phase pipeline enforced by Meta-Agent: Feature → Steps → Units → Red → Green → Refactor → Arch Review → Sec Review. Every phase ends with a git commit.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "observability-dashboard",
+      "name": "Observability Dashboard",
+      "type": "layer",
+      "layer": null,
+      "color": "sky",
+      "icon": "📊",
+      "description": "Runtime Visibility — read-only web UI that observes but never mutates.",
+      "sort_order": 10,
+      "versions": {
+        "overview": {
+          "content": "Read-only web UI. Process view, goal feed, tool timeline, security events, graph explorers. The single pane of glass for both observation and control.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "live-dashboard",
+      "name": "Live Dashboard",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "📊",
+      "description": "Real-time view of the entire runtime. Read-only — it observes but never mutates. Built as a simple web app that polls the State Store + Supervisor health API.",
+      "sort_order": 11,
+      "versions": {
+        "mvp": {
+          "content": "Single-page web app showing process status (up/down) and current goal. Polls Supervisor health API every 5s. Basic goal queue display from State Store. Static HTML + vanilla JS.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Real-time view of the entire runtime. Read-only — it observes but never mutates. Built as a simple web app that polls the State Store + Supervisor health API.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Full process tree view with live status. Goal & task feed with click-to-inspect. Tool call timeline with filtering. Security events panel. Escalation queue with response actions.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "SSE/WebSocket for real-time push updates. Entity Explorer for User KG. Repo Map for Code Graph. Embedded Human Gate approval UI. Performance metrics and resource graphs.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-dashboard.feature",
+            "title": "Live Dashboard (MVP)",
+            "content": "Feature: Live Dashboard (MVP)\n  A read-only web UI showing process status and current goal.\n  Polls the Supervisor health API and State Store.\n\n  Background:\n    Given the Dashboard web app is running\n\n  Scenario: Display process status\n    Given the Supervisor health API reports Meta-Agent as \"running\" and Worker as \"running\"\n    When the Dashboard polls the health API\n    Then both processes are shown with \"running\" status indicators\n\n  Scenario: Display current goal\n    Given the State Store contains a goal \"Build user auth\" with status \"in-progress\"\n    When the Dashboard polls the State Store\n    Then the current goal \"Build user auth\" is displayed\n    And its status shows \"in-progress\"\n\n  Scenario: Auto-refresh on interval\n    Given the Dashboard is displaying process status\n    When 5 seconds have elapsed\n    Then the Dashboard polls the health API again\n    And the display updates with fresh data\n\n  Scenario: Show offline state\n    Given the Supervisor health API is unreachable\n    When the Dashboard polls the health API\n    Then a \"Supervisor Unreachable\" indicator is shown\n\n  Scenario: Read-only — no mutation endpoints\n    Given the Dashboard is running\n    Then it exposes no POST, PUT, or DELETE endpoints\n    And all data access is via GET requests\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "live-process-view",
+      "name": "Live Process View",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "🔴",
+      "description": "Process tree with real-time status: running, recovering, crashed, paused. Uptime, restart count, current model, memory usage per instance.",
+      "sort_order": 12,
+      "versions": {
+        "overview": {
+          "content": "Process tree with real-time status: running, recovering, crashed, paused for every child. Uptime, restart count, current model, memory usage per instance.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "goal-task-feed",
+      "name": "Goal & Task Feed",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "📋",
+      "description": "Live stream of the Goal Queue. Current goal, decomposed sub-tasks, completion status. Clickable to inspect full task payloads.",
+      "sort_order": 13,
+      "versions": {
+        "overview": {
+          "content": "Live stream of the Goal Queue. Current goal, decomposed sub-tasks, completion status. Clickable to inspect full task payloads.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "tool-call-timeline",
+      "name": "Tool Call Timeline",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "🔧",
+      "description": "Chronological feed of every tool call. Shows tool name, args, response status, latency, sanitiser verdict. Filterable by instance, tool, and status.",
+      "sort_order": 14,
+      "versions": {
+        "overview": {
+          "content": "Chronological feed of every tool call. Shows tool name, args, response status, latency, sanitiser verdict. Filterable.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "security-events",
+      "name": "Security Events",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "🛡",
+      "description": "Sanitiser verdicts, blocked injections with raw payload preview, injection frequency per tool, auto-disable events.",
+      "sort_order": 15,
+      "versions": {
+        "overview": {
+          "content": "Sanitiser verdicts, blocked injections with raw payload preview, injection frequency per tool, auto-disable events.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "escalation-queue",
+      "name": "Escalation Queue",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "⏸",
+      "description": "Worker escalation requests waiting for Meta-Agent or human review. Shows question, context snapshot, and available actions.",
+      "sort_order": 16,
+      "versions": {
+        "overview": {
+          "content": "Worker escalation requests waiting for Meta-Agent or human review. Shows question, context, and available actions.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "entity-explorer",
+      "name": "Entity Explorer",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "👤",
+      "description": "Browse the User Knowledge Graph. See people, projects, preferences, and their relationships.",
+      "sort_order": 17,
+      "versions": {
+        "overview": {
+          "content": "Browse the User Knowledge Graph. See people, projects, preferences, and their relationships.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "repo-map",
+      "name": "Repo Map",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "🗺",
+      "description": "Visualise the Code Graph. Module hierarchy, file deps, data flows.",
+      "sort_order": 18,
+      "versions": {
+        "overview": {
+          "content": "Visualise the Code Graph. Module hierarchy, file deps, data flows.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "human-gate-dashboard",
+      "name": "Human Gate (Dashboard)",
+      "type": "component",
+      "layer": "observability-dashboard",
+      "color": "sky",
+      "icon": "⛳",
+      "description": "Approval queue + escalation responses. Gate actions embeddable in dashboard UI.",
+      "sort_order": 19,
+      "versions": {
+        "overview": {
+          "content": "Approval queue + escalation responses. Gate actions embeddable in dashboard UI.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "supervisor-layer",
+      "name": "Supervisor",
+      "type": "layer",
+      "layer": null,
+      "color": "purple",
+      "icon": "👁",
+      "description": "The Only Immortal Process — process management, signal handling, recovery.",
+      "sort_order": 20,
+      "versions": {
+        "overview": {
+          "content": "The only immortal process. No LLM. Process manager + crash recovery + heartbeat. Exposes health API. Kill switch. If it dies, systemd restarts it.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "supervisor",
+      "name": "Supervisor",
+      "type": "component",
+      "layer": "supervisor-layer",
+      "color": "purple",
+      "icon": "👁",
+      "description": "Manages all child processes. Heartbeat + crash recovery with tiered priority. No LLM, no planning — just process management, signal handling, and the recovery state machine. Exposes a health API (HTTP) for the dashboard.",
+      "sort_order": 21,
+      "versions": {
+        "mvp": {
+          "content": "Spawn and monitor two child processes (meta-agent, worker). Detect crashes via waitpid(). Restart crashed children with basic retry logic. Expose /health HTTP endpoint returning JSON process status. Handle SIGTERM for graceful shutdown of all children.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Manages all child processes. Heartbeat + crash recovery with tiered priority. No LLM, no planning — just process management, signal handling, and the recovery state machine. Exposes a health API (HTTP) for the dashboard.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Add exponential backoff on repeated crashes. Liveness probe (hang detection via output timeout). Recovery state machine with tiered priority (meta-agent first). Checkpoint-aware recovery — read last checkpoint before respawn. Human Gate alerting after max retries.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Full config-as-code DSL for spawn configuration. Resource monitoring (memory, CPU per child). Kill switch HTTP endpoint. Dashboard SSE push for process events. Per-instance gate policies. Runtime flag switching for gate modes.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-process-management.feature",
+            "title": "Supervisor Process Management (MVP)",
+            "content": "Feature: Supervisor Process Management (MVP)\n  The Supervisor spawns and monitors child processes.\n  It detects crashes and restarts children with basic retry logic.\n\n  Background:\n    Given the Supervisor process is running\n\n  Scenario: Spawn child processes on startup\n    When the Supervisor starts\n    Then it spawns the Meta-Agent process\n    And it spawns the Worker process\n    And both processes are in \"running\" state\n\n  Scenario: Detect child crash via waitpid\n    Given the Meta-Agent process is running\n    When the Meta-Agent process exits unexpectedly\n    Then the Supervisor detects the exit within 100ms\n    And the exit is logged with the process ID and exit code\n\n  Scenario: Restart crashed child\n    Given the Worker process has crashed\n    When the Supervisor detects the crash\n    Then it restarts the Worker process\n    And the new process is in \"running\" state\n    And the restart count is incremented\n\n  Scenario: Respect maximum retry limit\n    Given the Worker has crashed 5 times consecutively\n    When the Worker crashes again\n    Then the Supervisor does not restart the Worker\n    And the Worker state is set to \"failed\"\n    And an alert is logged\n\n  Scenario: Health API returns process status\n    Given both child processes are running\n    When a GET request is made to /health\n    Then the response status is 200\n    And the response body contains status for each child process\n    And each status includes \"pid\", \"state\", and \"uptime\"\n\n  Scenario: Graceful shutdown on SIGTERM\n    Given both child processes are running\n    When the Supervisor receives SIGTERM\n    Then it sends SIGTERM to all child processes\n    And it waits for children to exit\n    And it exits with code 0\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dual-heartbeat",
+      "name": "Dual Heartbeat",
+      "type": "component",
+      "layer": "supervisor-layer",
+      "color": "purple",
+      "icon": "💓",
+      "description": "Monitors both OpenCode instances via waitpid() + liveness probes. Instant crash detection. Periodic liveness probe for hang detection. Exponential backoff, max 5 retries.",
+      "sort_order": 22,
+      "versions": {
+        "mvp": {
+          "content": "waitpid() loop for crash detection. Basic restart on exit. Retry counter with max limit. Log crash events.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Monitors both OpenCode instances via waitpid() + liveness probes. Instant crash detection. Exponential backoff, max 5 retries.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "human-gate",
+      "name": "Human Gate",
+      "type": "component",
+      "layer": "supervisor-layer",
+      "color": "pink",
+      "icon": "⛳",
+      "description": "Three modes: full-auto, approve-goals, approve-all. Plus write fence for dangerous ops. Gate mode is a runtime flag — switch without restarting.",
+      "sort_order": 23,
+      "versions": {
+        "mvp": {
+          "content": "Basic approval queue. CLI-based approve/reject. Write fence for destructive operations (hardcoded list). Block until approved or timeout.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Three modes: full-auto, approve-goals, approve-all. Plus write fence for dangerous ops. Gate mode is a runtime flag.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Runtime mode switching (full-auto, approve-goals, approve-all). Per-instance gate policies. Escalation forwarding from Meta-Agent. Dashboard-embeddable approval UI.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Configurable write fence per tool category. Approval delegation rules. Audit trail of all gate decisions. Timeout policies with configurable fallback actions.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-human-gate.feature",
+            "title": "Human Gate (MVP)",
+            "content": "Feature: Human Gate (MVP)\n  The Human Gate provides an approval queue for dangerous\n  operations and a write fence for destructive actions.\n\n  Background:\n    Given the Human Gate is running\n\n  Scenario: Block destructive operation for approval\n    Given the write fence includes \"database drop\" operations\n    When a task requests a database drop\n    Then the task is paused with status \"awaiting_approval\"\n    And the approval request is added to the queue\n\n  Scenario: Approve pending request\n    Given a task is paused awaiting approval\n    When a human approves the request\n    Then the task status changes to \"approved\"\n    And execution resumes\n\n  Scenario: Reject pending request\n    Given a task is paused awaiting approval\n    When a human rejects the request\n    Then the task status changes to \"rejected\"\n    And the task is aborted\n\n  Scenario: Timeout on unanswered request\n    Given a task has been awaiting approval for longer than the timeout\n    When the timeout expires\n    Then the task is aborted\n    And the timeout event is logged\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fast-path-router",
+      "name": "Fast Path Router",
+      "type": "component",
+      "layer": "supervisor-layer",
+      "color": "lime",
+      "icon": "⚡",
+      "description": "Rule engine (no LLM). Classifies tasks as fast, full, or gated. Can query User KG for context.",
+      "sort_order": 24,
+      "versions": {
+        "mvp": {
+          "content": "Simple rule engine: match task text against patterns (single verb, no conditionals, target file exists). Three outputs: fast, full, gated. Configurable threshold.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Rule engine (no LLM). Classifies tasks as fast, full, or gated. Can query User KG for context.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "task-router-layer",
+      "name": "Task Router",
+      "type": "layer",
+      "layer": null,
+      "color": "lime",
+      "icon": "⚡",
+      "description": "Fast Path Decision Point — routes tasks by complexity.",
+      "sort_order": 30,
+      "versions": {
+        "overview": {
+          "content": "Fast path decision point. Rule engine (no LLM) routes tasks by complexity: trivial goes direct to Worker, complex goes to Meta-Agent, dangerous requires human approval.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "fast-path",
+      "name": "Fast Path",
+      "type": "component",
+      "layer": "task-router-layer",
+      "color": "lime",
+      "icon": "⚡",
+      "description": "Rule engine says: single-step, unambiguous, existing tools suffice. Task goes directly to Worker. Meta-Agent notified post-completion.",
+      "sort_order": 31,
+      "versions": {
+        "overview": {
+          "content": "Rule engine says: single-step, unambiguous, existing tools suffice. Task goes directly to Worker. Meta-Agent notified post-completion.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "full-path",
+      "name": "Full Path",
+      "type": "component",
+      "layer": "task-router-layer",
+      "color": "orange",
+      "icon": "🧠",
+      "description": "Classifier says: multi-step, ambiguous, or needs tool changes. Task goes to Meta-Agent for decomposition.",
+      "sort_order": 32,
+      "versions": {
+        "overview": {
+          "content": "Classifier says: multi-step, ambiguous, or needs tool changes. Task goes to Meta-Agent for decomposition.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "gated-path",
+      "name": "Gated Path",
+      "type": "component",
+      "layer": "task-router-layer",
+      "color": "purple",
+      "icon": "⛳",
+      "description": "Classifier or Human Gate flags: destructive, high-cost, or security-sensitive. Task pauses for human approval.",
+      "sort_order": 33,
+      "versions": {
+        "overview": {
+          "content": "Classifier or Human Gate flags: destructive, high-cost, or security-sensitive. Task pauses for human approval.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "knowledge-graphs",
+      "name": "Knowledge Graphs",
+      "type": "layer",
+      "layer": null,
+      "color": "gold",
+      "icon": "🧠",
+      "description": "Dual graph stores: User Knowledge Graph + RPG Code Graph.",
+      "sort_order": 40,
+      "versions": {
+        "overview": {
+          "content": "Dual graph stores. User Knowledge Graph holds domain context (people, projects, preferences). RPG Code Graph holds repo structure (files, modules, deps, data flows).",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "user-knowledge-graph",
+      "name": "User Knowledge Graph",
+      "type": "store",
+      "layer": "knowledge-graphs",
+      "color": "gold",
+      "icon": "👤",
+      "description": "A persistent graph of the user's world. Nodes are domain entities — people, projects, clients, teams, products, preferences, business rules, conventions, deadlines.",
+      "sort_order": 41,
+      "versions": {
+        "mvp": {
+          "content": "SQLite-backed entity store. Add/query entities with typed relationships. Basic traversal (1-hop neighbours). Manual entity creation via CLI or dashboard. Simple text search across entities.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "A persistent graph of the user's world. Nodes are domain entities — people, projects, clients, teams, products, preferences, business rules, conventions, deadlines. Edges are typed relationships with metadata.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Meta-Agent write access for inferred entities. Confidence layering (user-explicit 1.0 > meta-inferred 0.8). Multi-hop traversal queries. Convention enforcement lookups. Deadline awareness queries.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Full graph query language. Temporal awareness (when was this preference set?). Conflict resolution for contradictory preferences. Export/import for portability. Dashboard entity editor.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-user-kg.feature",
+            "title": "User Knowledge Graph (MVP)",
+            "content": "Feature: User Knowledge Graph (MVP)\n  A persistent entity-relationship store for domain context:\n  people, projects, preferences, conventions, deadlines.\n\n  Background:\n    Given the User Knowledge Graph SQLite database exists\n\n  Scenario: Add an entity\n    When an entity is added with type \"person\" and name \"Alice\"\n    Then the entity exists in the graph with a unique ID\n    And it has type \"person\" and name \"Alice\"\n\n  Scenario: Add a relationship between entities\n    Given entities \"Alice\" (person) and \"acme-saas\" (project) exist\n    When a relationship \"OWNS\" is added from \"Alice\" to \"acme-saas\"\n    Then the edge exists with type \"OWNS\"\n    And it references both entities\n\n  Scenario: Query 1-hop neighbours\n    Given \"Alice\" has relationships to \"acme-saas\", \"Bob\", and \"minimal-comments\"\n    When querying neighbours of \"Alice\"\n    Then all 3 connected entities are returned\n    And each result includes the relationship type\n\n  Scenario: Search entities by text\n    Given entities \"Alice\", \"Bob\", and \"acme-saas\" exist\n    When searching for \"alice\"\n    Then the entity \"Alice\" is returned\n\n  Scenario: Add entity with metadata\n    When an entity is added with type \"preference\" name \"no-orms\" and metadata '{\"reason\": \"team decision\"}'\n    Then the entity exists with the metadata attached\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rpg-code-graph",
+      "name": "RPG Code Graph",
+      "type": "store",
+      "layer": "knowledge-graphs",
+      "color": "emerald",
+      "icon": "🗺",
+      "description": "An RPG-style structural graph of the current codebase. Encodes file hierarchy, module boundaries, inter-module data flows, function signatures, class inheritance, and import dependencies.",
+      "sort_order": 42,
+      "versions": {
+        "mvp": {
+          "content": "Static analysis on repo load using tree-sitter. Build initial graph from imports, exports, class hierarchy. Basic queries: list files in module, show imports for file. SQLite-backed.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "An RPG-style structural graph of the current codebase. Encodes file hierarchy, module boundaries, inter-module data flows, function signatures, class inheritance, and import dependencies.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Incremental updates via Checkpointer (re-parse only changed files). Dependency traversal (topo_order, dependents). Data flow edges between modules. Pattern queries (existing patterns in a directory).",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Full where_to_add capability suggestions. Blast radius estimation for edits. Meta-Agent annotations (module boundaries, data flow intentions). Multi-language AST support. Visualization for dashboard Repo Map.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-code-graph.feature",
+            "title": "RPG Code Graph (MVP)",
+            "content": "Feature: RPG Code Graph (MVP)\n  Static analysis on repo load builds a structural graph of the\n  codebase: files, imports, exports, classes, functions.\n\n  Background:\n    Given a repository with source files exists\n\n  Scenario: Build initial graph from repo\n    When the Code Graph builder runs on the repository\n    Then nodes are created for each source file\n    And edges are created for import relationships\n    And the graph is stored in SQLite\n\n  Scenario: Extract function exports\n    Given a file \"auth/handler.ts\" exports function \"verifyToken\"\n    When the AST parser processes the file\n    Then a function node \"verifyToken\" exists\n    And an EXPORTS edge connects the file to the function\n\n  Scenario: Extract import relationships\n    Given \"api/routes.ts\" imports from \"auth/handler.ts\"\n    When the AST parser processes both files\n    Then an IMPORTS edge connects \"api/routes.ts\" to \"auth/handler.ts\"\n\n  Scenario: Infer modules from directory structure\n    Given the repository has directories \"auth/\", \"api/\", \"db/\"\n    When the Code Graph builder runs\n    Then module nodes are created for \"auth\", \"api\", \"db\"\n    And CONTAINS edges connect modules to their files\n\n  Scenario: Query files in a module\n    Given the module \"auth\" contains \"handler.ts\" and \"middleware.ts\"\n    When querying files in module \"auth\"\n    Then both files are returned\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dual-agents",
+      "name": "Dual OpenCode Instances",
+      "type": "layer",
+      "layer": null,
+      "color": "orange",
+      "icon": "🧠",
+      "description": "Meta-Agent (Planner) + Worker (Executor) — two stock OpenCode instances.",
+      "sort_order": 50,
+      "versions": {
+        "overview": {
+          "content": "Two stock OpenCode instances. Meta-Agent (Planner) uses cheap model, plans and dispatches. Worker (Executor) uses strong model, executes one phase at a time.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "meta-agent",
+      "name": "Meta-Agent (Planner)",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "orange",
+      "icon": "🧠",
+      "description": "Stock OpenCode, planning system prompt, cheap/fast model. Plans, evaluates, dispatches. Never touches codebase or external APIs directly. Tier-0: recovered first.",
+      "sort_order": 51,
+      "versions": {
+        "mvp": {
+          "content": "Single OpenCode instance with planning system prompt. Read goal queue, decompose into sub-tasks, dispatch to Worker via State Store. Read Worker progress from checkpoints. Basic goal → task decomposition.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Stock OpenCode, planning system prompt, cheap/fast model. Plans, evaluates, dispatches. Never touches codebase or external APIs directly. Tier-0: recovered first.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Phase-locked BDD/TDD dispatch pipeline. Gate verification between phases. Escalation response handling. User KG reads for planning context. Code Graph reads for repo-aware decomposition.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Self-evolution: tool discovery + hot-swap via proxy_admin. Config mutation via DSL. Prompt evolution based on observed results. Knowledge curation — write inferred preferences to User KG. Budget and scope guardrails.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-planning-loop.feature",
+            "title": "Meta-Agent Planning Loop (MVP)",
+            "content": "Feature: Meta-Agent Planning Loop (MVP)\n  The Meta-Agent reads goals, decomposes them into tasks,\n  and dispatches work to the Worker via the State Store.\n\n  Background:\n    Given the Meta-Agent is running with a planning system prompt\n    And the State Store is accessible\n\n  Scenario: Read next goal from queue\n    Given the goal queue contains \"Build user authentication\"\n    When the Meta-Agent checks the goal queue\n    Then it receives the goal \"Build user authentication\"\n    And the goal status is set to \"in-progress\"\n\n  Scenario: Decompose goal into tasks\n    Given the Meta-Agent has received the goal \"Build user authentication\"\n    When it decomposes the goal\n    Then the State Store contains at least 2 sub-tasks\n    And each sub-task has a description and ordering\n\n  Scenario: Dispatch task to Worker\n    Given a sub-task \"Create login endpoint\" exists in the State Store\n    When the Meta-Agent dispatches the task\n    Then the task status is set to \"dispatched\"\n    And the task includes a description and success criteria\n\n  Scenario: Read Worker progress\n    Given a task has been dispatched to the Worker\n    When the Meta-Agent checks Worker progress\n    Then it receives the latest checkpoint for that task\n    And the checkpoint includes tool calls made and their results\n\n  Scenario: Complete goal when all tasks done\n    Given all sub-tasks for a goal are in \"complete\" status\n    When the Meta-Agent evaluates the goal\n    Then the goal status is set to \"complete\"\n    And the Meta-Agent reads the next goal from the queue\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "worker",
+      "name": "Worker (Executor)",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "cyan",
+      "icon": "⚡",
+      "description": "Stock OpenCode, execution system prompt, strong model. Executes one phase at a time. Ephemeral and replaceable. Tier-1: recovered second.",
+      "sort_order": 52,
+      "versions": {
+        "mvp": {
+          "content": "Single OpenCode instance with execution system prompt. Receive task from State Store, execute with available tools, report results. Basic tool access via MCP proxy.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Stock OpenCode, execution system prompt, strong model. Executes one phase at a time. Ephemeral and replaceable. Tier-1: recovered second.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Phase-locked execution (single phase per dispatch, forbidden_actions enforcement). Escalation tools (request_clarification, check_escalation_response). User KG reads for preference-aware execution. Code Graph reads for structural coherence.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Context-aware resume after crash (transparent to the agent). Dynamic tool manifest — handles hot-swap mid-session. Confidence scoring on outputs. Full sanitiser integration on all external I/O.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-task-execution.feature",
+            "title": "Worker Task Execution (MVP)",
+            "content": "Feature: Worker Task Execution (MVP)\n  The Worker receives tasks from the State Store and executes\n  them using available tools via the MCP proxy.\n\n  Background:\n    Given the Worker is running with an execution system prompt\n    And the MCP proxy is accessible with at least one tool\n\n  Scenario: Receive dispatched task\n    Given a task \"Create login endpoint\" is in \"dispatched\" status\n    When the Worker checks for pending tasks\n    Then it receives the task with description and constraints\n\n  Scenario: Execute task with tools\n    Given the Worker has received a task\n    When it executes the task\n    Then it makes at least one tool call via the MCP proxy\n    And each tool call is logged to the State Store\n\n  Scenario: Report task completion\n    Given the Worker has finished executing a task\n    When it reports results\n    Then the task status is set to \"complete\"\n    And the result summary is written to the State Store\n\n  Scenario: Handle tool call failure\n    Given the Worker is executing a task\n    When a tool call returns an error\n    Then the Worker logs the error\n    And it attempts an alternative approach or reports failure\n\n  Scenario: Operate within provided constraints\n    Given the Worker receives a task with forbidden_actions [\"delete files\"]\n    When it executes the task\n    Then it does not call any tool that would delete files\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "goal-queue",
+      "name": "goal_queue",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "orange",
+      "icon": "📋",
+      "description": "push, pop, peek, reprioritise — manages the persistent goal queue.",
+      "sort_order": 53,
+      "versions": {
+        "overview": {
+          "content": "push, pop, peek, reprioritise — manages the persistent goal queue.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "state-reader",
+      "name": "state_reader",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "orange",
+      "icon": "📖",
+      "description": "get_checkpoint, get_task_log, get_escalations — reads Worker's progress.",
+      "sort_order": 54,
+      "versions": {
+        "overview": {
+          "content": "get_checkpoint, get_task_log, get_escalations — reads Worker's progress.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "worker-control",
+      "name": "worker_control",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "orange",
+      "icon": "🔧",
+      "description": "dispatch, abort, respond_escalation — sends phase-locked work to Worker.",
+      "sort_order": 55,
+      "versions": {
+        "overview": {
+          "content": "dispatch, abort, respond_escalation — sends phase-locked work to Worker.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "proxy-admin",
+      "name": "proxy_admin",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "orange",
+      "icon": "📡",
+      "description": "register, deregister, list — mutates Worker's tool manifest.",
+      "sort_order": 56,
+      "versions": {
+        "overview": {
+          "content": "register, deregister, list — mutates Worker's tool manifest.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "config-mutator",
+      "name": "config_mutator",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "orange",
+      "icon": "⚙",
+      "description": "update_prompt, update_model, update_agents — evolves Worker's config via DSL.",
+      "sort_order": 57,
+      "versions": {
+        "overview": {
+          "content": "update_prompt, update_model, update_agents — evolves Worker's config via DSL.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "tool-registry",
+      "name": "tool_registry",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "orange",
+      "icon": "🔍",
+      "description": "search, inspect, install — discovers new MCP servers from catalogue.",
+      "sort_order": 58,
+      "versions": {
+        "overview": {
+          "content": "search, inspect, install — discovers new MCP servers from catalogue.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "user-kg-read-meta",
+      "name": "user_kg_read (Meta)",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "gold",
+      "icon": "👤",
+      "description": "query, traverse, search — Meta-Agent reads User KG.",
+      "sort_order": 59,
+      "versions": {
+        "overview": {
+          "content": "query, traverse, search — Meta-Agent reads User KG.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "escalation-flow",
+      "name": "Escalation Flow",
+      "type": "layer",
+      "layer": null,
+      "color": "teal",
+      "icon": "🙋",
+      "description": "Worker ↔ Meta-Agent communication via shared state.",
+      "sort_order": 60,
+      "versions": {
+        "overview": {
+          "content": "Worker ↔ Meta-Agent communication via shared state. Worker writes question to State Store, Meta-Agent responds on its own cycle. Async, no blocking RPC.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "user-kg-write-meta",
+      "name": "user_kg_write (Meta)",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "gold",
+      "icon": "✏",
+      "description": "add_entity, add_edge, annotate — Meta-Agent writes to User KG.",
+      "sort_order": 60,
+      "versions": {
+        "overview": {
+          "content": "add_entity, add_edge, annotate — Meta-Agent writes to User KG.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "code-graph-read-meta",
+      "name": "code_graph_read (Meta)",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "emerald",
+      "icon": "🗺",
+      "description": "expand, path, topo_order — Meta-Agent reads Code Graph.",
+      "sort_order": 61,
+      "versions": {
+        "overview": {
+          "content": "expand, path, topo_order — Meta-Agent reads Code Graph.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "code-graph-write-meta",
+      "name": "code_graph_write (Meta)",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "emerald",
+      "icon": "✏",
+      "description": "annotate_module, set_data_flow — Meta-Agent writes to Code Graph.",
+      "sort_order": 62,
+      "versions": {
+        "overview": {
+          "content": "annotate_module, set_data_flow — Meta-Agent writes to Code Graph.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "request-clarification",
+      "name": "request_clarification",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "teal",
+      "icon": "🙋",
+      "description": "Writes question + context snapshot to State Store. Sets task status to paused:awaiting_guidance.",
+      "sort_order": 63,
+      "versions": {
+        "overview": {
+          "content": "Writes question + context snapshot to State Store. Sets task status to paused:awaiting_guidance.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "check-escalation-response",
+      "name": "check_escalation_response",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "teal",
+      "icon": "📨",
+      "description": "Polls State Store for Meta-Agent's response. Returns guidance or still_pending.",
+      "sort_order": 64,
+      "versions": {
+        "overview": {
+          "content": "Polls State Store for Meta-Agent's response. Returns guidance or still_pending.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "user-kg-read-worker",
+      "name": "user_kg_read (Worker)",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "gold",
+      "icon": "👤",
+      "description": "Read-only. No writes (injection safety).",
+      "sort_order": 65,
+      "versions": {
+        "overview": {
+          "content": "Read-only. No writes (injection safety).",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "code-graph-read-worker",
+      "name": "code_graph_read (Worker)",
+      "type": "component",
+      "layer": "dual-agents",
+      "color": "emerald",
+      "icon": "🗺",
+      "description": "Read-only. Checkpointer writes on its behalf.",
+      "sort_order": 66,
+      "versions": {
+        "overview": {
+          "content": "Read-only. Checkpointer writes on its behalf.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "shared-state",
+      "name": "Shared State Store",
+      "type": "layer",
+      "layer": null,
+      "color": "blue",
+      "icon": "💾",
+      "description": "The Bridge — SQLite WAL / Postgres shared by both instances.",
+      "sort_order": 70,
+      "versions": {
+        "overview": {
+          "content": "SQLite WAL / Postgres. Goals, tasks, tool logs, checkpoints, escalations. The bridge between both instances — they share a database, not a connection.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "state-store",
+      "name": "State Store",
+      "type": "store",
+      "layer": "shared-state",
+      "color": "blue",
+      "icon": "💾",
+      "description": "Append-only log that both instances read/write. Goals, tasks, tool logs, checkpoints, escalations. The bridge between both OpenCode instances — they share a database, not a connection.",
+      "sort_order": 71,
+      "versions": {
+        "mvp": {
+          "content": "SQLite WAL database with tables for goals, tasks, and tool_logs. Basic CRUD operations. Both agents read/write via simple SQL. No pruning, no optimization.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Append-only log that both instances read/write. Goals, tasks, tool logs, checkpoints, escalations. The bridge between both OpenCode instances.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Add checkpoints table, escalation records, fast-path completion records. Context rebuilder queries. Pruning policy (keep last N days). Indexes for common query patterns.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "SSE/WebSocket push for live dashboard updates. Postgres option for multi-machine deployments. Full audit trail with retention policies. Query optimization for dashboard views.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-shared-state.feature",
+            "title": "Shared State Store (MVP)",
+            "content": "Feature: Shared State Store (MVP)\n  The State Store is a SQLite WAL database that both agents\n  read and write. It stores goals, tasks, and tool logs.\n\n  Background:\n    Given the State Store SQLite database exists\n\n  Scenario: Create a goal\n    When a goal \"Build user authentication\" is inserted\n    Then the goal exists with status \"pending\"\n    And the goal has a created_at timestamp\n\n  Scenario: Create tasks for a goal\n    Given a goal exists with id \"goal-1\"\n    When tasks are inserted for goal \"goal-1\"\n    Then each task references the parent goal\n    And each task has status \"pending\" and an ordering index\n\n  Scenario: Log a tool call\n    Given a task exists with id \"task-1\"\n    When a tool call log is inserted with tool \"filesystem\", args hash, and result hash\n    Then the tool log exists with a timestamp\n    And the tool log references \"task-1\"\n\n  Scenario: Both agents can read/write concurrently\n    Given the Meta-Agent is writing a goal\n    And the Worker is writing a tool log\n    Then both writes succeed without conflict\n    And the WAL journal mode handles concurrent access\n\n  Scenario: Query task status by goal\n    Given a goal has 3 tasks with statuses \"complete\", \"in-progress\", \"pending\"\n    When querying tasks for that goal\n    Then all 3 tasks are returned with their statuses\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "checkpointer",
+      "name": "Checkpointer",
+      "type": "component",
+      "layer": "shared-state",
+      "color": "blue",
+      "icon": "📸",
+      "description": "Taps Worker's Proxy. Writes after every tool response: task ID, tool name, args, result hash, timestamp. Async — doesn't block the agent. Also triggers Code Graph updates on file edits.",
+      "sort_order": 72,
+      "versions": {
+        "mvp": {
+          "content": "Intercept tool responses from Worker proxy. Write task_id, tool_name, args_hash, result_hash, timestamp to State Store. Fire-and-forget (async, non-blocking).",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Taps Worker's Proxy. Writes after every tool response: task ID, tool name, args, result hash, timestamp. Async — doesn't block the agent.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Escalation state snapshots. File-edit detection triggering Code Graph AST re-parse. Plan summary snapshots for context rebuilder. Idempotency markers for crash recovery.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Configurable checkpoint granularity. Compressed checkpoint storage. Checkpoint pruning with retention policy. Metrics on checkpoint write latency.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-checkpointing.feature",
+            "title": "Checkpointer (MVP)",
+            "content": "Feature: Checkpointer (MVP)\n  The Checkpointer taps the Worker's MCP proxy and records\n  every tool call for crash recovery and progress tracking.\n\n  Background:\n    Given the Checkpointer is attached to the Worker's MCP proxy\n    And the State Store is accessible\n\n  Scenario: Record tool call after response\n    Given the Worker calls the \"filesystem\" tool with args \"read file.ts\"\n    When the tool returns a successful response\n    Then the Checkpointer writes a record to the State Store\n    And the record includes task_id, tool_name, args_hash, result_hash, and timestamp\n\n  Scenario: Non-blocking operation\n    Given the Worker is executing a task\n    When a tool call completes\n    Then the Checkpointer writes asynchronously\n    And the Worker does not wait for the checkpoint write\n\n  Scenario: Maintain ordering of tool calls\n    Given the Worker makes 3 sequential tool calls\n    When all 3 are checkpointed\n    Then the records are ordered by timestamp\n    And each has a sequential index within the task\n\n  Scenario: Handle write failure gracefully\n    Given the State Store is temporarily unavailable\n    When the Checkpointer attempts to write\n    Then it retries with backoff\n    And the Worker execution is not affected\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "context-rebuilder",
+      "name": "Context Rebuilder",
+      "type": "component",
+      "layer": "shared-state",
+      "color": "blue",
+      "icon": "📝",
+      "description": "On crash recovery: generates resume prompt from compressed checkpoint + relevant graph context. Lossy by design — like a save game, not a VM snapshot.",
+      "sort_order": 73,
+      "versions": {
+        "mvp": {
+          "content": "Read last checkpoint from State Store. Generate basic resume prompt: \"you were doing X, completed Y, next step Z\". Inject as system prompt on respawn.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "On crash recovery: generates resume prompt from compressed checkpoint + relevant graph context. Lossy by design — like a save game, not a VM snapshot.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Include relevant User KG context in resume prompt. Include Code Graph context for coding tasks. Handle paused:awaiting_guidance state (include escalation question + response).",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Compressed multi-checkpoint summaries. Relevance-ranked context selection. Token budget management for resume prompts. A/B testing of resume prompt strategies.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-context-rebuild.feature",
+            "title": "Context Rebuilder (MVP)",
+            "content": "Feature: Context Rebuilder (MVP)\n  On crash recovery, the Context Rebuilder generates a resume\n  prompt from the last checkpoint so the agent can continue.\n\n  Background:\n    Given the State Store contains checkpoints for a crashed agent\n\n  Scenario: Generate resume prompt for Worker\n    Given the Worker crashed mid-task on task \"Create login endpoint\"\n    And the last checkpoint shows 3 completed tool calls\n    When the Context Rebuilder generates a resume prompt\n    Then the prompt includes \"you were doing: Create login endpoint\"\n    And it lists the 3 completed tool calls with their results\n    And it states the next expected action\n\n  Scenario: Generate resume prompt for Meta-Agent\n    Given the Meta-Agent crashed while processing goal \"Build auth\"\n    And the goal has 5 tasks, 2 completed and 1 in-progress\n    When the Context Rebuilder generates a resume prompt\n    Then the prompt includes the current goal state\n    And it lists completed and pending tasks\n    And it states the current Worker status\n\n  Scenario: Handle empty checkpoint\n    Given no checkpoints exist for the crashed agent\n    When the Context Rebuilder generates a resume prompt\n    Then it produces a minimal prompt with no prior context\n    And the agent starts fresh\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mcp-proxies",
+      "name": "MCP Proxies",
+      "type": "layer",
+      "layer": null,
+      "color": "orange",
+      "icon": "⇄",
+      "description": "Tool proxy layer for both agent instances.",
+      "sort_order": 80,
+      "versions": {
+        "overview": {
+          "content": "Tool proxy layer. Meta-Agent gets static manifest (10 internal tools). Worker gets dynamic manifest (hot-swappable, sanitiser required).",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "mcp-proxy-meta",
+      "name": "MCP Proxy — Meta-Agent",
+      "type": "component",
+      "layer": "mcp-proxies",
+      "color": "orange",
+      "icon": "⇄",
+      "description": "Hosts 10 planning tools (6 planning + 4 graph). Static manifest. No external API calls, no injection risk. No sanitiser needed.",
+      "sort_order": 81,
+      "versions": {
+        "mvp": {
+          "content": "Static MCP server hosting goal_queue, state_reader, worker_control tools. Simple stdio transport. No hot-swap needed.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Hosts 10 planning tools (6 planning + 4 graph). Static manifest. No external API calls, no injection risk.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "mcp-proxy-worker",
+      "name": "MCP Proxy — Worker",
+      "type": "component",
+      "layer": "mcp-proxies",
+      "color": "cyan",
+      "icon": "⇄",
+      "description": "Hosts all external-facing tools + escalation + graph reads. Dynamic manifest — hot-swappable. All responses pass through Sanitiser. Circuit breaker on downstream health.",
+      "sort_order": 82,
+      "versions": {
+        "mvp": {
+          "content": "MCP proxy with configurable tool list. Route tool calls to downstream servers. Pass responses through sanitiser. Basic health check on downstream servers.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Hosts all external-facing tools + escalation + graph reads. Dynamic manifest — hot-swappable. All responses pass through Sanitiser. Circuit breaker.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "security-sandbox",
+      "name": "Security Sandbox",
+      "type": "layer",
+      "layer": null,
+      "color": "red",
+      "icon": "🛡",
+      "description": "Sanitiser — Worker proxy only. 3-stage pipeline.",
+      "sort_order": 90,
+      "versions": {
+        "overview": {
+          "content": "3-stage sanitiser: regex heuristics → structural strip → optional LLM classifier. Fail-closed. Scans inbound + outbound. Worker proxy only.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "sanitiser",
+      "name": "3-Stage Sanitiser",
+      "type": "component",
+      "layer": "security-sandbox",
+      "color": "red",
+      "icon": "🛡",
+      "description": "Sits between Worker's Proxy and downstream servers. ① Heuristic regex → ② Structural strip → ③ Optional LLM classifier. Fail-closed. Scans inbound + outbound.",
+      "sort_order": 91,
+      "versions": {
+        "mvp": {
+          "content": "Regex-based heuristic scanner for common injection patterns. Structural strip (remove role tags, cap response length). Pass/block verdict on each tool response. Logging to State Store.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "overview": {
+          "content": "Sits between Worker's Proxy and downstream servers. ① Heuristic regex → ② Structural strip → ③ Optional LLM classifier. Fail-closed. Scans inbound + outbound.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v1": {
+          "content": "Outbound scanning (prevent data exfiltration via tool args). Configurable rule sets per tool. Injection frequency tracking. Auto-disable tools exceeding threshold. Dashboard integration for Security Events.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        },
+        "v2": {
+          "content": "Optional LLM classifier stage for sophisticated injection detection. Adaptive rules based on observed attack patterns. Per-tool confidence scoring. Full audit trail with payload samples.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {
+        "mvp": [
+          {
+            "filename": "mvp-sanitiser.feature",
+            "title": "3-Stage Sanitiser (MVP)",
+            "content": "Feature: 3-Stage Sanitiser (MVP)\n  The Sanitiser sits between the Worker's MCP proxy and downstream\n  tool servers. It scans tool responses for injection attempts.\n\n  Background:\n    Given the Sanitiser is running as an isolated subprocess\n\n  Scenario: Pass clean tool response\n    Given a tool response contains normal text content\n    When the Sanitiser processes the response\n    Then the verdict is \"pass\"\n    And the response is forwarded to the Worker unchanged\n\n  Scenario: Block response with injection pattern\n    Given a tool response contains \"ignore previous instructions\"\n    When the Sanitiser processes the response\n    Then the verdict is \"block\"\n    And the response is not forwarded to the Worker\n    And the injection event is logged to the State Store\n\n  Scenario: Strip role tags from response\n    Given a tool response contains \"<system>\" tags\n    When the Sanitiser applies structural stripping\n    Then the role tags are removed from the response\n    And the cleaned response is forwarded\n\n  Scenario: Cap response length\n    Given a tool response exceeds the maximum allowed length\n    When the Sanitiser processes the response\n    Then the response is truncated to the maximum length\n    And the truncation is noted in the log\n\n  Scenario: Fail closed on processing error\n    Given the Sanitiser encounters an internal error during processing\n    When processing a tool response\n    Then the response is blocked (not forwarded)\n    And the error is logged\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "alert-pipeline",
+      "name": "Alert Pipeline",
+      "type": "component",
+      "layer": "security-sandbox",
+      "color": "red",
+      "icon": "📋",
+      "description": "Blocked injections logged to State Store. Meta-Agent can auto-disable compromised tools. Dashboard shows real-time security events.",
+      "sort_order": 92,
+      "versions": {
+        "overview": {
+          "content": "Blocked injections logged to State Store. Meta-Agent can auto-disable compromised tools. Dashboard shows real-time security events.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "downstream-tools",
+      "name": "Downstream MCP Tool Servers",
+      "type": "layer",
+      "layer": null,
+      "color": "amber",
+      "icon": "🔧",
+      "description": "External tool servers — hot-swappable.",
+      "sort_order": 100,
+      "versions": {
+        "overview": {
+          "content": "External MCP tool servers. Search, email, database, filesystem, code execution, custom. Hot-swappable — Meta-Agent adds/removes at runtime.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "tool-search",
+      "name": "Search",
+      "type": "external",
+      "layer": "downstream-tools",
+      "color": "amber",
+      "icon": "🔍",
+      "description": "External search MCP server.",
+      "sort_order": 101,
+      "versions": {
+        "overview": {
+          "content": "External search MCP server.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "tool-email",
+      "name": "Email",
+      "type": "external",
+      "layer": "downstream-tools",
+      "color": "amber",
+      "icon": "✉",
+      "description": "External email MCP server.",
+      "sort_order": 102,
+      "versions": {
+        "overview": {
+          "content": "External email MCP server.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "tool-database",
+      "name": "Database",
+      "type": "external",
+      "layer": "downstream-tools",
+      "color": "amber",
+      "icon": "🗄",
+      "description": "External database MCP server.",
+      "sort_order": 103,
+      "versions": {
+        "overview": {
+          "content": "External database MCP server.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "tool-filesystem",
+      "name": "Filesystem",
+      "type": "external",
+      "layer": "downstream-tools",
+      "color": "amber",
+      "icon": "📂",
+      "description": "External filesystem MCP server.",
+      "sort_order": 104,
+      "versions": {
+        "overview": {
+          "content": "External filesystem MCP server.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "tool-code-exec",
+      "name": "Code Exec",
+      "type": "external",
+      "layer": "downstream-tools",
+      "color": "amber",
+      "icon": "💻",
+      "description": "External code execution MCP server.",
+      "sort_order": 105,
+      "versions": {
+        "overview": {
+          "content": "External code execution MCP server.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "tool-custom",
+      "name": "Custom",
+      "type": "external",
+      "layer": "downstream-tools",
+      "color": "amber",
+      "icon": "🧩",
+      "description": "Custom MCP servers — hot-swappable.",
+      "sort_order": 106,
+      "versions": {
+        "overview": {
+          "content": "Custom MCP servers — hot-swappable.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "bdd-tdd-pipeline",
+      "name": "BDD/TDD Phase Pipeline",
+      "type": "layer",
+      "layer": null,
+      "color": "teal",
+      "icon": "🔄",
+      "description": "Strict phase pipeline enforced by Meta-Agent, executed by Worker.",
+      "sort_order": 110,
+      "versions": {
+        "overview": {
+          "content": "Strict 8-phase pipeline enforced by Meta-Agent: Feature → Steps → Units → Red → Green → Refactor → Arch Review → Sec Review. Every phase ends with a git commit.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "phase-feature",
+      "name": "① Feature",
+      "type": "phase",
+      "layer": "bdd-tdd-pipeline",
+      "color": "gold",
+      "icon": "📝",
+      "description": "Write the .feature file. Describe the behaviour in Gherkin. DO NOT write any tests or code.",
+      "sort_order": 111,
+      "versions": {
+        "overview": {
+          "content": "Write the .feature file. Describe the behaviour in Gherkin. DO NOT write any tests or code. Gate: .feature file exists.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "phase-steps",
+      "name": "② Step Tests",
+      "type": "phase",
+      "layer": "bdd-tdd-pipeline",
+      "color": "cyan",
+      "icon": "🧪",
+      "description": "Write failing step definitions for this feature file. DO NOT implement any production code.",
+      "sort_order": 112,
+      "versions": {
+        "overview": {
+          "content": "Write failing step definitions for this feature file. DO NOT implement any production code. Gate: step files exist.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "phase-units",
+      "name": "③ Unit Tests",
+      "type": "phase",
+      "layer": "bdd-tdd-pipeline",
+      "color": "purple",
+      "icon": "🧪",
+      "description": "Write failing unit tests for the components you'll need. DO NOT implement any production code.",
+      "sort_order": 113,
+      "versions": {
+        "overview": {
+          "content": "Write failing unit tests for the components you'll need. DO NOT implement any production code. Gate: test files exist.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "phase-red",
+      "name": "④ Red",
+      "type": "phase",
+      "layer": "bdd-tdd-pipeline",
+      "color": "red",
+      "icon": "🔴",
+      "description": "Run all tests. Confirm they fail. Report which tests fail and why. DO NOT fix anything.",
+      "sort_order": 114,
+      "versions": {
+        "overview": {
+          "content": "Run all tests. Confirm they fail. Report which tests fail and why. DO NOT fix anything. Gate: tests fail.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "phase-green",
+      "name": "⑤ Green",
+      "type": "phase",
+      "layer": "bdd-tdd-pipeline",
+      "color": "green",
+      "icon": "🟢",
+      "description": "Write the minimum production code to make all tests pass. DO NOT refactor or optimise.",
+      "sort_order": 115,
+      "versions": {
+        "overview": {
+          "content": "Write the minimum production code to make all tests pass. DO NOT refactor or optimise. Gate: tests pass.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "phase-refactor",
+      "name": "⑥ Refactor",
+      "type": "phase",
+      "layer": "bdd-tdd-pipeline",
+      "color": "sky",
+      "icon": "🔧",
+      "description": "Refactor for clarity, DRY, naming. All tests must still pass. DO NOT add new functionality.",
+      "sort_order": 116,
+      "versions": {
+        "overview": {
+          "content": "Refactor for clarity, DRY, naming. All tests must still pass. DO NOT add new functionality. Gate: tests still pass.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "phase-arch-review",
+      "name": "⑦ Arch Review",
+      "type": "phase",
+      "layer": "bdd-tdd-pipeline",
+      "color": "orange",
+      "icon": "🏛",
+      "description": "Audit against Clean Architecture standards. Report violations. DO NOT fix — only report.",
+      "sort_order": 117,
+      "versions": {
+        "overview": {
+          "content": "Audit against Clean Architecture standards. Report violations: dependency direction, layer leaks, abstraction gaps. DO NOT fix — only report. Gate: 0 violations.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    },
+    {
+      "id": "phase-sec-review",
+      "name": "⑧ Sec Review",
+      "type": "phase",
+      "layer": "bdd-tdd-pipeline",
+      "color": "rose",
+      "icon": "🔒",
+      "description": "Run security analysis. Check injection vectors, auth gaps, secrets exposure. DO NOT fix — only report.",
+      "sort_order": 118,
+      "versions": {
+        "overview": {
+          "content": "Run security analysis. Check: injection vectors, auth gaps, secrets exposure, unsafe dependencies. DO NOT fix — only report. Gate: 0 findings.",
+          "progress": 0,
+          "status": "planned",
+          "updated_at": "2026-02-10 09:34:13"
+        }
+      },
+      "features": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": 56,
+      "source_id": "supervisor",
+      "target_id": "meta-agent",
+      "type": "CONTROLS",
+      "label": "spawns + manages",
+      "metadata": null
+    },
+    {
+      "id": 57,
+      "source_id": "supervisor",
+      "target_id": "worker",
+      "type": "CONTROLS",
+      "label": "spawns + manages",
+      "metadata": null
+    },
+    {
+      "id": 58,
+      "source_id": "supervisor",
+      "target_id": "live-dashboard",
+      "type": "CONTROLS",
+      "label": "spawns",
+      "metadata": null
+    },
+    {
+      "id": 59,
+      "source_id": "meta-agent",
+      "target_id": "worker",
+      "type": "DISPATCHES_TO",
+      "label": "phase-locked tasks",
+      "metadata": null
+    },
+    {
+      "id": 60,
+      "source_id": "worker",
+      "target_id": "meta-agent",
+      "type": "ESCALATES_TO",
+      "label": "via state store",
+      "metadata": null
+    },
+    {
+      "id": 61,
+      "source_id": "live-dashboard",
+      "target_id": "state-store",
+      "type": "READS_FROM",
+      "label": "goals, tasks, logs",
+      "metadata": null
+    },
+    {
+      "id": 62,
+      "source_id": "live-dashboard",
+      "target_id": "supervisor",
+      "type": "READS_FROM",
+      "label": "health API",
+      "metadata": null
+    },
+    {
+      "id": 63,
+      "source_id": "live-process-view",
+      "target_id": "supervisor",
+      "type": "READS_FROM",
+      "label": "process status",
+      "metadata": null
+    },
+    {
+      "id": 64,
+      "source_id": "goal-task-feed",
+      "target_id": "state-store",
+      "type": "READS_FROM",
+      "label": "goal queue",
+      "metadata": null
+    },
+    {
+      "id": 65,
+      "source_id": "tool-call-timeline",
+      "target_id": "state-store",
+      "type": "READS_FROM",
+      "label": "tool logs",
+      "metadata": null
+    },
+    {
+      "id": 66,
+      "source_id": "security-events",
+      "target_id": "state-store",
+      "type": "READS_FROM",
+      "label": "injection events",
+      "metadata": null
+    },
+    {
+      "id": 67,
+      "source_id": "escalation-queue",
+      "target_id": "state-store",
+      "type": "READS_FROM",
+      "label": "escalations",
+      "metadata": null
+    },
+    {
+      "id": 68,
+      "source_id": "entity-explorer",
+      "target_id": "user-knowledge-graph",
+      "type": "READS_FROM",
+      "label": "entities",
+      "metadata": null
+    },
+    {
+      "id": 69,
+      "source_id": "repo-map",
+      "target_id": "rpg-code-graph",
+      "type": "READS_FROM",
+      "label": "code structure",
+      "metadata": null
+    },
+    {
+      "id": 70,
+      "source_id": "meta-agent",
+      "target_id": "state-store",
+      "type": "READS_FROM",
+      "label": "worker progress",
+      "metadata": null
+    },
+    {
+      "id": 71,
+      "source_id": "meta-agent",
+      "target_id": "state-store",
+      "type": "WRITES_TO",
+      "label": "goals, tasks",
+      "metadata": null
+    },
+    {
+      "id": 72,
+      "source_id": "meta-agent",
+      "target_id": "user-knowledge-graph",
+      "type": "READS_FROM",
+      "label": "preferences",
+      "metadata": null
+    },
+    {
+      "id": 73,
+      "source_id": "meta-agent",
+      "target_id": "user-knowledge-graph",
+      "type": "WRITES_TO",
+      "label": "inferred entities",
+      "metadata": null
+    },
+    {
+      "id": 74,
+      "source_id": "meta-agent",
+      "target_id": "rpg-code-graph",
+      "type": "READS_FROM",
+      "label": "repo structure",
+      "metadata": null
+    },
+    {
+      "id": 75,
+      "source_id": "meta-agent",
+      "target_id": "rpg-code-graph",
+      "type": "WRITES_TO",
+      "label": "annotations",
+      "metadata": null
+    },
+    {
+      "id": 76,
+      "source_id": "worker",
+      "target_id": "state-store",
+      "type": "READS_FROM",
+      "label": "task dispatch",
+      "metadata": null
+    },
+    {
+      "id": 77,
+      "source_id": "worker",
+      "target_id": "user-knowledge-graph",
+      "type": "READS_FROM",
+      "label": "preferences (read-only)",
+      "metadata": null
+    },
+    {
+      "id": 78,
+      "source_id": "worker",
+      "target_id": "rpg-code-graph",
+      "type": "READS_FROM",
+      "label": "code structure (read-only)",
+      "metadata": null
+    },
+    {
+      "id": 79,
+      "source_id": "checkpointer",
+      "target_id": "state-store",
+      "type": "WRITES_TO",
+      "label": "tool logs, checkpoints",
+      "metadata": null
+    },
+    {
+      "id": 80,
+      "source_id": "checkpointer",
+      "target_id": "rpg-code-graph",
+      "type": "WRITES_TO",
+      "label": "incremental AST updates",
+      "metadata": null
+    },
+    {
+      "id": 81,
+      "source_id": "context-rebuilder",
+      "target_id": "state-store",
+      "type": "READS_FROM",
+      "label": "checkpoints",
+      "metadata": null
+    },
+    {
+      "id": 82,
+      "source_id": "context-rebuilder",
+      "target_id": "user-knowledge-graph",
+      "type": "READS_FROM",
+      "label": "relevant context",
+      "metadata": null
+    },
+    {
+      "id": 83,
+      "source_id": "context-rebuilder",
+      "target_id": "rpg-code-graph",
+      "type": "READS_FROM",
+      "label": "relevant context",
+      "metadata": null
+    },
+    {
+      "id": 84,
+      "source_id": "meta-agent",
+      "target_id": "mcp-proxy-meta",
+      "type": "DEPENDS_ON",
+      "label": "tool access",
+      "metadata": null
+    },
+    {
+      "id": 85,
+      "source_id": "worker",
+      "target_id": "mcp-proxy-worker",
+      "type": "DEPENDS_ON",
+      "label": "tool access",
+      "metadata": null
+    },
+    {
+      "id": 86,
+      "source_id": "sanitiser",
+      "target_id": "mcp-proxy-worker",
+      "type": "SANITISES",
+      "label": "all external I/O",
+      "metadata": null
+    },
+    {
+      "id": 87,
+      "source_id": "mcp-proxy-worker",
+      "target_id": "tool-search",
+      "type": "PROXIES",
+      "label": null,
+      "metadata": null
+    },
+    {
+      "id": 88,
+      "source_id": "mcp-proxy-worker",
+      "target_id": "tool-email",
+      "type": "PROXIES",
+      "label": null,
+      "metadata": null
+    },
+    {
+      "id": 89,
+      "source_id": "mcp-proxy-worker",
+      "target_id": "tool-database",
+      "type": "PROXIES",
+      "label": null,
+      "metadata": null
+    },
+    {
+      "id": 90,
+      "source_id": "mcp-proxy-worker",
+      "target_id": "tool-filesystem",
+      "type": "PROXIES",
+      "label": null,
+      "metadata": null
+    },
+    {
+      "id": 91,
+      "source_id": "mcp-proxy-worker",
+      "target_id": "tool-code-exec",
+      "type": "PROXIES",
+      "label": null,
+      "metadata": null
+    },
+    {
+      "id": 92,
+      "source_id": "mcp-proxy-worker",
+      "target_id": "tool-custom",
+      "type": "PROXIES",
+      "label": null,
+      "metadata": null
+    },
+    {
+      "id": 93,
+      "source_id": "alert-pipeline",
+      "target_id": "state-store",
+      "type": "WRITES_TO",
+      "label": "security events",
+      "metadata": null
+    },
+    {
+      "id": 94,
+      "source_id": "alert-pipeline",
+      "target_id": "meta-agent",
+      "type": "DISPATCHES_TO",
+      "label": "auto-disable alerts",
+      "metadata": null
+    },
+    {
+      "id": 95,
+      "source_id": "human-gate",
+      "target_id": "fast-path",
+      "type": "GATES",
+      "label": "approve/reject",
+      "metadata": null
+    },
+    {
+      "id": 96,
+      "source_id": "human-gate",
+      "target_id": "full-path",
+      "type": "GATES",
+      "label": "approve/reject",
+      "metadata": null
+    },
+    {
+      "id": 97,
+      "source_id": "human-gate",
+      "target_id": "gated-path",
+      "type": "GATES",
+      "label": "blocks until approved",
+      "metadata": null
+    },
+    {
+      "id": 98,
+      "source_id": "fast-path",
+      "target_id": "worker",
+      "type": "DISPATCHES_TO",
+      "label": "direct",
+      "metadata": null
+    },
+    {
+      "id": 99,
+      "source_id": "full-path",
+      "target_id": "meta-agent",
+      "type": "DISPATCHES_TO",
+      "label": "for decomposition",
+      "metadata": null
+    },
+    {
+      "id": 100,
+      "source_id": "phase-feature",
+      "target_id": "phase-steps",
+      "type": "SEQUENCE",
+      "label": "commit → gate",
+      "metadata": null
+    },
+    {
+      "id": 101,
+      "source_id": "phase-steps",
+      "target_id": "phase-units",
+      "type": "SEQUENCE",
+      "label": "commit → gate",
+      "metadata": null
+    },
+    {
+      "id": 102,
+      "source_id": "phase-units",
+      "target_id": "phase-red",
+      "type": "SEQUENCE",
+      "label": "commit → gate",
+      "metadata": null
+    },
+    {
+      "id": 103,
+      "source_id": "phase-red",
+      "target_id": "phase-green",
+      "type": "SEQUENCE",
+      "label": "commit → gate",
+      "metadata": null
+    },
+    {
+      "id": 104,
+      "source_id": "phase-green",
+      "target_id": "phase-refactor",
+      "type": "SEQUENCE",
+      "label": "commit → gate",
+      "metadata": null
+    },
+    {
+      "id": 105,
+      "source_id": "phase-refactor",
+      "target_id": "phase-arch-review",
+      "type": "SEQUENCE",
+      "label": "commit → gate",
+      "metadata": null
+    },
+    {
+      "id": 106,
+      "source_id": "phase-arch-review",
+      "target_id": "phase-sec-review",
+      "type": "SEQUENCE",
+      "label": "commit → gate",
+      "metadata": null
+    }
+  ],
+  "stats": {
+    "total_nodes": 66,
+    "total_edges": 106,
+    "total_versions": 103,
+    "total_features": 11
+  }
+}
