@@ -232,7 +232,7 @@ function renderProgressBadge(version) {
 }
 
 function renderVersionStrip(node) {
-  const versions = ['overview','mvp','v1','v2'];
+  const versions = ['mvp','v1','v2'];
   const active = expandedNodes[node.id] || null;
 
   return `<div class="version-strip">${versions.map(v => {
@@ -290,7 +290,7 @@ function renderBox(node, extraClass) {
 
   return `
     <div class="box b-${c} ${isExpanded ? 'expanded' : ''} ${extraClass || ''}" id="box-${node.id}">
-      <div class="t" onclick="toggleVersion('${node.id}','overview',event)">
+      <div class="t" onclick="toggleVersion('${node.id}','mvp',event)">
         <span class="ic">${node.icon || '?'}</span>
         ${escapeHtml(node.name)}
         ${renderProgressBadge(getBestVersion(node))}
@@ -305,7 +305,7 @@ function renderBox(node, extraClass) {
 
 function getBestVersion(node) {
   const vers = node.versions || {};
-  return vers.v2 || vers.v1 || vers.mvp || vers.overview || null;
+  return vers.v2 || vers.v1 || vers.mvp || null;
 }
 
 function getOverviewText(node) {
@@ -413,7 +413,7 @@ function renderPipeline(layer) {
           return `
             ${i > 0 ? '<span class="phase-arrow">→</span>' : ''}
             <span class="phase"
-                  onclick="toggleVersion('${p.id}','overview',event)"
+                  onclick="toggleVersion('${p.id}','mvp',event)"
                   style="color:${COLORS[pc]};border-color:${COLORS[pc]}33;background:${COLORS[pc]}0f;">${escapeHtml(p.name)}</span>
           `;
         }).join('')}
