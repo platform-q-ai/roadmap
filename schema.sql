@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS nodes (
     color       TEXT,
     icon        TEXT,
     description TEXT,
+    tags        TEXT,                     -- JSON array of tag strings
     sort_order  INTEGER DEFAULT 0
 );
 

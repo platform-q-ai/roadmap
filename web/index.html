@@ -81,6 +81,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .b-rose .t{color:var(--rose);} .b-rose .ic{background:rgba(251,113,133,0.12);} .b-rose{border-color:rgba(251,113,133,0.18);}
 .b-indigo .t{color:var(--indigo);} .b-indigo .ic{background:rgba(129,140,248,0.12);} .b-indigo{border-color:rgba(129,140,248,0.18);}
 
+/* ─── Tags ────────────────────────────────────────────── */
+.tag-row{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
+.tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9px;padding:1px 5px;border-radius:2px;font-weight:500;}
+.tag-default{background:rgba(255,255,255,0.04);color:var(--text-muted);border:1px solid rgba(255,255,255,0.06);}
+.tag-new{background:rgba(163,230,53,0.1);color:var(--lime);border:1px solid rgba(163,230,53,0.2);}
+
 /* ─── Version Toggle ──────────────────────────────────── */
 .version-strip{display:flex;gap:0;margin-top:8px;border-radius:4px;overflow:hidden;border:1px solid var(--border);width:fit-content;}
 .version-btn{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;padding:5px 12px;background:var(--surface);color:var(--text-muted);border:none;cursor:pointer;transition:all 0.12s ease;display:flex;align-items:center;gap:4px;border-right:1px solid var(--border);}
@@ -269,6 +275,15 @@ function renderVersionContent(node) {
   return html;
 }
 
+function renderTags(node) {
+  let tags = [];
+  try { tags = typeof node.tags === 'string' ? JSON.parse(node.tags) : (node.tags || []); } catch(e) {}
+  if (!tags || tags.length === 0) return '';
+  return `<div class="tag-row">${tags.map(t =>
+    `<span class="tag ${t === 'new' ? 'tag-new' : 'tag-default'}">${escapeHtml(t)}</span>`
+  ).join('')}</div>`;
+}
+
 function renderBox(node, extraClass) {
   const c = node.color || 'blue';
   const isExpanded = expandedNodes[node.id];
@@ -281,6 +296,7 @@ function renderBox(node, extraClass) {
         ${renderProgressBadge(getBestVersion(node))}
       </div>
       <div class="d">${escapeHtml(getOverviewText(node))}</div>
+      ${!isExpanded ? renderTags(node) : ''}
       ${isExpanded ? renderVersionStrip(node) : ''}
       ${isExpanded ? renderVersionContent(node) : ''}
     </div>
