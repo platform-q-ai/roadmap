@@ -11,7 +11,7 @@ import {
   DrizzleEdgeRepository,
   DrizzleNodeRepository,
   DrizzleVersionRepository,
-} from '../../infrastructure/drizzle/index.js';
+} from '../../infrastructure/index.js';
 import { CreateComponent } from '../../use-cases/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

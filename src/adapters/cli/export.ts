@@ -12,7 +12,7 @@ import {
   DrizzleFeatureRepository,
   DrizzleNodeRepository,
   DrizzleVersionRepository,
-} from '../../infrastructure/drizzle/index.js';
+} from '../../infrastructure/index.js';
 import type { ArchitectureData } from '../../use-cases/index.js';
 import { ExportArchitecture } from '../../use-cases/index.js';
 

@@ -10,7 +10,7 @@ import {
   createDrizzleConnection,
   DrizzleNodeRepository,
   DrizzleVersionRepository,
-} from '../../infrastructure/drizzle/index.js';
+} from '../../infrastructure/index.js';
 import { UpdateProgress } from '../../use-cases/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

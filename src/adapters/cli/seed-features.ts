@@ -10,7 +10,7 @@ import {
   createDrizzleConnection,
   DrizzleFeatureRepository,
   DrizzleNodeRepository,
-} from '../../infrastructure/drizzle/index.js';
+} from '../../infrastructure/index.js';
 import type { FeatureFileInput } from '../../use-cases/index.js';
 import { SeedFeatures } from '../../use-cases/index.js';
 

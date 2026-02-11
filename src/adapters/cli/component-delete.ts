@@ -12,7 +12,7 @@ import {
   DrizzleFeatureRepository,
   DrizzleNodeRepository,
   DrizzleVersionRepository,
-} from '../../infrastructure/drizzle/index.js';
+} from '../../infrastructure/index.js';
 import { DeleteComponent } from '../../use-cases/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
