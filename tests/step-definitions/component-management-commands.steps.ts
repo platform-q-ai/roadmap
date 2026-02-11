@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Given, Then, When } from '@cucumber/cucumber';
@@ -409,6 +409,29 @@ Then(
         `Command ${cmd} does not reference "${placeholder}"`
       );
     }
+  }
+);
+
+// ─── Then (Command files must not use raw sqlite3) ──────────────────
+
+Then(
+  'no command file contains a raw {string} CLI invocation',
+  function (this: World, forbidden: string) {
+    const commandsDir = join(process.cwd(), '.opencode', 'commands');
+    const files = readdirSync(commandsDir).filter(f => f.endsWith('.md'));
+    const violations: string[] = [];
+    for (const file of files) {
+      const content = readFileSync(join(commandsDir, file), 'utf-8');
+      if (content.includes(forbidden)) {
+        violations.push(file);
+      }
+    }
+    assert.equal(
+      violations.length,
+      0,
+      `Command files contain raw "${forbidden}" references: ${violations.join(', ')}. ` +
+        'Commands should use CLI adapters, not direct database access.'
+    );
   }
 );
 
