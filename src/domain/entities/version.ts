@@ -50,6 +50,13 @@ export class Version {
   };
 
   /**
+   * Check whether a version tag is a recognised phase tag (mvp, v1, v2).
+   */
+  static isPhaseTag(tag: string): boolean {
+    return tag in Version.PHASE_MAJOR;
+  }
+
+  /**
    * Derive phase progress from a node's current_version semver string.
    *
    * Each version tag (mvp, v1, v2) maps to a major version number.

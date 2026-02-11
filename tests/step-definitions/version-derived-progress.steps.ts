@@ -2,19 +2,14 @@ import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
-import type { Edge } from '../../src/domain/entities/edge.js';
 import { Node } from '../../src/domain/entities/node.js';
 import { Version } from '../../src/domain/entities/version.js';
 import type { ArchitectureData } from '../../src/use-cases/get-architecture.js';
-import { GetArchitecture } from '../../src/use-cases/get-architecture.js';
-import { buildRepos } from '../helpers/build-repos.js';
 
 interface World {
   node: Node;
   nodes: Node[];
-  edges: Edge[];
   versions: Version[];
-  features: never[];
   derivedProgress: number;
   derivedStatus: string;
   result: ArchitectureData;
@@ -37,8 +32,6 @@ Given('a node with no current_version', function (this: World) {
 });
 
 When('I derive phase progress for version {string}', function (this: World, versionTag: string) {
-  // This calls Version.deriveProgress(currentVersion, versionTag)
-  // which does not exist yet — will fail RED
   this.derivedProgress = Version.deriveProgress(this.node.current_version, versionTag);
   this.derivedStatus = Version.deriveStatus(this.derivedProgress);
 });

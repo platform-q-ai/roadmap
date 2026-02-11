@@ -128,10 +128,9 @@ export class GetArchitecture {
     const result: Record<string, VersionSummary> = {};
     for (const [tag, summary] of Object.entries(versions)) {
       const derived = Version.deriveProgress(currentVersion, tag);
-      if (derived > 0 || tag === 'mvp' || tag === 'v1' || tag === 'v2') {
-        const progress = derived;
-        const status = Version.deriveStatus(progress);
-        result[tag] = { ...summary, progress, status };
+      const isPhaseTag = derived > 0 || Version.isPhaseTag(tag);
+      if (isPhaseTag) {
+        result[tag] = { ...summary, progress: derived, status: Version.deriveStatus(derived) };
       } else {
         result[tag] = summary;
       }
