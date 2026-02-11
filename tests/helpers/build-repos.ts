@@ -4,14 +4,16 @@
  * Builds mock repositories backed by arrays, suitable for Cucumber worlds
  * that hold nodes[], edges[], versions[], features[].
  */
-import type { Edge } from '../../src/domain/entities/edge.js';
-import type { Feature } from '../../src/domain/entities/feature.js';
-import type { Node } from '../../src/domain/entities/node.js';
-import type { Version } from '../../src/domain/entities/version.js';
-import type { IEdgeRepository } from '../../src/domain/repositories/edge-repository.js';
-import type { IFeatureRepository } from '../../src/domain/repositories/feature-repository.js';
-import type { INodeRepository } from '../../src/domain/repositories/node-repository.js';
-import type { IVersionRepository } from '../../src/domain/repositories/version-repository.js';
+import type {
+  Edge,
+  Feature,
+  IEdgeRepository,
+  IFeatureRepository,
+  INodeRepository,
+  IVersionRepository,
+  Node,
+  Version,
+} from '../../src/domain/index.js';
 
 export interface InMemoryWorld {
   nodes: Node[];
