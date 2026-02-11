@@ -1,17 +1,20 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import type {
+  CreateComponentInput,
   IEdgeRepository,
   IFeatureRepository,
   INodeRepository,
   IVersionRepository,
+  NodeType,
+  VersionStatus,
 } from '../../use-cases/index.js';
 import {
   CreateComponent,
   DeleteComponent,
-  Feature,
   GetArchitecture,
   UpdateProgress,
+  UploadFeature,
 } from '../../use-cases/index.js';
 
 export interface ApiDeps {
@@ -70,235 +73,273 @@ function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-function buildCreateInput(body: Record<string, unknown>) {
+const VALID_NODE_TYPES: readonly string[] = [
+  'layer',
+  'component',
+  'store',
+  'external',
+  'phase',
+  'app',
+];
+
+const VALID_STATUSES: readonly string[] = ['planned', 'in-progress', 'complete'];
+
+function parseCreateInput(body: Record<string, unknown>): CreateComponentInput | null {
   const { id, name, type, layer, description, tags } = body;
+  if (!id || !name || !type || !layer) {
+    return null;
+  }
+  const typeStr = String(type);
+  if (!VALID_NODE_TYPES.includes(typeStr)) {
+    return null;
+  }
   return {
     id: String(id),
     name: String(name),
-    type: String(type),
+    type: typeStr as NodeType,
     layer: String(layer),
     description: description ? String(description) : undefined,
     tags: Array.isArray(tags) ? tags.map(String) : undefined,
   };
 }
 
-export function buildRoutes(deps: ApiDeps): Route[] {
-  const { nodeRepo, edgeRepo, versionRepo, featureRepo } = deps;
+function parseProgressInput(body: Record<string, unknown>): {
+  progress: number;
+  status: VersionStatus;
+} | null {
+  const progress = Number(body.progress);
+  const status = String(body.status ?? '');
+  if (isNaN(progress) || !VALID_STATUSES.includes(status)) {
+    return null;
+  }
+  return { progress, status: status as VersionStatus };
+}
 
+// ─── Route handlers ─────────────────────────────────────────────────
+
+function handleHealth(_req: IncomingMessage, res: ServerResponse) {
+  json(res, 200, { status: 'ok' });
+}
+
+async function handleGetArchitecture(deps: ApiDeps, _req: IncomingMessage, res: ServerResponse) {
+  const uc = new GetArchitecture(deps);
+  const data = await uc.execute();
+  json(res, 200, data);
+}
+
+async function handleListComponents(deps: ApiDeps, _req: IncomingMessage, res: ServerResponse) {
+  const all = await deps.nodeRepo.findAll();
+  const components = all.filter(n => !n.isLayer());
+  json(
+    res,
+    200,
+    components.map(n => n.toJSON())
+  );
+}
+
+async function handleGetComponent(deps: ApiDeps, res: ServerResponse, id: string) {
+  const node = await deps.nodeRepo.findById(id);
+  if (!node) {
+    json(res, 404, { error: `Component not found: ${id}` });
+    return;
+  }
+  const versions = await deps.versionRepo.findByNode(id);
+  const features = await deps.featureRepo.findByNode(id);
+  json(res, 200, {
+    ...node.toJSON(),
+    versions: versions.map(v => v.toJSON()),
+    features: features.map(f => f.toJSON()),
+  });
+}
+
+async function handleCreateComponent(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
+  const raw = await readBody(req);
+  const body = parseJsonBody(raw);
+  if (!body) {
+    json(res, 400, { error: 'Invalid JSON body' });
+    return;
+  }
+  const input = parseCreateInput(body);
+  if (!input) {
+    json(res, 400, { error: 'Missing or invalid fields: id, name, type, layer' });
+    return;
+  }
+  const uc = new CreateComponent({
+    nodeRepo: deps.nodeRepo,
+    edgeRepo: deps.edgeRepo,
+    versionRepo: deps.versionRepo,
+  });
+  try {
+    await uc.execute(input);
+    json(res, 201, { id: input.id, name: input.name, type: input.type, layer: input.layer });
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg });
+  }
+}
+
+async function handleDeleteComponent(deps: ApiDeps, res: ServerResponse, id: string) {
+  const uc = new DeleteComponent(deps);
+  try {
+    await uc.execute(id);
+    res.writeHead(204);
+    res.end();
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg });
+  }
+}
+
+async function handleUpdateProgress(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  params: { nodeId: string; version: string }
+) {
+  const raw = await readBody(req);
+  const body = parseJsonBody(raw);
+  if (!body) {
+    json(res, 400, { error: 'Invalid JSON body' });
+    return;
+  }
+  const input = parseProgressInput(body);
+  if (!input) {
+    json(res, 400, { error: 'Missing or invalid fields: progress, status' });
+    return;
+  }
+  const uc = new UpdateProgress({ versionRepo: deps.versionRepo, nodeRepo: deps.nodeRepo });
+  try {
+    await uc.execute(params.nodeId, params.version, input.progress, input.status);
+    json(res, 200, {
+      nodeId: params.nodeId,
+      version: params.version,
+      progress: input.progress,
+      status: input.status,
+    });
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg });
+  }
+}
+
+async function handleGetFeatures(deps: ApiDeps, res: ServerResponse, id: string) {
+  const node = await deps.nodeRepo.findById(id);
+  if (!node) {
+    json(res, 404, { error: `Component not found: ${id}` });
+    return;
+  }
+  const features = await deps.featureRepo.findByNode(id);
+  json(
+    res,
+    200,
+    features.map(f => f.toJSON())
+  );
+}
+
+async function handleUploadFeature(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  params: { nodeId: string; filename: string }
+) {
+  const content = await readBody(req);
+  const uc = new UploadFeature({ featureRepo: deps.featureRepo, nodeRepo: deps.nodeRepo });
+  try {
+    const result = await uc.execute({ nodeId: params.nodeId, filename: params.filename, content });
+    json(res, 200, result);
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg });
+  }
+}
+
+async function handleGetEdges(deps: ApiDeps, res: ServerResponse, id: string) {
+  const node = await deps.nodeRepo.findById(id);
+  if (!node) {
+    json(res, 404, { error: `Component not found: ${id}` });
+    return;
+  }
+  const inbound = await deps.edgeRepo.findByTarget(id);
+  const outbound = await deps.edgeRepo.findBySource(id);
+  json(res, 200, {
+    inbound: inbound.map(e => e.toJSON()),
+    outbound: outbound.map(e => e.toJSON()),
+  });
+}
+
+async function handleGetDependencies(deps: ApiDeps, res: ServerResponse, id: string) {
+  const node = await deps.nodeRepo.findById(id);
+  if (!node) {
+    json(res, 404, { error: `Component not found: ${id}` });
+    return;
+  }
+  const outbound = await deps.edgeRepo.findBySource(id);
+  const inbound = await deps.edgeRepo.findByTarget(id);
+  const dependencies = outbound.filter(e => e.type === 'DEPENDS_ON').map(e => e.toJSON());
+  const dependents = inbound.filter(e => e.type === 'DEPENDS_ON').map(e => e.toJSON());
+  json(res, 200, { dependencies, dependents });
+}
+
+// ─── Route table ────────────────────────────────────────────────────
+
+export function buildRoutes(deps: ApiDeps): Route[] {
   return [
-    // GET /api/health
     {
       method: 'GET',
       pattern: /^\/api\/health$/,
-      handler: async (_req, res) => {
-        json(res, 200, { status: 'ok' });
-      },
+      handler: async (req, res) => handleHealth(req, res),
     },
-
-    // GET /api/architecture
     {
       method: 'GET',
       pattern: /^\/api\/architecture$/,
-      handler: async (_req, res) => {
-        const uc = new GetArchitecture({ nodeRepo, edgeRepo, versionRepo, featureRepo });
-        const data = await uc.execute();
-        json(res, 200, data);
-      },
+      handler: async (req, res) => handleGetArchitecture(deps, req, res),
     },
-
-    // GET /api/components
     {
       method: 'GET',
       pattern: /^\/api\/components$/,
-      handler: async (_req, res) => {
-        const all = await nodeRepo.findAll();
-        const components = all.filter(n => !n.isLayer());
-        json(
-          res,
-          200,
-          components.map(n => n.toJSON())
-        );
-      },
+      handler: async (req, res) => handleListComponents(deps, req, res),
     },
-
-    // GET /api/components/:id
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)$/,
-      handler: async (_req, res, match) => {
-        const id = match[1];
-        const node = await nodeRepo.findById(id);
-        if (!node) {
-          json(res, 404, { error: `Component not found: ${id}` });
-          return;
-        }
-        const versions = await versionRepo.findByNode(id);
-        const features = await featureRepo.findByNode(id);
-        json(res, 200, {
-          ...node.toJSON(),
-          versions: versions.map(v => v.toJSON()),
-          features: features.map(f => f.toJSON()),
-        });
-      },
+      handler: async (_req, res, m) => handleGetComponent(deps, res, m[1]),
     },
-
-    // POST /api/components
     {
       method: 'POST',
       pattern: /^\/api\/components$/,
-      handler: async (req, res) => {
-        const raw = await readBody(req);
-        const body = parseJsonBody(raw);
-        if (!body) {
-          json(res, 400, { error: 'Invalid JSON body' });
-          return;
-        }
-        if (!body.id || !body.name || !body.type || !body.layer) {
-          json(res, 400, { error: 'Missing required fields: id, name, type, layer' });
-          return;
-        }
-        const input = buildCreateInput(body);
-        const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
-        try {
-          await uc.execute(input as Parameters<typeof uc.execute>[0]);
-          json(res, 201, { id: input.id, name: input.name, type: input.type, layer: input.layer });
-        } catch (err) {
-          const msg = errorMessage(err);
-          json(res, errorStatus(msg), { error: msg });
-        }
-      },
+      handler: async (req, res) => handleCreateComponent(deps, req, res),
     },
-
-    // DELETE /api/components/:id
     {
       method: 'DELETE',
       pattern: /^\/api\/components\/([^/]+)$/,
-      handler: async (_req, res, match) => {
-        const id = match[1];
-        const uc = new DeleteComponent({ nodeRepo, edgeRepo, versionRepo, featureRepo });
-        try {
-          await uc.execute(id);
-          res.writeHead(204);
-          res.end();
-        } catch (err) {
-          const msg = errorMessage(err);
-          json(res, errorStatus(msg), { error: msg });
-        }
-      },
+      handler: async (_req, res, m) => handleDeleteComponent(deps, res, m[1]),
     },
-
-    // PATCH /api/components/:id/versions/:version/progress
     {
       method: 'PATCH',
       pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)\/progress$/,
-      handler: async (req, res, match) => {
-        const [, nodeId, version] = match;
-        const raw = await readBody(req);
-        const body = parseJsonBody(raw);
-        if (!body) {
-          json(res, 400, { error: 'Invalid JSON body' });
-          return;
-        }
-        const progress = Number(body.progress);
-        const status = String(body.status ?? '');
-        if (isNaN(progress) || !status) {
-          json(res, 400, { error: 'Missing required fields: progress, status' });
-          return;
-        }
-        const uc = new UpdateProgress({ versionRepo, nodeRepo });
-        try {
-          await uc.execute(nodeId, version, progress, status as Parameters<typeof uc.execute>[3]);
-          json(res, 200, { nodeId, version, progress, status });
-        } catch (err) {
-          const msg = errorMessage(err);
-          json(res, errorStatus(msg), { error: msg });
-        }
-      },
+      handler: async (req, res, m) =>
+        handleUpdateProgress(deps, req, res, { nodeId: m[1], version: m[2] }),
     },
-
-    // GET /api/components/:id/features
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)\/features$/,
-      handler: async (_req, res, match) => {
-        const id = match[1];
-        const node = await nodeRepo.findById(id);
-        if (!node) {
-          json(res, 404, { error: `Component not found: ${id}` });
-          return;
-        }
-        const features = await featureRepo.findByNode(id);
-        json(
-          res,
-          200,
-          features.map(f => f.toJSON())
-        );
-      },
+      handler: async (_req, res, m) => handleGetFeatures(deps, res, m[1]),
     },
-
-    // PUT /api/components/:id/features/:filename
     {
       method: 'PUT',
       pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
-      handler: async (req, res, match) => {
-        const [, nodeId, filename] = match;
-        const node = await nodeRepo.findById(nodeId);
-        if (!node) {
-          json(res, 404, { error: `Component not found: ${nodeId}` });
-          return;
-        }
-        const content = await readBody(req);
-        const version = Feature.versionFromFilename(filename);
-        const title = Feature.titleFromContent(content, filename);
-        const feature = new Feature({
-          node_id: nodeId,
-          version,
-          filename,
-          title,
-          content,
-        });
-        await featureRepo.save(feature);
-        json(res, 200, { filename, version, title, node_id: nodeId });
-      },
+      handler: async (req, res, m) =>
+        handleUploadFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
     },
-
-    // GET /api/components/:id/edges
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)\/edges$/,
-      handler: async (_req, res, match) => {
-        const id = match[1];
-        const node = await nodeRepo.findById(id);
-        if (!node) {
-          json(res, 404, { error: `Component not found: ${id}` });
-          return;
-        }
-        const inbound = await edgeRepo.findByTarget(id);
-        const outbound = await edgeRepo.findBySource(id);
-        json(res, 200, {
-          inbound: inbound.map(e => e.toJSON()),
-          outbound: outbound.map(e => e.toJSON()),
-        });
-      },
+      handler: async (_req, res, m) => handleGetEdges(deps, res, m[1]),
     },
-
-    // GET /api/components/:id/dependencies
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)\/dependencies$/,
-      handler: async (_req, res, match) => {
-        const id = match[1];
-        const node = await nodeRepo.findById(id);
-        if (!node) {
-          json(res, 404, { error: `Component not found: ${id}` });
-          return;
-        }
-        const outbound = await edgeRepo.findBySource(id);
-        const inbound = await edgeRepo.findByTarget(id);
-        const dependencies = outbound.filter(e => e.type === 'DEPENDS_ON').map(e => e.toJSON());
-        const dependents = inbound.filter(e => e.type === 'DEPENDS_ON').map(e => e.toJSON());
-        json(res, 200, { dependencies, dependents });
-      },
+      handler: async (_req, res, m) => handleGetDependencies(deps, res, m[1]),
     },
   ];
 }

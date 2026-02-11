@@ -96,12 +96,11 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
-  // API adapter overrides — entry point needs console, route builder exceeds function length
+  // API adapter overrides — entry point needs console output
   {
-    files: ['src/adapters/api/**/*.ts'],
+    files: ['src/adapters/api/start.ts'],
     rules: {
       'no-console': 'off',
-      'max-lines-per-function': 'off',
     },
   },
   // Test file overrides
