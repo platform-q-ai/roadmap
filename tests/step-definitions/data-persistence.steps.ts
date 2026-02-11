@@ -265,7 +265,7 @@ Given(
   function (this: World, nodeId: string, version: string, filename: string) {
     this.pendingFeature = new Feature({
       node_id: nodeId,
-      version: version as 'mvp',
+      version,
       filename,
       title: filename.replace('.feature', ''),
       content: `Feature: ${filename}`,

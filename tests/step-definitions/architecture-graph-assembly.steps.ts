@@ -6,12 +6,9 @@ import { Edge } from '../../src/domain/entities/edge.js';
 import { Feature } from '../../src/domain/entities/feature.js';
 import { Node } from '../../src/domain/entities/node.js';
 import { Version } from '../../src/domain/entities/version.js';
-import type { IEdgeRepository } from '../../src/domain/repositories/edge-repository.js';
-import type { IFeatureRepository } from '../../src/domain/repositories/feature-repository.js';
-import type { INodeRepository } from '../../src/domain/repositories/node-repository.js';
-import type { IVersionRepository } from '../../src/domain/repositories/version-repository.js';
 import type { ArchitectureData } from '../../src/use-cases/get-architecture.js';
 import { GetArchitecture } from '../../src/use-cases/get-architecture.js';
+import { buildRepos } from '../helpers/build-repos.js';
 
 interface World {
   nodes: Node[];
@@ -19,46 +16,7 @@ interface World {
   versions: Version[];
   features: Feature[];
   result: ArchitectureData;
-}
-
-function buildRepos(world: World) {
-  const nodeRepo: INodeRepository = {
-    findAll: async () => world.nodes,
-    findById: async (id: string) => world.nodes.find(n => n.id === id) ?? null,
-    findByType: async (type: string) => world.nodes.filter(n => n.type === type),
-    findByLayer: async (layerId: string) => world.nodes.filter(n => n.layer === layerId),
-    exists: async (id: string) => world.nodes.some(n => n.id === id),
-    save: async () => {},
-    delete: async () => {},
-  };
-  const edgeRepo: IEdgeRepository = {
-    findAll: async () => world.edges,
-    findBySource: async (sid: string) => world.edges.filter(e => e.source_id === sid),
-    findByTarget: async (tid: string) => world.edges.filter(e => e.target_id === tid),
-    findByType: async (type: string) => world.edges.filter(e => e.type === type),
-    findRelationships: async () => world.edges.filter(e => !e.isContainment()),
-    save: async () => {},
-    delete: async () => {},
-  };
-  const versionRepo: IVersionRepository = {
-    findAll: async () => world.versions,
-    findByNode: async (nid: string) => world.versions.filter(v => v.node_id === nid),
-    findByNodeAndVersion: async (nid: string, ver: string) =>
-      world.versions.find(v => v.node_id === nid && v.version === ver) ?? null,
-    save: async () => {},
-    updateProgress: async () => {},
-    deleteByNode: async () => {},
-  };
-  const featureRepo: IFeatureRepository = {
-    findAll: async () => world.features,
-    findByNode: async (nid: string) => world.features.filter(f => f.node_id === nid),
-    findByNodeAndVersion: async (nid: string, ver: string) =>
-      world.features.filter(f => f.node_id === nid && f.version === ver),
-    save: async () => {},
-    deleteAll: async () => {},
-    deleteByNode: async () => {},
-  };
-  return { nodeRepo, edgeRepo, versionRepo, featureRepo };
+  [key: string]: unknown;
 }
 
 // ─── Background ─────────────────────────────────────────────────────
@@ -107,7 +65,7 @@ Given(
       this.versions.push(
         new Version({
           node_id: nodeId,
-          version: ver as 'overview' | 'mvp' | 'v1',
+          version: ver,
           content: `Content for ${ver}`,
           progress: 0,
           status: 'planned',
@@ -125,7 +83,7 @@ Given(
     this.features.push(
       new Feature({
         node_id: nodeId,
-        version: version as 'mvp',
+        version,
         filename,
         title: 'Test Feature',
         content: 'Feature: Test Feature',

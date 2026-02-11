@@ -28,8 +28,22 @@ export interface EnrichedNode {
   description: string | null;
   tags: string[];
   sort_order: number;
+  current_version: string | null;
+  display_state: string;
   versions: Record<string, VersionSummary>;
   features: Record<string, FeatureSummary[]>;
+}
+
+interface ProgressionEdge {
+  source_id: string;
+  target_id: string;
+  type: string;
+  label: string | null;
+}
+
+export interface ProgressionTree {
+  nodes: EnrichedNode[];
+  edges: ProgressionEdge[];
 }
 
 export interface ArchitectureData {
@@ -44,6 +58,7 @@ export interface ArchitectureData {
     label: string | null;
     metadata: string | null;
   }>;
+  progression_tree: ProgressionTree;
   stats: {
     total_nodes: number;
     total_edges: number;
@@ -78,6 +93,51 @@ export class GetArchitecture {
     this.featureRepo = featureRepo;
   }
 
+  private buildVersionIndex(
+    versions: Array<{
+      node_id: string;
+      version: string;
+      content: string | null;
+      progress: number;
+      status: string;
+      updated_at: string | null;
+    }>
+  ): Record<string, Record<string, VersionSummary>> {
+    const index: Record<string, Record<string, VersionSummary>> = {};
+    for (const v of versions) {
+      if (!index[v.node_id]) {
+        index[v.node_id] = {};
+      }
+      index[v.node_id][v.version] = {
+        content: v.content,
+        progress: v.progress,
+        status: v.status,
+        updated_at: v.updated_at,
+      };
+    }
+    return index;
+  }
+
+  private buildFeatureIndex(
+    features: Array<{
+      node_id: string;
+      version: string;
+      filename: string;
+      title: string;
+      content: string | null;
+    }>
+  ): Record<string, FeatureSummary[]> {
+    const index: Record<string, FeatureSummary[]> = {};
+    for (const f of features) {
+      const key = `${f.node_id}:${f.version}`;
+      if (!index[key]) {
+        index[key] = [];
+      }
+      index[key].push({ filename: f.filename, title: f.title, content: f.content });
+    }
+    return index;
+  }
+
   async execute(): Promise<ArchitectureData> {
     const [nodes, edges, versions, features] = await Promise.all([
       this.nodeRepo.findAll(),
@@ -86,35 +146,21 @@ export class GetArchitecture {
       this.featureRepo.findAll(),
     ]);
 
-    const versionsByNode: Record<string, Record<string, VersionSummary>> = {};
-    for (const v of versions) {
-      if (!versionsByNode[v.node_id]) {
-        versionsByNode[v.node_id] = {};
-      }
-      versionsByNode[v.node_id][v.version] = {
-        content: v.content,
-        progress: v.progress,
-        status: v.status,
-        updated_at: v.updated_at,
-      };
-    }
-
-    const featuresByNodeVersion: Record<string, FeatureSummary[]> = {};
-    for (const f of features) {
-      const key = `${f.node_id}:${f.version}`;
-      if (!featuresByNodeVersion[key]) {
-        featuresByNodeVersion[key] = [];
-      }
-      featuresByNodeVersion[key].push({
-        filename: f.filename,
-        title: f.title,
-        content: f.content,
-      });
-    }
+    const versionsByNode = this.buildVersionIndex(versions);
+    const featuresByNodeVersion = this.buildFeatureIndex(features);
 
     const enrichedNodes: EnrichedNode[] = nodes.map(n => {
       const nodeFeatures: Record<string, FeatureSummary[]> = {};
-      for (const v of ['mvp', 'v1', 'v2']) {
+      const nodeVersionKeys = Object.keys(versionsByNode[n.id] || {});
+      const allVersionKeys = new Set([...nodeVersionKeys, 'mvp', 'v1', 'v2']);
+
+      for (const fKey of Object.keys(featuresByNodeVersion)) {
+        if (fKey.startsWith(`${n.id}:`)) {
+          allVersionKeys.add(fKey.split(':')[1]);
+        }
+      }
+
+      for (const v of allVersionKeys) {
         const key = `${n.id}:${v}`;
         if (featuresByNodeVersion[key]) {
           nodeFeatures[v] = featuresByNodeVersion[key];
@@ -123,6 +169,7 @@ export class GetArchitecture {
 
       return {
         ...n.toJSON(),
+        display_state: n.displayState(),
         versions: versionsByNode[n.id] || {},
         features: nodeFeatures,
       };
@@ -131,6 +178,7 @@ export class GetArchitecture {
     const layers = nodes.filter(n => n.isLayer());
     const layerGroups = layers.map(layer => ({
       ...layer.toJSON(),
+      display_state: layer.displayState(),
       children: enrichedNodes.filter(n => n.layer === layer.id && n.type !== 'layer'),
       versions: versionsByNode[layer.id] || {},
       features: {} as Record<string, FeatureSummary[]>,
@@ -138,11 +186,28 @@ export class GetArchitecture {
 
     const relationships = edges.filter(e => !e.isContainment()).map(e => e.toJSON());
 
+    const appNodeIds = new Set(nodes.filter(n => n.isApp()).map(n => n.id));
+    const progressionNodes = enrichedNodes.filter(n => appNodeIds.has(n.id));
+    const progressionEdges: ProgressionEdge[] = edges
+      .filter(
+        e => e.type === 'DEPENDS_ON' && appNodeIds.has(e.source_id) && appNodeIds.has(e.target_id)
+      )
+      .map(e => ({
+        source_id: e.source_id,
+        target_id: e.target_id,
+        type: e.type,
+        label: e.label,
+      }));
+
     return {
       generated_at: new Date().toISOString(),
       layers: layerGroups,
       nodes: enrichedNodes,
       edges: relationships,
+      progression_tree: {
+        nodes: progressionNodes,
+        edges: progressionEdges,
+      },
       stats: {
         total_nodes: nodes.length,
         total_edges: edges.length,
