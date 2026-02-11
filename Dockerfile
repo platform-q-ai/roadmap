@@ -7,9 +7,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
 RUN npm run build
 
 EXPOSE 3000
 
+USER node
 CMD ["npm", "start"]

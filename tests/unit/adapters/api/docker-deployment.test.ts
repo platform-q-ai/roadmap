@@ -102,15 +102,15 @@ describe('Dockerfile', () => {
   });
 
   describe('build', () => {
-    it('copies all source files', () => {
+    it('copies all source files with correct ownership', () => {
       const content = readFileSync(dockerfilePath, 'utf-8');
-      expect(content).toContain('COPY . .');
+      expect(content).toMatch(/COPY\s+--chown=node:node\s+\.\s+\./);
     });
 
     it('copies source after npm ci (layer caching)', () => {
       const content = readFileSync(dockerfilePath, 'utf-8');
       const npmCiIndex = content.indexOf('npm ci');
-      const copyAllIndex = content.indexOf('COPY . .');
+      const copyAllIndex = content.indexOf('COPY --chown=node:node . .');
       expect(npmCiIndex).toBeGreaterThan(-1);
       expect(copyAllIndex).toBeGreaterThan(-1);
       expect(npmCiIndex).toBeLessThan(copyAllIndex);
@@ -126,6 +126,11 @@ describe('Dockerfile', () => {
     it('exposes port 3000', () => {
       const content = readFileSync(dockerfilePath, 'utf-8');
       expect(content).toContain('EXPOSE 3000');
+    });
+
+    it('runs as non-root user', () => {
+      const content = readFileSync(dockerfilePath, 'utf-8');
+      expect(content).toMatch(/USER\s+node/);
     });
 
     it('has CMD to start the server', () => {
