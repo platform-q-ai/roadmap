@@ -1,8 +1,7 @@
 import type Database from 'better-sqlite3';
 
-import type { VersionStatus, VersionTag } from '../../domain/entities/version.js';
-import { Version } from '../../domain/entities/version.js';
-import type { IVersionRepository } from '../../domain/repositories/version-repository.js';
+import type { IVersionRepository, VersionStatus, VersionTag } from '../../domain/index.js';
+import { Version } from '../../domain/index.js';
 
 export class SqliteVersionRepository implements IVersionRepository {
   constructor(private readonly db: Database.Database) {}

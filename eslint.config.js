@@ -89,6 +89,13 @@ export default tseslint.config(
       curly: ['error', 'all'],
     },
   },
+  // CLI adapter overrides — entry points that need console output
+  {
+    files: ['src/adapters/cli/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
   // Test file overrides
   {
     files: ['tests/**/*.ts'],

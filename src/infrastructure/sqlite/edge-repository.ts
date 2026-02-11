@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3';
 
-import { Edge } from '../../domain/entities/edge.js';
-import type { IEdgeRepository } from '../../domain/repositories/edge-repository.js';
+import type { IEdgeRepository } from '../../domain/index.js';
+import { Edge } from '../../domain/index.js';
 
 export class SqliteEdgeRepository implements IEdgeRepository {
   constructor(private readonly db: Database.Database) {}

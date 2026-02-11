@@ -11,8 +11,8 @@ import {
   SqliteFeatureRepository,
   SqliteNodeRepository,
 } from '../../infrastructure/sqlite/index.js';
-import type { FeatureFileInput } from '../../use-cases/seed-features.js';
-import { SeedFeatures } from '../../use-cases/seed-features.js';
+import type { FeatureFileInput } from '../../use-cases/index.js';
+import { SeedFeatures } from '../../use-cases/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..', '..');
@@ -56,10 +56,8 @@ const seedFeatures = new SeedFeatures({
 try {
   const featureFiles = scanFeatureFiles();
   const { seeded, skipped } = await seedFeatures.execute(featureFiles);
-  // eslint-disable-next-line no-console
   console.log(`Seeded ${seeded} feature files into database`);
   if (skipped > 0) {
-    // eslint-disable-next-line no-console
     console.log(`  Skipped ${skipped} (node_id not in nodes table)`);
   }
 } finally {

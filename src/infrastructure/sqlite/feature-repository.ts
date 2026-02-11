@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3';
 
-import { Feature } from '../../domain/entities/feature.js';
-import type { IFeatureRepository } from '../../domain/repositories/feature-repository.js';
+import type { IFeatureRepository } from '../../domain/index.js';
+import { Feature } from '../../domain/index.js';
 
 export class SqliteFeatureRepository implements IFeatureRepository {
   constructor(private readonly db: Database.Database) {}

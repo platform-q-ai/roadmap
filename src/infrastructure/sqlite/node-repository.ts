@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3';
 
-import { Node } from '../../domain/entities/node.js';
-import type { INodeRepository } from '../../domain/repositories/node-repository.js';
+import type { INodeRepository } from '../../domain/index.js';
+import { Node } from '../../domain/index.js';
 
 export class SqliteNodeRepository implements INodeRepository {
   constructor(private readonly db: Database.Database) {}

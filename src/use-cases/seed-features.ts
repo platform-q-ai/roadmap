@@ -1,5 +1,5 @@
-import { Feature } from '../domain/entities/feature.js';
 import type { IFeatureRepository, INodeRepository } from '../domain/index.js';
+import { Feature } from '../domain/index.js';
 
 export interface FeatureFileInput {
   nodeId: string;

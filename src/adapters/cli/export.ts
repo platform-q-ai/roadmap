@@ -13,8 +13,8 @@ import {
   SqliteNodeRepository,
   SqliteVersionRepository,
 } from '../../infrastructure/sqlite/index.js';
-import { ExportArchitecture } from '../../use-cases/export-architecture.js';
-import type { ArchitectureData } from '../../use-cases/get-architecture.js';
+import type { ArchitectureData } from '../../use-cases/index.js';
+import { ExportArchitecture } from '../../use-cases/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..', '..');
@@ -37,9 +37,7 @@ const exportArchitecture = new ExportArchitecture({
 
 try {
   const { stats } = await exportArchitecture.execute(OUT_PATH);
-  // eslint-disable-next-line no-console
   console.log(`Exported to ${OUT_PATH}`);
-  // eslint-disable-next-line no-console
   console.log(
     `  ${stats.total_nodes} nodes, ${stats.total_edges} edges, ${stats.total_versions} versions, ${stats.total_features} features`
   );
