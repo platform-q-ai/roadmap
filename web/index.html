@@ -159,14 +159,22 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .tab-content.active{display:block;}
 
 /* ─── Progression Tree ────────────────────────────────── */
-#progression-container{width:100%;height:600px;background:var(--surface);border:1px solid var(--border);border-radius:7px;position:relative;}
-.node-tooltip{position:absolute;background:var(--surface-2);border:1px solid var(--border-accent);border-radius:5px;padding:12px 16px;font-size:12px;max-width:320px;z-index:100;pointer-events:none;display:none;}
-.node-tooltip .tt-name{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px;margin-bottom:4px;}
-.node-tooltip .tt-state{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;}
-.node-tooltip .tt-desc{color:var(--text-dim);line-height:1.5;}
+#progression-container{width:100%;height:600px;background:var(--surface);border:1px solid var(--border);border-radius:7px;position:relative;cursor:pointer;}
 .state-concept{color:var(--text-muted);}
 .state-mvp{color:var(--amber);}
 .state-released{color:var(--green);}
+
+/* ─── Component Dialog ────────────────────────────────── */
+.dialog-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.dialog-overlay.open{display:flex;}
+.dialog-box{background:var(--surface);border:1px solid var(--border-accent);border-radius:8px;width:90%;max-width:640px;max-height:80vh;overflow-y:auto;padding:24px 28px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.dialog-close{position:absolute;top:12px;right:14px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-dim);font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:all 0.12s ease;}
+.dialog-close:hover{color:var(--text);border-color:var(--border-accent);background:var(--surface-2);}
+.dialog-header{margin-bottom:12px;}
+.dialog-header .dialog-title{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px;}
+.dialog-header .dialog-state{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-top:4px;}
+.dialog-header .dialog-desc{font-size:13px;color:var(--text-dim);line-height:1.6;margin-top:8px;}
+.dialog-body{margin-top:12px;}
 
 /* ─── Responsive ──────────────────────────────────────── */
 @media(max-width:900px){
@@ -201,11 +209,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
   <div id="tab-progression" class="tab-content active">
     <div id="progression-container"></div>
-    <div id="node-tooltip" class="node-tooltip"></div>
   </div>
 
   <div id="tab-architecture" class="tab-content">
     <div id="architecture"></div>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="dialog-overlay" onclick="onOverlayClick(event)">
+  <div class="dialog-box" id="dialog-box">
+    <button class="dialog-close" onclick="closeDialog()">&times;</button>
+    <div class="dialog-header" id="dialog-header"></div>
+    <div class="dialog-body" id="dialog-body"></div>
   </div>
 </div>
 
@@ -693,34 +708,119 @@ function renderProgressionTree() {
     autoungrabify: true,
   });
 
-  // Tooltip on hover
-  const tooltip = document.getElementById('node-tooltip');
-
-  cy.on('mouseover', 'node', function(e) {
-    const node = e.target;
-    const data = node.data('nodeData');
-    const vs = node.data('visualState');
-    const stateClass = vs === 'locked' ? 'state-concept' : vs === 'in-progress' ? 'state-mvp' : 'state-released';
-    const pos = e.renderedPosition;
-    const container = document.getElementById('progression-container');
-    const rect = container.getBoundingClientRect();
-
-    tooltip.innerHTML = `
-      <div class="tt-name">${escapeHtml(data.name)}</div>
-      <div class="tt-state ${stateClass}">${escapeHtml(node.data('stateLabel'))}</div>
-      <div class="tt-desc">${escapeHtml(data.description).substring(0, 200)}${data.description.length > 200 ? '...' : ''}</div>
-    `;
-    tooltip.style.display = 'block';
-    tooltip.style.left = (pos.x + rect.left + 80) + 'px';
-    tooltip.style.top = (pos.y + rect.top - 40) + 'px';
-  });
-
-  cy.on('mouseout', 'node', function() {
-    tooltip.style.display = 'none';
+  // Click node to open detail dialog
+  cy.on('tap', 'node', function(e) {
+    const nodeData = e.target.data('nodeData');
+    if (nodeData) openDialog(nodeData.id);
   });
 
   window._cyInitialized = true;
 }
+
+// ─── Component Dialog ─────────────────────────────────────
+let dialogNodeId = null;
+let dialogVersion = null;
+let dialogFeaturesOpen = false;
+
+function openDialog(nodeId) {
+  const node = getNodeById(nodeId);
+  if (!node) return;
+
+  dialogNodeId = nodeId;
+  dialogVersion = dialogVersion && (node.versions || {})[dialogVersion] ? dialogVersion : 'mvp';
+  dialogFeaturesOpen = false;
+
+  renderDialog();
+
+  document.getElementById('dialog-overlay').classList.add('open');
+}
+
+function closeDialog() {
+  document.getElementById('dialog-overlay').classList.remove('open');
+  dialogNodeId = null;
+  dialogVersion = null;
+  dialogFeaturesOpen = false;
+}
+
+function onOverlayClick(event) {
+  if (event.target === document.getElementById('dialog-overlay')) {
+    closeDialog();
+  }
+}
+
+function setDialogVersion(version, event) {
+  if (event) event.stopPropagation();
+  dialogVersion = version;
+  renderDialog();
+}
+
+function toggleDialogFeatures(event) {
+  if (event) event.stopPropagation();
+  dialogFeaturesOpen = !dialogFeaturesOpen;
+  renderDialog();
+}
+
+function renderDialog() {
+  const node = getNodeById(dialogNodeId);
+  if (!node) return;
+
+  const vs = node.display_state || 'Concept';
+  const stateClass = vs === 'Concept' ? 'state-concept' : vs === 'MVP' ? 'state-mvp' : 'state-released';
+  const stateLabel = vs + (node.current_version ? ' ' + node.current_version : '');
+
+  document.getElementById('dialog-header').innerHTML = `
+    <div class="dialog-title" style="color:var(--${node.color || 'blue'})">
+      <span>${node.icon || '?'}</span>
+      ${escapeHtml(node.name)}
+      ${renderProgressBadge(getBestVersion(node))}
+    </div>
+    <div class="dialog-state ${stateClass}">${escapeHtml(stateLabel)}</div>
+    <div class="dialog-desc">${escapeHtml(node.description || '')}</div>
+  `;
+
+  // Version strip
+  const versions = ['mvp','v1','v2'];
+  const stripHtml = `<div class="version-strip">${versions.map(v => {
+    const ver = (node.versions || {})[v];
+    if (!ver) return '';
+    const status = ver.status || 'planned';
+    const isActive = dialogVersion === v;
+    return `<button class="version-btn ${isActive ? 'active status-'+status : ''}" onclick="setDialogVersion('${v}',event)">${v}${ver.progress > 0 ? ' '+ver.progress+'%' : ''}</button>`;
+  }).join('')}</div>`;
+
+  // Version content
+  const activeVer = (node.versions || {})[dialogVersion];
+  let contentHtml = '';
+  if (activeVer) {
+    contentHtml = `<div class="version-content"><p>${escapeHtml(activeVer.content || 'No content yet.')}</p></div>`;
+  }
+
+  // Feature files
+  const features = (node.features || {})[dialogVersion];
+  let featuresHtml = '';
+  if (features && features.length > 0) {
+    featuresHtml = `
+      <div class="features-section">
+        <div class="features-header" onclick="toggleDialogFeatures(event)">
+          <span class="arrow ${dialogFeaturesOpen ? 'open' : ''}">▶</span>
+          ${features.length} feature file${features.length > 1 ? 's' : ''}
+        </div>
+        ${dialogFeaturesOpen ? features.map(f => `
+          <div class="feature-file">
+            <div class="ff-title">${escapeHtml(f.title)}</div>
+            <pre>${escapeHtml(f.content)}</pre>
+          </div>
+        `).join('') : ''}
+      </div>
+    `;
+  }
+
+  document.getElementById('dialog-body').innerHTML = stripHtml + contentHtml + featuresHtml;
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDialog();
+});
 
 // ─── Load Data ───────────────────────────────────────────
 async function init() {
