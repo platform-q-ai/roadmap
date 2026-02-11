@@ -1,8 +1,8 @@
 import { createReadStream, existsSync } from 'node:fs';
 import http from 'node:http';
-import { extname, join, normalize, resolve } from 'node:path';
+import { extname, normalize, resolve } from 'node:path';
 
-import type { ApiDeps } from './routes.js';
+import type { ApiDeps, Route } from './routes.js';
 import { buildRoutes } from './routes.js';
 
 export interface AppOptions {
@@ -50,6 +50,40 @@ function serveStatic(staticDir: string, urlPath: string, res: http.ServerRespons
   return true;
 }
 
+function setCorsHeaders(res: http.ServerResponse): void {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+interface RequestContext {
+  method: string;
+  url: string;
+  req: http.IncomingMessage;
+  res: http.ServerResponse;
+}
+
+async function tryApiRoute(routes: Route[], ctx: RequestContext): Promise<boolean> {
+  for (const route of routes) {
+    if (route.method !== ctx.method) {
+      continue;
+    }
+    const match = ctx.url.match(route.pattern);
+    if (!match) {
+      continue;
+    }
+    try {
+      await route.handler(ctx.req, ctx.res, match);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Internal server error';
+      ctx.res.writeHead(500, { 'Content-Type': 'application/json' });
+      ctx.res.end(JSON.stringify({ error: message }));
+    }
+    return true;
+  }
+  return false;
+}
+
 /**
  * Create an HTTP server with all API routes wired up.
  *
@@ -67,10 +101,7 @@ export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
     const method = req.method ?? 'GET';
     const url = req.url ?? '/';
 
-    // CORS headers for cross-origin LLM tool access
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    setCorsHeaders(res);
 
     if (method === 'OPTIONS') {
       res.writeHead(204);
@@ -78,25 +109,10 @@ export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
       return;
     }
 
-    // API routes take priority
-    for (const route of routes) {
-      if (route.method !== method) {
-        continue;
-      }
-      const match = url.match(route.pattern);
-      if (match) {
-        try {
-          await route.handler(req, res, match);
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Internal server error';
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: message }));
-        }
-        return;
-      }
+    if (await tryApiRoute(routes, { method, url, req, res })) {
+      return;
     }
 
-    // Try static file serving if configured
     if (staticDir && method === 'GET') {
       const urlPath = url.split('?')[0];
       if (serveStatic(staticDir, urlPath, res)) {
@@ -104,7 +120,6 @@ export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
       }
     }
 
-    // No route matched and no static file found
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not found' }));
   });
