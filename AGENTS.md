@@ -532,6 +532,7 @@ After the reviewer leaves comments, the build agent addresses each one:
 
 | Command | Location | Purpose |
 |---------|----------|---------|
+| `/bdd` | `.opencode/commands/bdd.md` | Full BDD red-to-green TDD workflow with enforced phases |
 | `/ship` | `.opencode/commands/ship.md` | Full delivery pipeline: commit, push, PR, review, fix |
 
 ### File Roles (OpenCode)
