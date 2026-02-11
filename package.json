@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Living documentation for the Open Autonomous Runtime architecture",
   "scripts": {
-    "build:db": "sqlite3 db/architecture.db < schema.sql && sqlite3 db/architecture.db < seed.sql",
+    "build:db": "mkdir -p db && sqlite3 db/architecture.db < schema.sql && sqlite3 db/architecture.db < seed.sql",
     "seed:features": "tsx src/adapters/cli/seed-features.ts",
     "export": "tsx src/adapters/cli/export.ts",
     "build:data": "npm run build:db && npm run seed:features && npm run export",
