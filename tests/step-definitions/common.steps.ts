@@ -37,6 +37,9 @@ Given(
     if (!this.edges) {
       this.edges = [];
     }
-    this.edges.push(new Edge({ source_id: source, target_id: target, type: type as EdgeType }));
+    const nextId = this.edges.length + 1;
+    this.edges.push(
+      new Edge({ id: nextId, source_id: source, target_id: target, type: type as EdgeType })
+    );
   }
 );
