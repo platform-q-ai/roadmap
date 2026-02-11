@@ -83,7 +83,7 @@ describe('OpenCode command files', () => {
   });
 });
 
-const API_BASE_URL = 'http://localhost:3000';
+const RENDER_API_BASE_URL = 'https://roadmap-5vvp.onrender.com';
 
 const API_ROUTE_MAP: Record<string, { method: string; path: string }> = {
   'component-create.md': { method: 'POST', path: '/api/components' },
@@ -92,12 +92,21 @@ const API_ROUTE_MAP: Record<string, { method: string; path: string }> = {
   'component-progress.md': { method: 'PATCH', path: '/api/components' },
 };
 
-describe('OpenCode commands use API routes', () => {
-  describe('API base URL', () => {
+describe('OpenCode commands use Render production API', () => {
+  describe('Render API base URL', () => {
     for (const cmd of COMPONENT_COMMANDS) {
-      it(`${cmd} references the API base URL`, () => {
+      it(`${cmd} references the Render production URL`, () => {
         const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
-        expect(content).toContain(API_BASE_URL);
+        expect(content).toContain(RENDER_API_BASE_URL);
+      });
+    }
+  });
+
+  describe('no localhost references', () => {
+    for (const cmd of COMPONENT_COMMANDS) {
+      it(`${cmd} does not reference localhost`, () => {
+        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
+        expect(content).not.toContain('http://localhost:3000');
       });
     }
   });
@@ -111,9 +120,9 @@ describe('OpenCode commands use API routes', () => {
       });
     }
 
-    it('component-publish.md references the API base URL', () => {
+    it('component-publish.md references the Render API base URL', () => {
       const content = readFileSync(join(COMMANDS_DIR, 'component-publish.md'), 'utf-8');
-      expect(content).toContain(API_BASE_URL);
+      expect(content).toContain(RENDER_API_BASE_URL);
     });
   });
 
@@ -133,13 +142,58 @@ describe('OpenCode commands use API routes', () => {
     }
   });
 
-  describe('curl examples', () => {
+  describe('curl examples use Render URL', () => {
     for (const cmd of COMPONENT_COMMANDS) {
-      it(`${cmd} contains a curl example`, () => {
+      it(`${cmd} contains curl examples with Render URL`, () => {
         const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
         expect(content).toContain('curl');
+        expect(content).toContain(RENDER_API_BASE_URL);
       });
     }
+  });
+});
+
+describe('README reflects Render deployment', () => {
+  const readmePath = join(ROOT, 'README.md');
+
+  it('README contains the Render deployment URL', () => {
+    const content = readFileSync(readmePath, 'utf-8');
+    expect(content).toContain('https://roadmap-5vvp.onrender.com');
+  });
+
+  it('README does not reference GitHub Pages URL', () => {
+    const content = readFileSync(readmePath, 'utf-8');
+    expect(content).not.toContain('github.io/roadmap');
+  });
+
+  it('README does not reference GitHub Pages', () => {
+    const content = readFileSync(readmePath, 'utf-8');
+    expect(content).not.toContain('GitHub Pages');
+  });
+
+  it('README does not reference pages.yml', () => {
+    const content = readFileSync(readmePath, 'utf-8');
+    expect(content).not.toContain('pages.yml');
+  });
+
+  it('README deployment section mentions Render', () => {
+    const content = readFileSync(readmePath, 'utf-8');
+    const sections = content.split(/^## /m);
+    const deploySection = sections.find(s => s.startsWith('Deployment'));
+    expect(deploySection).toBeDefined();
+    expect(deploySection).toContain('Render');
+  });
+
+  it('README does not reference CI/CD to GitHub Pages in tech stack', () => {
+    const content = readFileSync(readmePath, 'utf-8');
+    expect(content).not.toContain('CI/CD to GitHub Pages');
+  });
+});
+
+describe('GitHub Pages workflow removed', () => {
+  it('pages.yml does not exist in .github/workflows', () => {
+    const pagesPath = join(ROOT, '.github', 'workflows', 'pages.yml');
+    expect(existsSync(pagesPath)).toBe(false);
   });
 });
 

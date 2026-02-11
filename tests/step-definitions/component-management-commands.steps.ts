@@ -433,7 +433,7 @@ Then(
 
 // ─── Then (Commands use API routes) ──────────────────────────────────
 
-const API_BASE_URL_PATTERN = 'http://localhost:3000';
+const API_BASE_URL_PATTERN = 'https://roadmap-5vvp.onrender.com';
 
 Then(
   'the command file {string} references API route {string} {string}',

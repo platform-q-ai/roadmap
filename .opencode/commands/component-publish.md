@@ -6,19 +6,19 @@ Publish all pending architecture changes to the website.
 
 This command retrieves the current architecture data via the API and writes it to web/data.json, making all component changes visible in the web view.
 
-**API base URL**: `http://localhost:3000`
+**API base URL**: `https://roadmap-5vvp.onrender.com`
 
 Follow these steps:
 
 1. **Fetch the full architecture** via GET /api/architecture:
    ```
-   curl http://localhost:3000/api/architecture -o web/data.json
+   curl https://roadmap-5vvp.onrender.com/api/architecture -o web/data.json
    ```
    - Returns `200` with the complete architecture graph (layers, nodes, edges, progression_tree, stats)
 
 2. **Verify** the exported data by checking the file was written:
    ```
-   curl http://localhost:3000/api/health
+   curl https://roadmap-5vvp.onrender.com/api/health
    ```
    - Confirms the API server is running and healthy
 

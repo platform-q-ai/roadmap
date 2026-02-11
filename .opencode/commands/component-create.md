@@ -6,7 +6,7 @@ Create a new component in the architecture database based on the user's request.
 
 **User request**: $ARGUMENTS
 
-**API base URL**: `http://localhost:3000`
+**API base URL**: `https://roadmap-5vvp.onrender.com`
 
 Follow these steps:
 
@@ -20,7 +20,7 @@ Follow these steps:
 
 2. **Create the component** via POST /api/components:
    ```
-   curl -X POST http://localhost:3000/api/components \
+   curl -X POST https://roadmap-5vvp.onrender.com/api/components \
      -H "Content-Type: application/json" \
      -d '{"id":"<id>","name":"<name>","type":"<type>","layer":"<layer>","description":"<description>","tags":["<tag1>","<tag2>"]}'
    ```
@@ -30,7 +30,7 @@ Follow these steps:
 
 3. **Verify** the component was created:
    ```
-   curl http://localhost:3000/api/components/<id>
+   curl https://roadmap-5vvp.onrender.com/api/components/<id>
    ```
 
 4. **Report** the result to the user.
