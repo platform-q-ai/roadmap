@@ -66,19 +66,29 @@ export class Version {
    * Unrecognised tags (overview, v3, etc.) return 0.
    */
   static deriveProgress(currentVersion: string | null, versionTag: string): number {
-    if (!currentVersion) return 0;
+    if (!currentVersion) {
+      return 0;
+    }
 
     const phaseMajor = Version.PHASE_MAJOR[versionTag];
-    if (phaseMajor === undefined) return 0;
+    if (phaseMajor === undefined) {
+      return 0;
+    }
 
     const parts = currentVersion.split('.');
     const major = parseInt(parts[0], 10);
     const minor = parseInt(parts[1], 10);
 
-    if (isNaN(major) || isNaN(minor)) return 0;
+    if (isNaN(major) || isNaN(minor)) {
+      return 0;
+    }
 
-    if (major > phaseMajor) return 100;
-    if (major < phaseMajor) return 0;
+    if (major > phaseMajor) {
+      return 100;
+    }
+    if (major < phaseMajor) {
+      return 0;
+    }
 
     return Math.min(minor * 10, 100);
   }
@@ -88,8 +98,12 @@ export class Version {
    * 0 = planned, 100 = complete, 1-99 = in-progress.
    */
   static deriveStatus(progress: number): VersionStatus {
-    if (progress <= 0) return 'planned';
-    if (progress >= 100) return 'complete';
+    if (progress <= 0) {
+      return 'planned';
+    }
+    if (progress >= 100) {
+      return 'complete';
+    }
     return 'in-progress';
   }
 

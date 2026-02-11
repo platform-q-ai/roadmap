@@ -1,9 +1,9 @@
 import {
-  Version,
   type IEdgeRepository,
   type IFeatureRepository,
   type INodeRepository,
   type IVersionRepository,
+  Version,
 } from '../domain/index.js';
 
 interface VersionSummary {
@@ -123,7 +123,9 @@ export class GetArchitecture {
     versions: Record<string, VersionSummary>,
     currentVersion: string | null
   ): Record<string, VersionSummary> {
-    if (!currentVersion) return versions;
+    if (!currentVersion) {
+      return versions;
+    }
 
     const result: Record<string, VersionSummary> = {};
     for (const [tag, summary] of Object.entries(versions)) {
