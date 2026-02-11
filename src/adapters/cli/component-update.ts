@@ -7,10 +7,10 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 import {
-  createConnection,
-  SqliteNodeRepository,
-  SqliteVersionRepository,
-} from '../../infrastructure/sqlite/index.js';
+  createDrizzleConnection,
+  DrizzleNodeRepository,
+  DrizzleVersionRepository,
+} from '../../infrastructure/drizzle/index.js';
 import { UpdateProgress } from '../../use-cases/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -31,21 +31,17 @@ if (isNaN(progress)) {
   process.exit(1);
 }
 
-const db = createConnection(DB_PATH);
+const db = createDrizzleConnection(DB_PATH);
 
 const updateProgress = new UpdateProgress({
-  nodeRepo: new SqliteNodeRepository(db),
-  versionRepo: new SqliteVersionRepository(db),
+  nodeRepo: new DrizzleNodeRepository(db),
+  versionRepo: new DrizzleVersionRepository(db),
 });
 
-try {
-  await updateProgress.execute(
-    nodeId,
-    version as Parameters<typeof updateProgress.execute>[1],
-    progress,
-    status as Parameters<typeof updateProgress.execute>[3]
-  );
-  console.log(`Updated ${nodeId}/${version}: progress=${progress}%, status=${status}`);
-} finally {
-  db.close();
-}
+await updateProgress.execute(
+  nodeId,
+  version as Parameters<typeof updateProgress.execute>[1],
+  progress,
+  status as Parameters<typeof updateProgress.execute>[3]
+);
+console.log(`Updated ${nodeId}/${version}: progress=${progress}%, status=${status}`);

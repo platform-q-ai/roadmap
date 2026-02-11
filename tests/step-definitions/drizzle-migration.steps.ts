@@ -4,18 +4,18 @@ import { join } from 'node:path';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
+import { Edge } from '../../src/domain/entities/edge.js';
+import { Feature } from '../../src/domain/entities/feature.js';
 import { Node } from '../../src/domain/entities/node.js';
 import type { VersionStatus } from '../../src/domain/entities/version.js';
 import { Version } from '../../src/domain/entities/version.js';
-import { Edge } from '../../src/domain/entities/edge.js';
-import { Feature } from '../../src/domain/entities/feature.js';
 
 // Drizzle modules loaded dynamically to avoid crashing other scenarios during RED phase.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 let drizzleSchema: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 let drizzleConnection: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 let drizzleRepos: any = null;
 
 async function loadDrizzleModules() {
@@ -41,15 +41,14 @@ async function loadDrizzleModules() {
 }
 
 interface World {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   drizzleDb: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   nodeRepo: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   edgeRepo: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   versionRepo: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   featureRepo: any;
   savedNode: Node | null;
   [key: string]: unknown;

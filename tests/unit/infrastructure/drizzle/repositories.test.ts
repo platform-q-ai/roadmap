@@ -1,19 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { sql } from 'drizzle-orm';
-
-import { Node } from '@domain/entities/node.js';
 import { Edge } from '@domain/entities/edge.js';
-import { Version } from '@domain/entities/version.js';
 import { Feature } from '@domain/entities/feature.js';
-
+import { Node } from '@domain/entities/node.js';
+import { Version } from '@domain/entities/version.js';
 import { createDrizzleConnection } from '@infrastructure/drizzle/connection.js';
-import { nodeVersionsTable } from '@infrastructure/drizzle/schema.js';
-import { DrizzleNodeRepository } from '@infrastructure/drizzle/node-repository.js';
 import { DrizzleEdgeRepository } from '@infrastructure/drizzle/edge-repository.js';
-import { DrizzleVersionRepository } from '@infrastructure/drizzle/version-repository.js';
 import { DrizzleFeatureRepository } from '@infrastructure/drizzle/feature-repository.js';
-
+import { DrizzleNodeRepository } from '@infrastructure/drizzle/node-repository.js';
+import { nodeVersionsTable } from '@infrastructure/drizzle/schema.js';
+import { DrizzleVersionRepository } from '@infrastructure/drizzle/version-repository.js';
+import { sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 describe('Drizzle Repositories', () => {
   let db: BetterSQLite3Database;

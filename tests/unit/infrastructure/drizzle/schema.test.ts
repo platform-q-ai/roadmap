@@ -1,11 +1,10 @@
-import { describe, expect, it } from 'vitest';
-
 import {
-  nodesTable,
   edgesTable,
-  nodeVersionsTable,
   featuresTable,
+  nodesTable,
+  nodeVersionsTable,
 } from '@infrastructure/drizzle/schema.js';
+import { describe, expect, it } from 'vitest';
 
 describe('Drizzle Schema', () => {
   describe('nodesTable', () => {

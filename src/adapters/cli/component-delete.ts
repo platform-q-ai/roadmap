@@ -7,12 +7,12 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 import {
-  createConnection,
-  SqliteEdgeRepository,
-  SqliteFeatureRepository,
-  SqliteNodeRepository,
-  SqliteVersionRepository,
-} from '../../infrastructure/sqlite/index.js';
+  createDrizzleConnection,
+  DrizzleEdgeRepository,
+  DrizzleFeatureRepository,
+  DrizzleNodeRepository,
+  DrizzleVersionRepository,
+} from '../../infrastructure/drizzle/index.js';
 import { DeleteComponent } from '../../use-cases/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -27,18 +27,14 @@ if (args.length < 1) {
 
 const [id] = args;
 
-const db = createConnection(DB_PATH);
+const db = createDrizzleConnection(DB_PATH);
 
 const deleteComponent = new DeleteComponent({
-  nodeRepo: new SqliteNodeRepository(db),
-  edgeRepo: new SqliteEdgeRepository(db),
-  versionRepo: new SqliteVersionRepository(db),
-  featureRepo: new SqliteFeatureRepository(db),
+  nodeRepo: new DrizzleNodeRepository(db),
+  edgeRepo: new DrizzleEdgeRepository(db),
+  versionRepo: new DrizzleVersionRepository(db),
+  featureRepo: new DrizzleFeatureRepository(db),
 });
 
-try {
-  await deleteComponent.execute(id);
-  console.log(`Deleted component "${id}" and all related data`);
-} finally {
-  db.close();
-}
+await deleteComponent.execute(id);
+console.log(`Deleted component "${id}" and all related data`);
