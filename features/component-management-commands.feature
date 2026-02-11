@@ -81,6 +81,12 @@ Feature: Component Management Commands
     Then each component command file has a "description" in frontmatter
     And each component command file references "$ARGUMENTS" for parameters
 
+  # ── Command files use adapter layer, not raw DB access ──────────
+
+  Scenario: Command files must not contain raw sqlite3 CLI references
+    Given the project has an .opencode/commands directory
+    Then no command file contains a raw "sqlite3" CLI invocation
+
   # ── CLI adapter scripts exist ───────────────────────────────────
 
   Scenario: CLI adapter scripts exist for component management
