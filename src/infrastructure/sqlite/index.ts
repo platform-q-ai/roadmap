@@ -1,0 +1,5 @@
+export { createConnection } from './connection.js';
+export { SqliteEdgeRepository } from './edge-repository.js';
+export { SqliteFeatureRepository } from './feature-repository.js';
+export { SqliteNodeRepository } from './node-repository.js';
+export { SqliteVersionRepository } from './version-repository.js';

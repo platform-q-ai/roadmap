@@ -1,53 +1,80 @@
-# Living View
+# Roadmap
 
-Living documentation for the **Open Autonomous Runtime** architecture. Each component in the system is a node in a SQLite graph database with versioned specs (MVP / v1 / v2), Gherkin feature files, and progress tracking. The web view renders the full architecture as an interactive diagram where every component can be expanded to explore its documentation and build status.
+Living documentation for the **Open Autonomous Runtime** architecture. Every component in the system is a node in a SQLite graph database with versioned specs (MVP / v1 / v2), Gherkin feature files, and progress tracking. A static web view renders the full architecture as an interactive diagram where every box can be expanded to explore documentation, build status, and BDD specs.
+
+**Live:** [platform-q-ai.github.io/roadmap](https://platform-q-ai.github.io/roadmap/)
 
 Built in the open.
 
+## Architecture Overview
+
+The runtime is an autonomous AI agent system built around two LLM-powered instances (a Meta-Agent planner and a Worker executor) orchestrated by a Supervisor process. The architecture spans 11 layers and 55+ components:
+
+| Layer | Purpose |
+|-------|---------|
+| Observability Dashboard | Live process view, tool call timeline, security events, entity explorer |
+| Supervisor | Process manager, heartbeat, human gate, fast-path router |
+| Task Router | Fast path (trivial), full path (complex), gated path (dangerous) |
+| Knowledge Graphs | User domain context + code structure via tree-sitter |
+| Dual OpenCode Instances | Meta-Agent (planner) + Worker (executor) with 14 MCP tools |
+| Escalation Flow | Worker-to-human reverse communication |
+| Shared State Store | Append-only SQLite/Postgres, checkpointer, context rebuilder |
+| MCP Proxies | Static proxy for Meta-Agent, dynamic hot-swappable proxy for Worker |
+| Security Sandbox | 3-stage sanitiser + alert pipeline |
+| Downstream Tools | Search, email, database, filesystem, code execution, custom |
+| BDD/TDD Pipeline | 8-phase pipeline: Feature, Steps, Units, Red, Green, Refactor, Arch Review, Sec Review |
+
 ## Quick Start
 
+Prerequisites: `sqlite3` CLI and Node.js.
+
 ```bash
-# Rebuild the database from schema + seed
-rm -f db/architecture.db
-sqlite3 db/architecture.db < schema.sql
-sqlite3 db/architecture.db < seed.sql
-node scripts/seed-features.js
+git clone https://github.com/platform-q-ai/roadmap.git
+cd roadmap
+npm install
+npm run build
+```
 
-# Export to JSON for the web view
-node scripts/export.js
+This rebuilds the database, seeds feature files, and exports `web/data.json`. Then serve locally:
 
-# Serve locally
-python3 -m http.server 8080 --directory web
+```bash
+npm run serve
 # Open http://localhost:8080
 ```
 
 ## Repository Structure
 
+The codebase follows Clean Architecture. Dependencies point inward: adapters -> use-cases -> domain.
+
 ```
-living-view/
-├── schema.sql                  # SQLite graph schema (nodes, edges, versions, features)
-├── seed.sql                    # All component data extracted from architecture HTML
+roadmap/
+├── schema.sql                  # SQLite graph schema
+├── seed.sql                    # All component data, edges, and version content
 ├── db/
-│   └── architecture.db         # Built SQLite database (generated — do not edit directly)
+│   └── architecture.db         # Built SQLite database (generated)
+├── src/
+│   ├── domain/                 # Entities + repository interfaces (zero deps)
+│   │   ├── entities/           # Node, Edge, Version, Feature
+│   │   └── repositories/      # Abstract interfaces (contracts only)
+│   ├── use-cases/              # Business logic (depends only on domain)
+│   │   ├── get-architecture.js
+│   │   ├── export-architecture.js
+│   │   ├── seed-features.js
+│   │   └── update-progress.js
+│   ├── infrastructure/         # Concrete implementations
+│   │   └── sqlite/             # better-sqlite3 repository implementations
+│   └── adapters/               # Entry points
+│       └── cli/                # CLI commands (export, seed-features)
 ├── components/
-│   ├── supervisor/
-│   │   └── features/
-│   │       └── mvp-process-management.feature
-│   ├── meta-agent/
-│   │   └── features/
-│   │       └── mvp-planning-loop.feature
-│   ├── worker/
-│   │   └── features/
-│   │       └── mvp-task-execution.feature
+│   ├── supervisor/features/
+│   ├── meta-agent/features/
+│   ├── worker/features/
 │   └── ... (50+ component directories)
-├── scripts/
-│   ├── export.js               # DB → web/data.json
-│   └── seed-features.js        # Scan .feature files into DB
 ├── web/
-│   ├── index.html              # Interactive web view (single page, static)
-│   └── data.json               # Exported data (generated — do not edit directly)
-├── opencode-architecture-v3.2.html  # Original static architecture document
-└── PLAN.md                     # Detailed build plan
+│   ├── index.html              # Interactive web view (single file, no dependencies)
+│   └── data.json               # Exported data (generated)
+├── specs/                      # Detailed component specifications
+└── AGENTS.md                   # Instructions for LLM maintainers
 ```
 
 ## How It Works
@@ -56,30 +83,38 @@ living-view/
 
 Everything lives in four SQLite tables:
 
-- **nodes** — 66 components (layers, components, stores, external tools, pipeline phases). Each has an id, name, type, color, icon, description, and JSON tags array.
-- **edges** — 106 typed relationships (CONTAINS, CONTROLS, READS_FROM, WRITES_TO, DISPATCHES_TO, ESCALATES_TO, PROXIES, SANITISES, GATES, SEQUENCE).
-- **node_versions** — 103 versioned specs. Each component can have MVP, v1, and v2 documentation with a progress percentage (0-100) and status (planned / in-progress / complete).
-- **features** — 11 Gherkin feature files linked to components and versions.
+- **nodes** -- 66 components (layers, components, stores, external tools, pipeline phases). Each has an id, name, type, color, icon, description, and JSON tags array.
+- **edges** -- 106 typed relationships (CONTAINS, CONTROLS, READS_FROM, WRITES_TO, DISPATCHES_TO, ESCALATES_TO, PROXIES, SANITISES, GATES, SEQUENCE).
+- **node_versions** -- 103 versioned specs. Each component has MVP, v1, and v2 documentation with progress (0-100%) and status (planned / in-progress / complete).
+- **features** -- Gherkin feature files linked to components and versions.
 
 ### Data Flow
 
 ```
-seed.sql + schema.sql  →  sqlite3  →  architecture.db
-                                            ↓
-components/**/features/*.feature  →  seed-features.js  →  architecture.db
-                                                              ↓
-                                                        export.js  →  data.json  →  web view
+seed.sql + schema.sql  ->  sqlite3  ->  architecture.db
+                                              |
+components/**/features/*.feature  ->  seed-features  ->  architecture.db
+                                                               |
+                                                         export  ->  data.json  ->  web view
 ```
 
-The web view is fully static. It reads `data.json` on load. No server required — host on GitHub Pages, Netlify, or any static host.
+### Clean Architecture
+
+New delivery mechanisms (API server, MCP server, VS Code extension) are added as adapters in `src/adapters/` that reuse existing use cases. The domain and use-case layers never change to support a new delivery mechanism.
+
+```
+Adapters (CLI, API, MCP)  ->  Use Cases  ->  Domain (entities + interfaces)
+                                   |
+                          Infrastructure (SQLite)
+```
 
 ### Web View
 
-The interactive page renders the architecture as a layered stack matching the original HTML document's dark theme. Each component box:
+The interactive page renders the architecture as a layered diagram with a dark theme. Each component box:
 
-- Shows its description and tags in collapsed state
-- Expands on click to show a version toggle strip (MVP / v1 / v2)
-- Displays the selected version's content with progress badge
+- Shows its description, progress badge, and tags when collapsed
+- Expands on click to reveal a version toggle strip (MVP / v1 / v2)
+- Displays the selected version's content with a progress bar
 - Lists associated Gherkin feature files (expandable)
 
 ## Common Tasks
@@ -88,32 +123,24 @@ The interactive page renders the architecture as a layered stack matching the or
 
 ```bash
 sqlite3 db/architecture.db "UPDATE node_versions SET progress = 40, status = 'in-progress' WHERE node_id = 'supervisor' AND version = 'mvp';"
-node scripts/export.js
+npm run export
 ```
 
 ### Add a new feature file
 
 1. Create the file: `components/supervisor/features/mvp-health-api.feature`
 2. Prefix the filename with the version: `mvp-`, `v1-`, or `v2-`
-3. Run: `node scripts/seed-features.js && node scripts/export.js`
+3. Run: `npm run seed:features && npm run export`
 
 ### Add a new component
 
-1. Add the node to `seed.sql` in the NODES section
-2. Add edges in the EDGES section
-3. Add version content in the NODE VERSIONS section
+1. Add the node in `seed.sql` (NODES section)
+2. Add containment and relationship edges (EDGES section)
+3. Add version content for MVP / v1 / v2 (NODE VERSIONS section)
 4. Create `components/<id>/features/` directory
-5. Rebuild: `rm -f db/architecture.db && sqlite3 db/architecture.db < schema.sql && sqlite3 db/architecture.db < seed.sql && node scripts/seed-features.js && node scripts/export.js`
+5. Run: `npm run build`
 
-### Full rebuild
-
-```bash
-rm -f db/architecture.db
-sqlite3 db/architecture.db < schema.sql
-sqlite3 db/architecture.db < seed.sql
-node scripts/seed-features.js
-node scripts/export.js
-```
+See [AGENTS.md](AGENTS.md) for detailed instructions and schema reference.
 
 ## Edge Types
 
@@ -131,8 +158,16 @@ node scripts/export.js
 | `GATES` | Human approval boundary |
 | `SEQUENCE` | Ordered pipeline step |
 
-## Requirements
+## Deployment
 
-- `sqlite3` CLI
-- Node.js (for export scripts)
-- Any HTTP server for local viewing (Python, Node, etc.)
+The site deploys to GitHub Pages automatically on push to `master` via `.github/workflows/pages.yml`. It serves the `web/` directory as a static site.
+
+To deploy manually or to another static host, just serve the `web/` directory -- it contains only `index.html` and `data.json` with no build step or dependencies.
+
+## Tech Stack
+
+- **SQLite** + **better-sqlite3** -- graph database backend
+- **Node.js** (ESM) -- clean architecture application layer
+- **Vanilla HTML/CSS/JS** -- single-file web view, zero frameworks
+- **Gherkin** -- BDD feature specs per component
+- **GitHub Actions** -- CI/CD to GitHub Pages
