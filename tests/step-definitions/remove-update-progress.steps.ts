@@ -8,21 +8,27 @@ import { Then } from '@cucumber/cucumber';
 
 Then('no file {string} exists in src\\/use-cases', function (filename: string) {
   const dir = join(process.cwd(), 'src', 'use-cases');
-  if (!existsSync(dir)) return;
+  if (!existsSync(dir)) {
+    return;
+  }
   const files = readdirSync(dir);
   assert.ok(!files.includes(filename), `File "${filename}" must not exist in src/use-cases`);
 });
 
 Then('no file {string} exists in src\\/adapters\\/cli', function (filename: string) {
   const dir = join(process.cwd(), 'src', 'adapters', 'cli');
-  if (!existsSync(dir)) return;
+  if (!existsSync(dir)) {
+    return;
+  }
   const files = readdirSync(dir);
   assert.ok(!files.includes(filename), `File "${filename}" must not exist in src/adapters/cli`);
 });
 
 Then('no file {string} exists in .opencode\\/commands', function (filename: string) {
   const dir = join(process.cwd(), '.opencode', 'commands');
-  if (!existsSync(dir)) return;
+  if (!existsSync(dir)) {
+    return;
+  }
   const files = readdirSync(dir);
   assert.ok(!files.includes(filename), `File "${filename}" must not exist in .opencode/commands`);
 });

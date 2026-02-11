@@ -138,16 +138,6 @@ describe('Drizzle Repositories', () => {
       expect(found).toBeNull();
     });
 
-    it('updates progress and status', async () => {
-      await versionRepo.save(
-        new Version({ node_id: 'comp-1', version: 'mvp', progress: 0, status: 'planned' })
-      );
-      await versionRepo.updateProgress('comp-1', 'mvp', 75, 'in-progress');
-      const found = await versionRepo.findByNodeAndVersion('comp-1', 'mvp');
-      expect(found?.progress).toBe(75);
-      expect(found?.status).toBe('in-progress');
-    });
-
     it('deletes versions by node', async () => {
       await versionRepo.save(new Version({ node_id: 'comp-1', version: 'mvp' }));
       await versionRepo.save(new Version({ node_id: 'comp-1', version: 'v1' }));
@@ -208,11 +198,10 @@ describe('Drizzle Repositories', () => {
           node_id: 'comp-1',
           version: 'mvp',
           content: 'Old',
-          progress: 0,
-          status: 'planned',
+          progress: 75,
+          status: 'in-progress',
         })
       );
-      await versionRepo.updateProgress('comp-1', 'mvp', 75, 'in-progress');
 
       // Simulate seed upsert: update content, preserve progress
       db.insert(nodeVersionsTable)

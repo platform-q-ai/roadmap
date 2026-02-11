@@ -20,7 +20,6 @@ const COMPONENT_COMMANDS = [
   'component-create.md',
   'component-delete.md',
   'component-update.md',
-  'component-progress.md',
   'component-publish.md',
 ];
 
@@ -113,7 +112,7 @@ function buildTrackingRepos(world: World) {
     save: async (version: Version) => {
       world.savedVersions.push(version);
     },
-    updateProgress: async () => {},
+
     deleteByNode: async (nid: string) => {
       world.deletedVersionNodeIds.push(nid);
     },

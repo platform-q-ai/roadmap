@@ -92,14 +92,3 @@ Feature: Drizzle ORM Migration
     Given the package.json build scripts
     Then the build:db script should not contain "rm -f"
     And the build:db script should not contain "rm db/"
-
-  # ── Component Update Commands ──────────────────────────────────────
-
-  Scenario: Component update command uses Drizzle repositories
-    Given the CLI adapter for component-update
-    Then it should import from the Drizzle infrastructure module
-    And it should not import from better-sqlite3 directly
-
-  Scenario: Component progress command references API route
-    Given the opencode command file for component-progress
-    Then it should reference the progress API route

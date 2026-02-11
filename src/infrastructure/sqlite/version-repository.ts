@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3';
 
-import type { IVersionRepository, VersionStatus, VersionTag } from '../../domain/index.js';
+import type { IVersionRepository, VersionTag } from '../../domain/index.js';
 import { Version } from '../../domain/index.js';
 
 export class SqliteVersionRepository implements IVersionRepository {
@@ -32,20 +32,6 @@ export class SqliteVersionRepository implements IVersionRepository {
        VALUES (?, ?, ?, ?, ?, datetime('now'))`
       )
       .run(version.node_id, version.version, version.content, version.progress, version.status);
-  }
-
-  async updateProgress(
-    nodeId: string,
-    version: VersionTag,
-    progress: number,
-    status: VersionStatus
-  ): Promise<void> {
-    this.db
-      .prepare(
-        `UPDATE node_versions SET progress = ?, status = ?, updated_at = datetime('now')
-       WHERE node_id = ? AND version = ?`
-      )
-      .run(progress, status, nodeId, version);
   }
 
   async deleteByNode(nodeId: string): Promise<void> {

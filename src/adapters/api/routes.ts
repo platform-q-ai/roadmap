@@ -7,13 +7,11 @@ import type {
   INodeRepository,
   IVersionRepository,
   NodeType,
-  VersionStatus,
 } from '../../use-cases/index.js';
 import {
   CreateComponent,
   DeleteComponent,
   GetArchitecture,
-  UpdateProgress,
   UploadFeature,
 } from '../../use-cases/index.js';
 
@@ -82,8 +80,6 @@ const VALID_NODE_TYPES: readonly string[] = [
   'app',
 ];
 
-const VALID_STATUSES: readonly string[] = ['planned', 'in-progress', 'complete'];
-
 function parseCreateInput(body: Record<string, unknown>): CreateComponentInput | null {
   const { id, name, type, layer, description, tags } = body;
   if (!id || !name || !type || !layer) {
@@ -101,18 +97,6 @@ function parseCreateInput(body: Record<string, unknown>): CreateComponentInput |
     description: description ? String(description) : undefined,
     tags: Array.isArray(tags) ? tags.map(String) : undefined,
   };
-}
-
-function parseProgressInput(body: Record<string, unknown>): {
-  progress: number;
-  status: VersionStatus;
-} | null {
-  const progress = Number(body.progress);
-  const status = String(body.status ?? '');
-  if (isNaN(progress) || !VALID_STATUSES.includes(status)) {
-    return null;
-  }
-  return { progress, status: status as VersionStatus };
 }
 
 // ─── Route handlers ─────────────────────────────────────────────────
@@ -184,38 +168,6 @@ async function handleDeleteComponent(deps: ApiDeps, res: ServerResponse, id: str
     await uc.execute(id);
     res.writeHead(204);
     res.end();
-  } catch (err) {
-    const msg = errorMessage(err);
-    json(res, errorStatus(msg), { error: msg });
-  }
-}
-
-async function handleUpdateProgress(
-  deps: ApiDeps,
-  req: IncomingMessage,
-  res: ServerResponse,
-  params: { nodeId: string; version: string }
-) {
-  const raw = await readBody(req);
-  const body = parseJsonBody(raw);
-  if (!body) {
-    json(res, 400, { error: 'Invalid JSON body' });
-    return;
-  }
-  const input = parseProgressInput(body);
-  if (!input) {
-    json(res, 400, { error: 'Missing or invalid fields: progress, status' });
-    return;
-  }
-  const uc = new UpdateProgress({ versionRepo: deps.versionRepo, nodeRepo: deps.nodeRepo });
-  try {
-    await uc.execute(params.nodeId, params.version, input.progress, input.status);
-    json(res, 200, {
-      nodeId: params.nodeId,
-      version: params.version,
-      progress: input.progress,
-      status: input.status,
-    });
   } catch (err) {
     const msg = errorMessage(err);
     json(res, errorStatus(msg), { error: msg });
@@ -313,12 +265,6 @@ export function buildRoutes(deps: ApiDeps): Route[] {
       method: 'DELETE',
       pattern: /^\/api\/components\/([^/]+)$/,
       handler: async (_req, res, m) => handleDeleteComponent(deps, res, m[1]),
-    },
-    {
-      method: 'PATCH',
-      pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)\/progress$/,
-      handler: async (req, res, m) =>
-        handleUpdateProgress(deps, req, res, { nodeId: m[1], version: m[2] }),
     },
     {
       method: 'GET',

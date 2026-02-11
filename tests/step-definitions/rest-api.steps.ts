@@ -63,16 +63,6 @@ function buildApiRepos(world: ApiWorld) {
     save: async (version: Version) => {
       world.versions.push(version);
     },
-    updateProgress: async (nid: string, ver: string, progress: number, status: string) => {
-      const idx = world.versions.findIndex(v => v.node_id === nid && v.version === ver);
-      if (idx >= 0) {
-        world.versions[idx] = new Version({
-          ...world.versions[idx],
-          progress,
-          status: status as 'planned' | 'in-progress' | 'complete',
-        });
-      }
-    },
     deleteByNode: async (nid: string) => {
       world.versions = world.versions.filter(v => v.node_id !== nid);
     },

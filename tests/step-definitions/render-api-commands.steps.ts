@@ -10,7 +10,6 @@ const COMPONENT_COMMANDS = [
   'component-create.md',
   'component-delete.md',
   'component-update.md',
-  'component-progress.md',
   'component-publish.md',
 ];
 

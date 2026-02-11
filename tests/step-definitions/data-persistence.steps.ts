@@ -218,18 +218,6 @@ When('I find versions by node {string}', async function (this: World, nodeId: st
 });
 
 When(
-  'I update progress for node {string} version {string} to {int} with status {string}',
-  async function (this: World, nodeId: string, version: string, progress: number, status: string) {
-    await this.versionRepo.updateProgress(
-      nodeId,
-      version as VersionTag,
-      progress,
-      status as VersionStatus
-    );
-  }
-);
-
-When(
   'I find the version for node {string} version {string}',
   async function (this: World, nodeId: string, version: string) {
     this.retrievedVersion = await this.versionRepo.findByNodeAndVersion(

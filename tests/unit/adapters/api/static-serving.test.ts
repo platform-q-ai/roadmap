@@ -38,7 +38,6 @@ function buildEmptyRepos() {
     findByNode: vi.fn(async () => []),
     findByNodeAndVersion: vi.fn(async () => null),
     save: vi.fn(async () => {}),
-    updateProgress: vi.fn(async () => {}),
     deleteByNode: vi.fn(async () => {}),
   };
   const featureRepo: IFeatureRepository = {

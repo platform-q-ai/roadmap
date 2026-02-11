@@ -169,9 +169,9 @@ Feature: Secure and Rate-Limited API
       When I send a PUT request to "/api/components/test-comp/features/v1-test.feature" with that key
       Then the response status is not 403
 
-    Scenario: Write scope allows PATCH requests
+    Scenario: Write scope allows PUT requests
       Given a valid API key with scopes "read" and "write"
-      When I send a PATCH request to "/api/components/test-comp/versions/mvp/progress" with that key
+      When I send a PUT request to "/api/components/test-comp/versions/mvp" with that key
       Then the response status is not 403
 
     Scenario: Write scope allows DELETE requests for component data

@@ -11,16 +11,10 @@ const COMPONENT_COMMANDS = [
   'component-create.md',
   'component-delete.md',
   'component-update.md',
-  'component-progress.md',
   'component-publish.md',
 ];
 
-const CLI_ADAPTERS = [
-  'component-create.ts',
-  'component-delete.ts',
-  'component-update.ts',
-  'export.ts',
-];
+const CLI_ADAPTERS = ['component-create.ts', 'component-delete.ts', 'export.ts'];
 
 describe('OpenCode command files', () => {
   describe('existence', () => {
@@ -71,11 +65,6 @@ describe('OpenCode command files', () => {
       expect(content.toLowerCase()).toContain('update');
     });
 
-    it('component-progress.md instructs updating progress', () => {
-      const content = readFileSync(join(COMMANDS_DIR, 'component-progress.md'), 'utf-8');
-      expect(content.toLowerCase()).toContain('progress');
-    });
-
     it('component-publish.md instructs publishing to web', () => {
       const content = readFileSync(join(COMMANDS_DIR, 'component-publish.md'), 'utf-8');
       expect(content.toLowerCase()).toContain('publish');
@@ -88,8 +77,7 @@ const RENDER_API_BASE_URL = 'https://roadmap-5vvp.onrender.com';
 const API_ROUTE_MAP: Record<string, { method: string; path: string }> = {
   'component-create.md': { method: 'POST', path: '/api/components' },
   'component-delete.md': { method: 'DELETE', path: '/api/components' },
-  'component-update.md': { method: 'PATCH', path: '/api/components' },
-  'component-progress.md': { method: 'PATCH', path: '/api/components' },
+  'component-update.md': { method: 'PUT', path: '/api/components' },
 };
 
 describe('OpenCode commands use Render production API', () => {
@@ -216,11 +204,6 @@ describe('CLI adapter scripts', () => {
     it('component-delete.ts imports DeleteComponent use case', () => {
       const content = readFileSync(join(CLI_DIR, 'component-delete.ts'), 'utf-8');
       expect(content).toContain('DeleteComponent');
-    });
-
-    it('component-update.ts imports UpdateProgress use case', () => {
-      const content = readFileSync(join(CLI_DIR, 'component-update.ts'), 'utf-8');
-      expect(content).toContain('UpdateProgress');
     });
 
     it('export.ts imports ExportArchitecture use case', () => {
