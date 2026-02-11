@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@domain/*": ["src/domain/*"],
+      "@use-cases/*": ["src/use-cases/*"],
+      "@infrastructure/*": ["src/infrastructure/*"],
+      "@adapters/*": ["src/adapters/*"]
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}

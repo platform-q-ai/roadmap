@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-10T09:56:51.229Z",
+  "generated_at": "2026-02-11T12:10:32.829Z",
   "layers": [
     {
       "id": "observability-dashboard",
@@ -9,7 +9,11 @@
       "color": "sky",
       "icon": "📊",
       "description": "Runtime Visibility — read-only web UI that observes but never mutates. The single pane of glass for both observation and control.",
-      "tags": "[\"read-only\",\"web ui\",\"live updates\"]",
+      "tags": [
+        "read-only",
+        "web ui",
+        "live updates"
+      ],
       "sort_order": 10,
       "children": [
         {
@@ -20,32 +24,36 @@
           "color": "sky",
           "icon": "📊",
           "description": "Real-time view of the entire runtime. Read-only — it observes but never mutates. Built as a simple web app (React / plain HTML) that polls the State Store + Supervisor health API. Runs as a separate process managed by the Supervisor. Think: the runtime equivalent of the process tree diagram, but live. Reads from two sources: State Store (goals, tasks, tool logs, escalations, checkpoints) and Supervisor health API (process status, heartbeat data, resource usage). It writes nothing — pure read-only observer. Optional: SSE/WebSocket push from State Store for live updates without polling. Human Gate approval actions can be embedded here, making it the single pane of glass for both observation and control.",
-          "tags": "[\"read-only\",\"web ui\",\"sse/websocket\"]",
+          "tags": [
+            "read-only",
+            "web ui",
+            "sse/websocket"
+          ],
           "sort_order": 11,
           "versions": {
             "mvp": {
               "content": "Single-page web app showing process status (up/down) and current goal. Polls Supervisor health API every 5s. Basic goal queue display from State Store. Static HTML + vanilla JS.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Real-time view of the entire runtime. Read-only — it observes but never mutates. Built as a simple web app (React / plain HTML) that polls the State Store + Supervisor health API. Runs as a separate process managed by the Supervisor. Think: the runtime equivalent of the process tree diagram, but live. Data sources: State Store → goals, tasks, tool call logs, escalations, checkpoints, fast-path records, injection events. Supervisor Health API → process status, uptime, restart count, memory, current model per instance. No direct process inspection — dashboard never connects to OpenCode or proxies directly. Push vs Poll: SSE from State Store for live updates; poll Supervisor health every 5s. Human Gate embedded: approval buttons for gated tasks + escalation responses in same UI.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Full process tree view with live status. Goal & task feed with click-to-inspect. Tool call timeline with filtering. Security events panel. Escalation queue with response actions.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "SSE/WebSocket for real-time push updates. Entity Explorer for User KG. Repo Map for Code Graph. Embedded Human Gate approval UI. Performance metrics and resource graphs.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -66,14 +74,19 @@
           "color": "sky",
           "icon": "🔴",
           "description": "Process tree with real-time status: running, recovering, crashed, paused for every child. Uptime, restart count, current model, memory usage per instance.",
-          "tags": "[\"running\",\"recovering\",\"crashed\",\"paused\"]",
+          "tags": [
+            "running",
+            "recovering",
+            "crashed",
+            "paused"
+          ],
           "sort_order": 12,
           "versions": {
             "overview": {
               "content": "Process tree with real-time status: running, recovering, crashed, paused for every child. Uptime, restart count, current model, memory usage per instance.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -86,14 +99,18 @@
           "color": "sky",
           "icon": "📋",
           "description": "Live stream of the Goal Queue. Current goal, decomposed sub-tasks, completion status. See what the Meta-Agent is planning and what the Worker is executing. Clickable to inspect full task payloads.",
-          "tags": "[\"live stream\",\"clickable\",\"task payloads\"]",
+          "tags": [
+            "live stream",
+            "clickable",
+            "task payloads"
+          ],
           "sort_order": 13,
           "versions": {
             "overview": {
               "content": "Live stream of the Goal Queue. Current goal, decomposed sub-tasks, completion status. See what the Meta-Agent is planning and what the Worker is executing. Clickable to inspect full task payloads.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -106,14 +123,18 @@
           "color": "sky",
           "icon": "🔧",
           "description": "Chronological feed of every tool call (both instances). Shows: tool name, args (truncated), response status, latency, sanitiser verdict (pass/block). Filterable by instance, tool, and status. This is your debugging lifeline.",
-          "tags": "[\"chronological\",\"filterable\",\"debugging lifeline\"]",
+          "tags": [
+            "chronological",
+            "filterable",
+            "debugging lifeline"
+          ],
           "sort_order": 14,
           "versions": {
             "overview": {
               "content": "Chronological feed of every tool call (both instances). Shows: tool name, args (truncated), response status, latency, sanitiser verdict (pass/block). Filterable by instance, tool, and status. This is your debugging lifeline.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -126,14 +147,18 @@
           "color": "sky",
           "icon": "🛡",
           "description": "Sanitiser verdicts, blocked injections with raw payload preview, injection frequency per tool, auto-disable events. Links to full audit log entries. Alerts when injection rate exceeds threshold.",
-          "tags": "[\"audit log\",\"injection frequency\",\"auto-disable\"]",
+          "tags": [
+            "audit log",
+            "injection frequency",
+            "auto-disable"
+          ],
           "sort_order": 15,
           "versions": {
             "overview": {
               "content": "Sanitiser verdicts, blocked injections with raw payload preview, injection frequency per tool, auto-disable events. Links to full audit log entries. Alerts when injection rate exceeds threshold.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -146,14 +171,18 @@
           "color": "sky",
           "icon": "⏸",
           "description": "Worker escalation requests waiting for Meta-Agent or human review. Shows the Worker's question, context snapshot, and available actions: respond, override, or abort task.",
-          "tags": "[\"respond\",\"override\",\"abort\"]",
+          "tags": [
+            "respond",
+            "override",
+            "abort"
+          ],
           "sort_order": 16,
           "versions": {
             "overview": {
               "content": "Worker escalation requests waiting for Meta-Agent or human review. Shows the Worker's question, context snapshot, and available actions: respond, override, or abort task.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -166,14 +195,18 @@
           "color": "sky",
           "icon": "👤",
           "description": "Browse the User Knowledge Graph. See people, projects, preferences, and their relationships. Understand what the agents \"know about you\".",
-          "tags": "[\"new\",\"user kg\",\"browse\"]",
+          "tags": [
+            "new",
+            "user kg",
+            "browse"
+          ],
           "sort_order": 17,
           "versions": {
             "overview": {
               "content": "Browse the User Knowledge Graph. See people, projects, preferences, and their relationships. Understand what the agents \"know about you\".",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -186,14 +219,18 @@
           "color": "sky",
           "icon": "🗺",
           "description": "Visualise the Code Graph. Module hierarchy, file deps, data flows. See the agent's structural understanding of your codebase.",
-          "tags": "[\"new\",\"code graph\",\"visualise\"]",
+          "tags": [
+            "new",
+            "code graph",
+            "visualise"
+          ],
           "sort_order": 18,
           "versions": {
             "overview": {
               "content": "Visualise the Code Graph. Module hierarchy, file deps, data flows. See the agent's structural understanding of your codebase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -206,14 +243,17 @@
           "color": "sky",
           "icon": "⛳",
           "description": "Approval queue + escalation responses. Gate actions embeddable in dashboard UI.",
-          "tags": "[\"approval\",\"embedded\"]",
+          "tags": [
+            "approval",
+            "embedded"
+          ],
           "sort_order": 19,
           "versions": {
             "overview": {
               "content": "Approval queue + escalation responses. Gate actions embeddable in dashboard UI.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -224,9 +264,10 @@
           "content": "Read-only web UI. Process view, goal feed, tool timeline, security events, graph explorers. The dashboard is a thin web UI (React / plain HTML) that reads from two sources: the State Store (goals, tasks, tool logs, escalations, checkpoints) and the Supervisor's health API (process status, heartbeat data, resource usage). It writes nothing — pure read-only observer. Optional: SSE/WebSocket push from State Store for live updates without polling. The Human Gate approval actions can be embedded here too, making it the single pane of glass for both observation and control.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "supervisor-layer",
@@ -236,7 +277,11 @@
       "color": "purple",
       "icon": "👁",
       "description": "The Only Immortal Process — process management, signal handling, recovery state machine. No LLM, no planning. If it dies, systemd/Docker restarts it.",
-      "tags": "[\"immortal\",\"no llm\",\"process manager\"]",
+      "tags": [
+        "immortal",
+        "no llm",
+        "process manager"
+      ],
       "sort_order": 20,
       "children": [
         {
@@ -247,32 +292,37 @@
           "color": "purple",
           "icon": "👁",
           "description": "Manages all child processes. Heartbeat + crash recovery with tiered priority. No LLM, no planning — just process management, signal handling, and the recovery state machine. This is what makes it stable: it has almost no reasons to crash. If it does, systemd/Docker restarts it. Exposes a health API (HTTP on :9100) for the dashboard. Kill switch: /stop HTTP endpoint + SIGTERM handler → instant halt of all children. Emergency brake for runaway agents.",
-          "tags": "[\"immortal\",\"health api\",\"kill switch\",\"no llm\"]",
+          "tags": [
+            "immortal",
+            "health api",
+            "kill switch",
+            "no llm"
+          ],
           "sort_order": 21,
           "versions": {
             "mvp": {
               "content": "Spawn and monitor two child processes (meta-agent, worker). Detect crashes via waitpid(). Restart crashed children with basic retry logic. Expose /health HTTP endpoint returning JSON process status. Handle SIGTERM for graceful shutdown of all children.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Manages all child processes. Heartbeat + crash recovery with tiered priority. No LLM, no planning — just process management, signal handling, and the recovery state machine. This is what makes it stable: it has almost no reasons to crash. If it does, systemd/Docker restarts it. Exposes a health API (HTTP on :9100) for the dashboard. Kill switch: /stop HTTP endpoint + SIGTERM handler → instant halt of all children. Why a Supervisor, not a cron job? (1) Instant detection: waitpid() returns the moment a child exits. Cron's worst-case latency = poll interval. (2) Crash loop handling: Supervisor tracks restart count + applies exponential backoff. (3) Multi-step recovery: kill → checkpoint read → config rebuild → context inject → respawn. (4) Lifecycle ownership: Supervisor owns the full process tree — PIDs, health, state. (5) Signal handling: catches SIGTERM/SIGCHLD and coordinates graceful shutdown. Stability hierarchy: Tier ∞ (Supervisor) immortal → Tier 0 (Meta-Agent) recovered first → Tier 1 (Worker) expendable. Recovery order: Supervisor → Meta-Agent → Worker. Each tier can recover the one below it.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Add exponential backoff on repeated crashes. Liveness probe (hang detection via output timeout_ms). Recovery state machine with tiered priority (meta-agent first). Checkpoint-aware recovery — read last checkpoint before respawn. Human Gate alerting after max 5 retries.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Full config-as-code DSL for spawn configuration. Resource monitoring (memory, CPU per child). Kill switch /stop HTTP endpoint. Dashboard SSE push for process events. Per-instance gate policies. Runtime flag switching for gate modes.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -293,20 +343,26 @@
           "color": "purple",
           "icon": "💓",
           "description": "Monitors both OpenCode instances independently via waitpid() + liveness probes. Instant crash detection (zero latency) — waitpid() returns the moment a child exits. Periodic liveness probe for hang detection — if no output for timeout_ms, treat as hung. Detects: exit, hang, OOM. If the Worker crashes → recover using Meta-Agent's last plan. If the Meta-Agent crashes → recover it first (higher priority), then it re-dispatches the Worker. Exponential backoff, max 5 retries → alert Human Gate.",
-          "tags": "[\"waitpid\",\"zero latency\",\"meta first\",\"worker second\",\"exponential backoff\"]",
+          "tags": [
+            "waitpid",
+            "zero latency",
+            "meta first",
+            "worker second",
+            "exponential backoff"
+          ],
           "sort_order": 22,
           "versions": {
             "mvp": {
               "content": "waitpid() loop for crash detection. Basic restart on exit. Retry counter with max limit. Log crash events.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Monitors both OpenCode instances independently via waitpid() + liveness probes. Instant crash detection (zero latency) — waitpid() returns the moment a child exits. Periodic liveness probe for hang detection — if no output for timeout_ms, treat as hung. Detects: exit, hang, OOM. If Worker crashes → recover using Meta-Agent's last plan. If Meta-Agent crashes → recover it first (higher priority), then it re-dispatches Worker. Exponential backoff, max 5 retries → alert Human Gate.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -319,32 +375,38 @@
           "color": "pink",
           "icon": "⛳",
           "description": "Three modes: full-auto, approve-goals, approve-all. Plus write fence: dangerous ops require approval even in full-auto. Also surfaces escalation requests from the Worker. Write fence per-instance: Meta-Agent config mutations and Worker destructive ops can have independent gate policies. Gate mode is a runtime flag — switch between modes without restarting any process.",
-          "tags": "[\"full-auto\",\"approve-goals\",\"approve-all\",\"write fence\",\"runtime flag\"]",
+          "tags": [
+            "full-auto",
+            "approve-goals",
+            "approve-all",
+            "write fence",
+            "runtime flag"
+          ],
           "sort_order": 23,
           "versions": {
             "mvp": {
               "content": "Basic approval queue. CLI-based approve/reject. Write fence for destructive operations (hardcoded list). Block until approved or timeout.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Three modes: full-auto, approve-goals, approve-all. Plus write fence: dangerous ops require approval even in full-auto. Also surfaces escalation requests from the Worker. Write fence per-instance: Meta-Agent config mutations and Worker destructive ops have independent gate policies. Gate mode is a runtime flag — switch between modes without restarting.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Runtime mode switching (full-auto, approve-goals, approve-all). Per-instance gate policies. Escalation forwarding from Meta-Agent. Dashboard-embeddable approval UI.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Configurable write fence per tool category. Approval delegation rules. Audit trail of all gate decisions. Timeout policies with configurable fallback actions.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -365,20 +427,27 @@
           "color": "lime",
           "icon": "⚡",
           "description": "Rule engine (no LLM). Classifies tasks as fast, full, or gated. Scores incoming tasks by complexity signals: single-step? (e.g. \"format this file\"), no ambiguity? (clear input/output), no tool mutation needed? (current tools suffice). If all signals pass → direct to Worker, skipping Meta-Agent. Meta-Agent notified after completion via State Store. Cuts latency and cost for simple tasks by ~50%. Configurable: fast_path: \"aggressive\" | \"conservative\" | \"off\". Can query User KG for context (\"does user prefer X for this type of task?\"). If fast-path task fails, re-routed through Meta-Agent.",
-          "tags": "[\"fast\",\"full\",\"gated\",\"rule engine\",\"~50% savings\",\"new\"]",
+          "tags": [
+            "fast",
+            "full",
+            "gated",
+            "rule engine",
+            "~50% savings",
+            "new"
+          ],
           "sort_order": 24,
           "versions": {
             "mvp": {
               "content": "Simple rule engine: match task text against patterns (single verb, no conditionals, target file exists). Three outputs: fast, full, gated. Configurable threshold.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Rule engine (no LLM). Classifies tasks as fast, full, or gated. Scores by complexity signals: single-step, no ambiguity, no tool mutation needed. Configurable: fast_path: \"aggressive\" | \"conservative\" | \"off\". Can query User KG for context. Cuts latency and cost ~50% for simple tasks. Fallback: failed fast-path tasks re-route through Meta-Agent.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -389,9 +458,10 @@
           "content": "The only immortal process. No LLM. Process manager + crash recovery + heartbeat. Exposes health API on :9100. Kill switch: /stop HTTP endpoint + SIGTERM handler. If it dies, systemd/Docker restarts it. Recovery sequence on crash detection: (1) Kill hung process if still alive. (2) Read last checkpoint from State Store. (3) Rebuild config via DSL. (4) Inject resume context via Context Rebuilder. (5) Respawn fresh OpenCode process (new PID, clean slate, resume prompt). (6) Exponential backoff if repeated failures, max 5 retries → alert Human Gate.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "task-router-layer",
@@ -401,7 +471,11 @@
       "color": "lime",
       "icon": "⚡",
       "description": "Fast Path Decision Point — lightweight rule engine (no LLM) routes tasks by complexity: trivial goes direct to Worker, complex goes to Meta-Agent, dangerous requires human approval.",
-      "tags": "[\"rule engine\",\"no llm\",\"classifier\"]",
+      "tags": [
+        "rule engine",
+        "no llm",
+        "classifier"
+      ],
       "sort_order": 30,
       "children": [
         {
@@ -412,14 +486,18 @@
           "color": "lime",
           "icon": "⚡",
           "description": "Rule engine says: single-step, unambiguous, existing tools suffice. Task goes directly to Worker. Meta-Agent notified post-completion via State Store. Flow: task → classifier → FAST → Worker → done → State Store → Meta-Agent reads.",
-          "tags": "[\"trivial\",\"direct\",\"skip planner\"]",
+          "tags": [
+            "trivial",
+            "direct",
+            "skip planner"
+          ],
           "sort_order": 31,
           "versions": {
             "overview": {
               "content": "Rule engine says: single-step, unambiguous, existing tools suffice. Task goes directly to Worker. Meta-Agent notified post-completion via State Store. Flow: task → classifier → FAST → Worker → done → State Store → Meta-Agent reads.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -432,14 +510,18 @@
           "color": "orange",
           "icon": "🧠",
           "description": "Classifier says: multi-step, ambiguous, or needs tool changes. Task goes to Meta-Agent for decomposition. Normal planning loop. Flow: task → classifier → FULL → Meta-Agent → plan → dispatch → Worker → State Store.",
-          "tags": "[\"complex\",\"decomposition\",\"planning loop\"]",
+          "tags": [
+            "complex",
+            "decomposition",
+            "planning loop"
+          ],
           "sort_order": 32,
           "versions": {
             "overview": {
               "content": "Classifier says: multi-step, ambiguous, or needs tool changes. Task goes to Meta-Agent for decomposition. Normal planning loop. Flow: task → classifier → FULL → Meta-Agent → plan → dispatch → Worker → State Store.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -452,14 +534,18 @@
           "color": "purple",
           "icon": "⛳",
           "description": "Classifier or Human Gate flags: destructive, high-cost, or security-sensitive. Task pauses for human approval before any routing. Flow: task → classifier → GATE → Human Gate → approve → (fast or full path).",
-          "tags": "[\"dangerous\",\"approval required\",\"security-sensitive\"]",
+          "tags": [
+            "dangerous",
+            "approval required",
+            "security-sensitive"
+          ],
           "sort_order": 33,
           "versions": {
             "overview": {
               "content": "Classifier or Human Gate flags: destructive, high-cost, or security-sensitive. Task pauses for human approval. Flow: task → classifier → GATE → Human Gate → approve → (fast or full path).",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -470,9 +556,10 @@
           "content": "Fast path decision point. Rule engine (no LLM) routes tasks by complexity. Classifier is NOT an LLM — it's a rule engine (regex + heuristics on task text). Signals: single verb (\"format\", \"lint\", \"rename\"), no conditional language, target file exists, current tools suffice. Configurable threshold: fast_path: \"aggressive\" | \"conservative\" | \"off\". Meta-Agent stays aware: fast-path completions logged to State Store. Fallback: if fast-path task fails, re-routed through Meta-Agent.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "knowledge-graphs",
@@ -482,7 +569,11 @@
       "color": "gold",
       "icon": "🧠",
       "description": "Dual graph stores: User Knowledge Graph (domain context — people, projects, preferences) + RPG Code Graph (repo structure — files, modules, deps, data flows).",
-      "tags": "[\"dual stores\",\"domain context\",\"repo structure\"]",
+      "tags": [
+        "dual stores",
+        "domain context",
+        "repo structure"
+      ],
       "sort_order": 40,
       "children": [
         {
@@ -493,32 +584,38 @@
           "color": "gold",
           "icon": "👤",
           "description": "A persistent graph of the user's world. Nodes are domain entities — people, projects, clients, teams, products, preferences, business rules, conventions, deadlines. Edges are typed relationships with metadata. This is not about code — it's about understanding who you are and what you care about so agents make contextually appropriate decisions. Entity types: person, project, org, team, preference, convention, deadline, stack, compliance, product, domain-concept, decision. Relationship types: OWNS, PREFERS, WORKS_WITH, HAS_CLIENT, USES_STACK, REQUIRES, CONVENTION, HAS_DEADLINE, DECIDED, DISLIKES. Populated by: (1) User directly — onboarding flow or dashboard edits. (2) Meta-Agent — infers entities from conversations and patterns over time. (3) Never by Worker — same injection-safety principle. Worker reads, never writes. Confidence layering: user-explicit (1.0) > meta-agent-inferred (0.8) > auto-extracted (0.6).",
-          "tags": "[\"new\",\"persistent\",\"entity types\",\"relationship types\",\"confidence layering\"]",
+          "tags": [
+            "new",
+            "persistent",
+            "entity types",
+            "relationship types",
+            "confidence layering"
+          ],
           "sort_order": 41,
           "versions": {
             "mvp": {
               "content": "SQLite-backed entity store. Add/query entities with typed relationships. Basic traversal (1-hop neighbours). Manual entity creation via CLI or dashboard. Simple text search across entities.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "A persistent graph of the user's world. Nodes are domain entities — people, projects, clients, teams, products, preferences, business rules, conventions, deadlines. Edges are typed relationships with metadata. This is not about code — it's about understanding who you are and what you care about so agents make contextually appropriate decisions. Entity types: person, project, org, team, preference, convention, deadline, stack, compliance, product, domain-concept, decision. Relationship types: OWNS, PREFERS, WORKS_WITH, HAS_CLIENT, USES_STACK, REQUIRES, CONVENTION, HAS_DEADLINE, DECIDED, DISLIKES. Populated by: (1) User directly — onboarding flow or dashboard edits. (2) Meta-Agent — infers entities from conversations and patterns. (3) Never by Worker — injection safety. Confidence layering: user-explicit (1.0) > meta-agent-inferred (0.8) > auto-extracted (0.6). What it solves: Personalisation (\"Alice prefers typed SQL over ORMs\"), project awareness (\"acme-saas uses Next.js + Postgres, client needs SOC2\"), team context (\"Bob is backend lead, prefers PRs\"), decision memory (\"We decided JWT over sessions on Jan 15\"), convention enforcement (\"No ORMs, minimal comments, Tailwind\"), deadline awareness (Meta-Agent prioritises based on known deadlines).",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Meta-Agent write access for inferred entities. Confidence layering (user-explicit 1.0 > meta-inferred 0.8). Multi-hop traversal queries. Convention enforcement lookups. Deadline awareness queries.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Full graph query language. Temporal awareness (when was this preference set?). Conflict resolution for contradictory preferences. Export/import for portability. Dashboard entity editor.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -539,32 +636,39 @@
           "color": "emerald",
           "icon": "🗺",
           "description": "An RPG-style structural graph of the current codebase. Encodes file hierarchy, module boundaries, inter-module data flows, function signatures, class inheritance, and import dependencies. Inspired by Microsoft RPG/ZeroRepo (https://arxiv.org/abs/2509.16198). This is a code quality feature — it helps the Worker write structurally coherent code by understanding what exists, what depends on what, and where new code should go. Node types: module, file, function, class, interface, package, route, schema, test. Edge types: CONTAINS, IMPORTS, EXPORTS, DATA_FLOW, EXTENDS, IMPLEMENTS, DEPENDS_ON, TESTS, CALLS. Populated by: (1) Static analysis on init — AST parse via tree-sitter on repo load (~seconds for repos under 100K LoC). (2) Worker's Checkpointer — auto-updates after file edits (re-parse only changed files, diff old vs new, update edges incrementally). (3) Meta-Agent — can annotate with higher-level module boundaries and data flow intentions. Lightweight — no LLM needed for extraction. Query patterns: topo_order(module), data_flow(A,B), dependents(file), pattern(type,dir), where_to_add(capability).",
-          "tags": "[\"new\",\"tree-sitter\",\"ast parsing\",\"disposable\",\"re-derivable\",\"query patterns\"]",
+          "tags": [
+            "new",
+            "tree-sitter",
+            "ast parsing",
+            "disposable",
+            "re-derivable",
+            "query patterns"
+          ],
           "sort_order": 42,
           "versions": {
             "mvp": {
               "content": "Static analysis on repo load using tree-sitter. Build initial graph from imports, exports, class hierarchy. Basic queries: list files in module, show imports for file. SQLite-backed.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "An RPG-style structural graph of the current codebase. Encodes file hierarchy, module boundaries, inter-module data flows, function signatures, class inheritance, and import dependencies. Inspired by Microsoft RPG/ZeroRepo (arxiv.org/abs/2509.16198). This is a code quality feature — it helps the Worker write structurally coherent code. Node types: module, file, function, class, interface, package, route, schema, test. Edge types: CONTAINS, IMPORTS, EXPORTS, DATA_FLOW, EXTENDS, IMPLEMENTS, DEPENDS_ON, TESTS, CALLS. What it solves: Dependency awareness (Worker knows what imports what before editing), placement decisions (\"where should rate limiting go?\" → traverse module→file→function), topological code generation (build in dependency order), data flow understanding (inter-module edges), pattern consistency (existing patterns visible), blast radius estimation (Meta-Agent traverses deps). Implementation: (1) Initial build on repo load — tree-sitter AST parse, extract files/imports/exports/classes/functions, infer modules from directory structure, ~seconds for repos under 100K LoC. (2) Incremental update on edit — Checkpointer detects file-edit tool calls, re-parses only changed files, diffs old vs new, updates edges incrementally. (3) Query patterns — topo_order(module), data_flow(A,B), dependents(file), pattern(type,dir), where_to_add(capability).",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Incremental updates via Checkpointer (re-parse only changed files). Dependency traversal (topo_order, dependents). Data flow edges between modules. Pattern queries.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Full where_to_add capability suggestions. Blast radius estimation. Meta-Agent annotations. Multi-language AST support. Dashboard Repo Map visualization.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -583,9 +687,10 @@
           "content": "Dual graph stores. User Knowledge Graph holds domain context (people, projects, preferences). RPG Code Graph holds repo structure (files, modules, deps, data flows). Three stores, three purposes: State Store (operational — what's happening now, prunable), User KG (domain — who you are, long-lived), Code Graph (repo structure — what the codebase looks like, disposable and re-derivable from code).",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "dual-agents",
@@ -595,7 +700,11 @@
       "color": "orange",
       "icon": "🧠",
       "description": "Two stock OpenCode instances. Meta-Agent (Planner) uses cheap/fast model (Haiku/Sonnet), plans and dispatches. Worker (Executor) uses strong model (Sonnet/Opus), executes one phase at a time. They share no tools — isolation by design.",
-      "tags": "[\"stock opencode\",\"dual instances\",\"tool isolation\"]",
+      "tags": [
+        "stock opencode",
+        "dual instances",
+        "tool isolation"
+      ],
       "sort_order": 50,
       "children": [
         {
@@ -606,32 +715,39 @@
           "color": "orange",
           "icon": "🧠",
           "description": "Stock OpenCode, planning system prompt, cheap/fast model (Haiku/Sonnet). This instance never touches the codebase or external APIs directly. It only plans, evaluates, and dispatches. Tier-0: recovered first. If this is down, the Worker has no direction. Only internal tools, no injection surface. Traverses User KG to align plans with user preferences, deadlines, team context. Reads Code Graph to understand repo structure before decomposing coding tasks. Also handles escalation responses: reads Worker's request_clarification entries from State Store, reasons about them, and writes guidance back — which the Worker receives on its next checkpoint resume or via check_escalation_response tool. System prompt: \"You are a task planner. Use your tools to: read the goal queue, check worker status, decompose goals into tasks, dispatch tasks, evaluate results, and generate follow-up goals. You may also evolve the worker's tools and config when needed.\" The loop emerges from the prompt + tool availability.",
-          "tags": "[\"tier-0\",\"10 internal tools\",\"reads/writes user kg\",\"reads code graph\",\"haiku/sonnet\",\"new\"]",
+          "tags": [
+            "tier-0",
+            "10 internal tools",
+            "reads/writes user kg",
+            "reads code graph",
+            "haiku/sonnet",
+            "new"
+          ],
           "sort_order": 51,
           "versions": {
             "mvp": {
               "content": "Single OpenCode instance with planning system prompt. Read goal queue, decompose into sub-tasks, dispatch to Worker via State Store. Read Worker progress from checkpoints. Basic goal → task decomposition.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Stock OpenCode, planning system prompt, cheap/fast model (Haiku/Sonnet). This instance never touches the codebase or external APIs directly. It only plans, evaluates, and dispatches. Tier-0: recovered first. If this is down, the Worker has no direction. Only internal tools, no injection surface. Traverses User KG to align plans with user preferences, deadlines, team context. Reads Code Graph to understand repo structure before decomposing coding tasks. Also handles escalation responses: reads Worker's request_clarification entries from State Store, reasons about them, and writes guidance back. System prompt: \"You are a task planner. Use your tools to: read the goal queue, check worker status, decompose goals into tasks, dispatch tasks, evaluate results, and generate follow-up goals. You may also evolve the worker's tools and config when needed.\" The loop emerges from the prompt + tool availability. How Meta-Agent uses both graphs: Before planning — \"What stack? Deadlines? Preferences?\" Before decomposing — \"Which modules? Dependency order? Blast radius?\" Task dispatch enrichment — includes relevant KG + Code Graph context in Worker's task prompt. Tool selection — User KG says \"prefers Brave over Google\" → configures proxy. Knowledge curation — writes inferred preferences to User KG. Self-evolution: tool discovery via tool_registry.search, config mutation via typed builder DSL (not raw JSON), sub-goal generation, prompt evolution based on observed results. Guardrails: budget limits, scope limits, allowed tool categories, model whitelist.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Phase-locked BDD/TDD dispatch pipeline. Gate verification between phases. Escalation response handling. User KG reads for planning context. Code Graph reads for repo-aware decomposition.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Self-evolution: tool discovery + hot-swap via proxy_admin. Config mutation via DSL. Prompt evolution based on observed results. Knowledge curation — write inferred preferences to User KG. Budget and scope guardrails.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -652,32 +768,42 @@
           "color": "cyan",
           "icon": "⚡",
           "description": "Stock OpenCode, execution system prompt, strong model (Sonnet/Opus). Tier-1, ephemeral, no fork. Lower stability priority — if it crashes, the Meta-Agent re-dispatches. Treated as ephemeral and replaceable. On recovery, the agent continues without knowing it crashed — the Context Rebuilder injects a resume prompt that makes it look like a natural continuation. External tools, sanitiser required. Reads User KG to respect user preferences during execution (naming conventions, tech choices). Traverses Code Graph to write structurally coherent code (dependency-aware edits, correct placement). Has two escalation tools: request_clarification to pause and ask the planner for guidance, and check_escalation_response to poll for an answer. System prompt: \"If you're uncertain about scope, direction, or trade-offs, use request_clarification. Don't guess — ask.\" Receives tasks as structured system prompt injections: phase, task, constraints, forbidden_actions, available_tools, success_criteria. Single-phase isolation: the Worker sees \"Write failing step tests for this feature file. DO NOT implement any production code.\" It literally cannot skip ahead because it doesn't know what \"ahead\" is. The forbidden_actions field explicitly lists what it must not do (e.g. [\"create production files\", \"modify existing src/\", \"run tests in watch mode\"]).",
-          "tags": "[\"tier-1\",\"dynamic tools\",\"reads user kg\",\"reads code graph\",\"sanitiser required\",\"ephemeral\",\"no fork\",\"sonnet/opus\",\"new\"]",
+          "tags": [
+            "tier-1",
+            "dynamic tools",
+            "reads user kg",
+            "reads code graph",
+            "sanitiser required",
+            "ephemeral",
+            "no fork",
+            "sonnet/opus",
+            "new"
+          ],
           "sort_order": 52,
           "versions": {
             "mvp": {
               "content": "Single OpenCode instance with execution system prompt. Receive task from State Store, execute with available tools, report results. Basic tool access via MCP proxy.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Stock OpenCode, execution system prompt, strong model (Sonnet/Opus). Tier-1, ephemeral, no fork. Lower stability priority — if it crashes, the Meta-Agent re-dispatches. Treated as ephemeral and replaceable. On recovery, the agent continues without knowing it crashed — the Context Rebuilder injects a resume prompt that makes it look like a natural continuation. External tools, sanitiser required. Reads User KG to respect user preferences during execution. Traverses Code Graph for structurally coherent code. Has escalation tools: request_clarification and check_escalation_response. System prompt: \"If you're uncertain about scope, direction, or trade-offs, use request_clarification. Don't guess — ask.\" Receives tasks as structured injections: phase, task, constraints, forbidden_actions, available_tools, success_criteria. Single-phase isolation: Worker sees only current phase, never what comes next. Example forbidden_actions: [\"create production files\", \"modify existing src/\", \"run tests in watch mode\"]. The Worker literally cannot skip ahead because it doesn't know what \"ahead\" is.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Phase-locked execution (single phase per dispatch, forbidden_actions enforcement). Escalation tools (request_clarification, check_escalation_response). User KG reads for preference-aware execution. Code Graph reads for structural coherence.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Context-aware resume after crash (transparent to agent). Dynamic tool manifest — handles hot-swap mid-session. Confidence scoring on outputs. Full sanitiser integration on all external I/O.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -698,14 +824,16 @@
           "color": "orange",
           "icon": "📋",
           "description": "push, pop, peek, reprioritise — manages the persistent goal queue.",
-          "tags": "[\"meta-agent tool\"]",
+          "tags": [
+            "meta-agent tool"
+          ],
           "sort_order": 53,
           "versions": {
             "overview": {
               "content": "push, pop, peek, reprioritise — manages the persistent goal queue.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -718,14 +846,16 @@
           "color": "orange",
           "icon": "📖",
           "description": "get_checkpoint, get_task_log, get_escalations — reads Worker's progress.",
-          "tags": "[\"meta-agent tool\"]",
+          "tags": [
+            "meta-agent tool"
+          ],
           "sort_order": 54,
           "versions": {
             "overview": {
               "content": "get_checkpoint, get_task_log, get_escalations — reads Worker's progress.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -738,14 +868,17 @@
           "color": "orange",
           "icon": "🔧",
           "description": "dispatch, abort, respond_escalation — sends phase-locked work to Worker. Dispatch includes phase, forbidden_actions, success_criteria.",
-          "tags": "[\"meta-agent tool\",\"phase-locked\"]",
+          "tags": [
+            "meta-agent tool",
+            "phase-locked"
+          ],
           "sort_order": 55,
           "versions": {
             "overview": {
               "content": "dispatch, abort, respond_escalation — sends phase-locked work to Worker. Dispatch includes phase, forbidden_actions, success_criteria.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -758,14 +891,17 @@
           "color": "orange",
           "icon": "📡",
           "description": "register, deregister, list — mutates Worker's tool manifest at runtime.",
-          "tags": "[\"meta-agent tool\",\"hot-swap\"]",
+          "tags": [
+            "meta-agent tool",
+            "hot-swap"
+          ],
           "sort_order": 56,
           "versions": {
             "overview": {
               "content": "register, deregister, list — mutates Worker's tool manifest at runtime.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -778,14 +914,18 @@
           "color": "orange",
           "icon": "⚙",
           "description": "update_prompt, update_model, update_agents — evolves Worker's config via typed builder DSL. Validated, versioned, rollback-safe. Not raw JSON editing.",
-          "tags": "[\"meta-agent tool\",\"dsl\",\"rollback-safe\"]",
+          "tags": [
+            "meta-agent tool",
+            "dsl",
+            "rollback-safe"
+          ],
           "sort_order": 57,
           "versions": {
             "overview": {
               "content": "update_prompt, update_model, update_agents — evolves Worker's config via typed builder DSL. Validated, versioned, rollback-safe.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -798,14 +938,17 @@
           "color": "orange",
           "icon": "🔍",
           "description": "search, inspect, install — discovers new MCP servers from a catalogue.",
-          "tags": "[\"meta-agent tool\",\"discovery\"]",
+          "tags": [
+            "meta-agent tool",
+            "discovery"
+          ],
           "sort_order": 58,
           "versions": {
             "overview": {
               "content": "search, inspect, install — discovers new MCP servers from a catalogue.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -818,14 +961,17 @@
           "color": "gold",
           "icon": "👤",
           "description": "query, traverse, search — Meta-Agent reads User KG for planning context.",
-          "tags": "[\"meta-agent tool\",\"new\"]",
+          "tags": [
+            "meta-agent tool",
+            "new"
+          ],
           "sort_order": 59,
           "versions": {
             "overview": {
               "content": "query, traverse, search — Meta-Agent reads User KG for planning context.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -838,14 +984,17 @@
           "color": "gold",
           "icon": "✏",
           "description": "add_entity, add_edge, annotate — Meta-Agent writes inferred entities to User KG.",
-          "tags": "[\"meta-agent tool\",\"new\"]",
+          "tags": [
+            "meta-agent tool",
+            "new"
+          ],
           "sort_order": 60,
           "versions": {
             "overview": {
               "content": "add_entity, add_edge, annotate — Meta-Agent writes inferred entities to User KG.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -858,14 +1007,17 @@
           "color": "emerald",
           "icon": "🗺",
           "description": "expand, path, topo_order — Meta-Agent reads Code Graph for repo-aware decomposition.",
-          "tags": "[\"meta-agent tool\",\"new\"]",
+          "tags": [
+            "meta-agent tool",
+            "new"
+          ],
           "sort_order": 61,
           "versions": {
             "overview": {
               "content": "expand, path, topo_order — Meta-Agent reads Code Graph for repo-aware decomposition.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -878,14 +1030,17 @@
           "color": "emerald",
           "icon": "✏",
           "description": "annotate_module, set_data_flow — Meta-Agent annotates Code Graph with module boundaries and data flow intentions.",
-          "tags": "[\"meta-agent tool\",\"new\"]",
+          "tags": [
+            "meta-agent tool",
+            "new"
+          ],
           "sort_order": 62,
           "versions": {
             "overview": {
               "content": "annotate_module, set_data_flow — Meta-Agent annotates Code Graph with module boundaries and data flow intentions.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -898,14 +1053,17 @@
           "color": "teal",
           "icon": "🙋",
           "description": "Writes question + context snapshot to State Store. Sets task status to paused:awaiting_guidance. Worker halts current execution and waits.",
-          "tags": "[\"worker tool\",\"escalation\"]",
+          "tags": [
+            "worker tool",
+            "escalation"
+          ],
           "sort_order": 63,
           "versions": {
             "overview": {
               "content": "Writes question + context snapshot to State Store. Sets task status to paused:awaiting_guidance. Worker halts current execution and waits.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -918,14 +1076,17 @@
           "color": "teal",
           "icon": "📨",
           "description": "Polls State Store for Meta-Agent's response. Returns guidance or still_pending. Worker resumes when guidance arrives.",
-          "tags": "[\"worker tool\",\"escalation\"]",
+          "tags": [
+            "worker tool",
+            "escalation"
+          ],
           "sort_order": 64,
           "versions": {
             "overview": {
               "content": "Polls State Store for Meta-Agent's response. Returns guidance or still_pending. Worker resumes when guidance arrives.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -938,14 +1099,18 @@
           "color": "gold",
           "icon": "👤",
           "description": "Read-only. No writes (injection safety). Worker reads preferences but cannot poison the knowledge graph even if fully compromised.",
-          "tags": "[\"worker tool\",\"read-only\",\"new\"]",
+          "tags": [
+            "worker tool",
+            "read-only",
+            "new"
+          ],
           "sort_order": 65,
           "versions": {
             "overview": {
               "content": "Read-only. No writes (injection safety). Worker reads preferences but cannot poison the knowledge graph.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -958,14 +1123,18 @@
           "color": "emerald",
           "icon": "🗺",
           "description": "Read-only. Checkpointer writes on Worker's behalf after file edits trigger AST re-parse.",
-          "tags": "[\"worker tool\",\"read-only\",\"new\"]",
+          "tags": [
+            "worker tool",
+            "read-only",
+            "new"
+          ],
           "sort_order": 66,
           "versions": {
             "overview": {
               "content": "Read-only. Checkpointer writes on Worker's behalf after file edits trigger AST re-parse.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -976,9 +1145,10 @@
           "content": "Two stock OpenCode instances. Meta-Agent (Planner) uses cheap model (Haiku/Sonnet), plans and dispatches. Worker (Executor) uses strong model (Sonnet/Opus), executes one phase at a time. Why two instances? (1) Separation of concerns: planning and execution have different tool sets, models, cost profiles, and risk levels. (2) Blast radius: a prompt injection in the Worker can't reach the Planner — they share no tools or MCP connection. (3) Independent recovery: Worker can crash and be re-dispatched without losing Meta-Agent's plan state. (4) Cost optimisation: Planner uses cheap model, Worker uses capable model. (5) Dogfooding: you build one runtime, not two systems. Both instances use the same config DSL, proxy, and checkpoint infra.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "escalation-flow",
@@ -988,7 +1158,11 @@
       "color": "teal",
       "icon": "🙋",
       "description": "Worker ↔ Meta-Agent communication via shared state. Worker hits ambiguity → calls request_clarification({question, context, options}) → State Store records escalation → Worker pauses → Meta-Agent picks it up on next cycle → reasons → responds via worker_control.respond_escalation → State Store updates → Worker calls check_escalation_response → receives guidance → resumes. Timeout handling: if Meta-Agent does not respond within escalation_timeout_ms, Worker can (a) proceed with best guess, (b) abort, or (c) escalate to Human Gate. Policy set in Worker system prompt.",
-      "tags": "[\"async\",\"no blocking rpc\",\"structured payload\"]",
+      "tags": [
+        "async",
+        "no blocking rpc",
+        "structured payload"
+      ],
       "sort_order": 60,
       "children": [],
       "versions": {
@@ -996,9 +1170,10 @@
           "content": "Worker ↔ Meta-Agent communication via shared state. Escalation sequence: Worker hits ambiguity → calls request_clarification({question, context, options}) → State Store records with status pending → Worker pauses (returns control to idle loop) → Meta-Agent's state_reader.get_escalations() picks it up → Meta-Agent reasons → calls worker_control.respond_escalation({task_id, guidance}) → State Store updates to resolved → Worker calls check_escalation_response() → receives guidance → resumes. Timeout: if no response within escalation_timeout_ms, Worker can: (a) proceed_best_guess, (b) abort, or (c) escalate_to_human. Design: Worker stays isolated (writes to State Store, not to Meta-Agent directly). Async by design (no blocking RPC). Structured payload: {question, context_snapshot, suggested_options[], urgency}. Crash safety: Checkpointer snapshots escalation state.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "shared-state",
@@ -1008,7 +1183,11 @@
       "color": "blue",
       "icon": "💾",
       "description": "The Bridge — SQLite WAL / Postgres. Goals, tasks, tool logs, checkpoints, escalations. Both instances communicate by sharing a database, not a connection.",
-      "tags": "[\"sqlite wal\",\"postgres\",\"append-only\"]",
+      "tags": [
+        "sqlite wal",
+        "postgres",
+        "append-only"
+      ],
       "sort_order": 70,
       "children": [
         {
@@ -1019,32 +1198,36 @@
           "color": "blue",
           "icon": "💾",
           "description": "Append-only log that both instances read/write. The Meta-Agent writes goals and reads results. The Worker's Checkpointer writes tool call logs and progress. This is how the two OpenCode instances communicate without direct coupling — they share a database, not a connection. Also stores escalation records (question, context, response, status) and fast-path completion records so the Meta-Agent stays aware of tasks it didn't plan. Dashboard reads everything here.",
-          "tags": "[\"checkpointer\",\"context rebuilder\",\"crash recovery\"]",
+          "tags": [
+            "checkpointer",
+            "context rebuilder",
+            "crash recovery"
+          ],
           "sort_order": 71,
           "versions": {
             "mvp": {
               "content": "SQLite WAL database with tables for goals, tasks, and tool_logs. Basic CRUD operations. Both agents read/write via simple SQL. No pruning, no optimization.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Append-only log that both instances read/write. The Meta-Agent writes goals and reads results. The Worker's Checkpointer writes tool call logs and progress. This is how the two OpenCode instances communicate without direct coupling — they share a database, not a connection. Also stores escalation records (question, context, response, status) and fast-path completion records so the Meta-Agent stays aware of tasks it didn't plan. Dashboard reads everything here.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Add checkpoints table, escalation records, fast-path completion records. Context rebuilder queries. Pruning policy (keep last N days). Indexes for common query patterns.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "SSE/WebSocket push for live dashboard updates. Postgres option for multi-machine deployments. Full audit trail with retention policies. Query optimization for dashboard views.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -1065,32 +1248,37 @@
           "color": "blue",
           "icon": "📸",
           "description": "Taps Worker's Proxy. Writes after every tool response: task ID, tool name, args, result hash, timestamp, plan summary. Also snapshots escalation state so crash recovery can restore a paused-and-waiting Worker correctly. If tool was a file edit, also triggers AST re-parse and Code Graph update. Strategy: tool results are facts; LLM reasoning can be re-derived. So we save the facts (tool call + result) and let the Context Rebuilder regenerate the reasoning frame on recovery. Runs async — doesn't block the agent. The proxy fires-and-forgets to the checkpointer; the Worker never waits for a checkpoint write to complete.",
-          "tags": "[\"async\",\"fire-and-forget\",\"non-blocking\",\"code graph update\"]",
+          "tags": [
+            "async",
+            "fire-and-forget",
+            "non-blocking",
+            "code graph update"
+          ],
           "sort_order": 72,
           "versions": {
             "mvp": {
               "content": "Intercept tool responses from Worker proxy. Write task_id, tool_name, args_hash, result_hash, timestamp to State Store. Fire-and-forget (async, non-blocking).",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Taps Worker's Proxy. Writes after every tool response: task ID, tool name, args, result hash, timestamp, plan summary. Also snapshots escalation state so crash recovery can restore a paused-and-waiting Worker correctly. If tool was a file edit, triggers AST re-parse and Code Graph update. Strategy: tool results are facts; LLM reasoning can be re-derived. So we save the facts and let the Context Rebuilder regenerate the reasoning frame on recovery. Runs async — the proxy fires-and-forgets; the Worker never waits for a checkpoint write to complete.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Escalation state snapshots. File-edit detection triggering Code Graph AST re-parse. Plan summary snapshots for context rebuilder. Idempotency markers for crash recovery.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Configurable checkpoint granularity. Compressed checkpoint storage. Checkpoint pruning with retention policy. Metrics on checkpoint write latency.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -1111,32 +1299,36 @@
           "color": "blue",
           "icon": "📝",
           "description": "On crash recovery of either instance: generates resume prompt from compressed checkpoint + relevant graph context. For Worker: \"you were doing X, completed Y, next step Z\". For Meta-Agent: \"current goal is X, worker status is Y, pending goals are Z\". If Worker was in paused:awaiting_guidance state, resume prompt includes the escalation question and any response received while it was down. Lossy by design. You can't clone LLM hidden state — it's non-serialisable. This is like a save game, not a VM snapshot. The rebuilt context is \"good enough\" — the agent continues without knowing it crashed, picking up from the last checkpoint with a compressed summary of what came before.",
-          "tags": "[\"lossy by design\",\"save game\",\"resume prompt\"]",
+          "tags": [
+            "lossy by design",
+            "save game",
+            "resume prompt"
+          ],
           "sort_order": 73,
           "versions": {
             "mvp": {
               "content": "Read last checkpoint from State Store. Generate basic resume prompt: \"you were doing X, completed Y, next step Z\". Inject as system prompt on respawn.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "On crash recovery of either instance: generates resume prompt from compressed checkpoint + relevant graph context. For Worker: \"you were doing X, completed Y, next step Z\". For Meta-Agent: \"current goal is X, worker status is Y, pending goals are Z\". If Worker was in paused:awaiting_guidance state, resume prompt includes the escalation question and any response received while it was down. Lossy by design. You can't clone LLM hidden state — it's non-serialisable. This is like a save game, not a VM snapshot.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Include relevant User KG context in resume prompt. Include Code Graph context for coding tasks. Handle paused:awaiting_guidance state.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Compressed multi-checkpoint summaries. Relevance-ranked context selection. Token budget management for resume prompts.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -1155,9 +1347,10 @@
           "content": "SQLite WAL / Postgres. Goals, tasks, tool logs, checkpoints, escalations. The bridge between both instances — they share a database, not a connection. Context preservation: What IS saved — task ID + current step index, tool call log (name, args, result hash), plan summary (goal queue snapshot), goal queue pointer, timestamps, escalation state. What is NOT saved — LLM hidden state (non-serialisable), full conversation history (too large), in-flight reasoning (ephemeral by nature). Tool results are facts; LLM reasoning can be re-derived.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "mcp-proxies",
@@ -1167,7 +1360,11 @@
       "color": "orange",
       "icon": "⇄",
       "description": "Tool proxy layer for both agent instances. Meta-Agent gets static manifest (10 internal tools, no sanitiser). Worker gets dynamic manifest (hot-swappable, sanitiser required, circuit breaker).",
-      "tags": "[\"static manifest\",\"dynamic manifest\",\"hot-swappable\"]",
+      "tags": [
+        "static manifest",
+        "dynamic manifest",
+        "hot-swappable"
+      ],
       "sort_order": 80,
       "children": [
         {
@@ -1178,20 +1375,24 @@
           "color": "orange",
           "icon": "⇄",
           "description": "Hosts 10 planning tools (6 planning + 4 graph). These are your custom MCP servers — small, stable, purpose-built. No external API calls, no injection risk.",
-          "tags": "[\"static\",\"no sanitiser\",\"low risk\"]",
+          "tags": [
+            "static",
+            "no sanitiser",
+            "low risk"
+          ],
           "sort_order": 81,
           "versions": {
             "mvp": {
               "content": "Static MCP server hosting goal_queue, state_reader, worker_control tools. Simple stdio transport. No hot-swap needed.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Hosts 10 planning tools (6 planning + 4 graph). These are your custom MCP servers — small, stable, purpose-built. No external API calls, no injection risk.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1204,20 +1405,25 @@
           "color": "cyan",
           "icon": "⇄",
           "description": "Hosts all external-facing tools + escalation + graph reads. Dynamic manifest — the Meta-Agent's proxy_admin tool adds/removes servers here at runtime. All responses pass through the Sanitiser. Health & circuit breaker: heartbeats downstream servers; dead endpoints auto-removed from manifest, Meta-Agent notified via State Store so it can find replacements.",
-          "tags": "[\"sanitiser required\",\"hot-swappable\",\"checkpoint tap\",\"circuit breaker\"]",
+          "tags": [
+            "sanitiser required",
+            "hot-swappable",
+            "checkpoint tap",
+            "circuit breaker"
+          ],
           "sort_order": 82,
           "versions": {
             "mvp": {
               "content": "MCP proxy with configurable tool list. Route tool calls to downstream servers. Pass responses through sanitiser. Basic health check on downstream servers.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Hosts all external-facing tools + escalation + graph reads. Dynamic manifest — Meta-Agent's proxy_admin adds/removes servers at runtime. All responses pass through Sanitiser. Health & circuit breaker: heartbeats downstream servers; dead endpoints auto-removed from manifest, Meta-Agent notified via State Store so it can find replacements.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1228,9 +1434,10 @@
           "content": "Tool proxy layer. Meta-Agent gets static manifest (10 internal tools, no sanitiser, low risk). Worker gets dynamic manifest (hot-swappable, sanitiser required, circuit breaker, checkpoint tap).",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "security-sandbox",
@@ -1240,7 +1447,11 @@
       "color": "red",
       "icon": "🛡",
       "description": "3-stage sanitiser pipeline (Worker proxy only). Regex heuristics → structural strip (role tags, cap length) → optional LLM classifier. Fail-closed. Isolated subprocess. Scans inbound responses (injection defence) AND outbound tool args (prevents data exfiltration via tricked agent).",
-      "tags": "[\"fail-closed\",\"isolated subprocess\",\"bidirectional\"]",
+      "tags": [
+        "fail-closed",
+        "isolated subprocess",
+        "bidirectional"
+      ],
       "sort_order": 90,
       "children": [
         {
@@ -1251,32 +1462,37 @@
           "color": "red",
           "icon": "🛡",
           "description": "Sits between Worker's Proxy and downstream servers. Stage 1: Heuristic regex for common injection patterns. Stage 2: Structural strip (remove role tags, cap response length). Stage 3: Optional LLM classifier for sophisticated detection. The Meta-Agent's proxy does NOT need a sanitiser — its tools are all internal, no external input. Isolated subprocess. Fail-closed. Scans inbound responses (injection defence) and outbound tool args (prevents data exfiltration via a tricked agent — e.g. an injected prompt that encodes secrets into a search query). Injection events visible in dashboard Security Events panel.",
-          "tags": "[\"3-stage\",\"fail-closed\",\"isolated subprocess\",\"bidirectional\"]",
+          "tags": [
+            "3-stage",
+            "fail-closed",
+            "isolated subprocess",
+            "bidirectional"
+          ],
           "sort_order": 91,
           "versions": {
             "mvp": {
               "content": "Regex-based heuristic scanner for common injection patterns. Structural strip (remove role tags, cap response length). Pass/block verdict on each tool response. Logging to State Store.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "overview": {
               "content": "Sits between Worker's Proxy and downstream servers. Stage 1: Heuristic regex for common injection patterns. Stage 2: Structural strip (remove role tags, cap response length). Stage 3: Optional LLM classifier for sophisticated detection. The Meta-Agent's proxy does NOT need a sanitiser — its tools are all internal, no external input. Isolated subprocess. Fail-closed. Scans inbound responses (injection defence) and outbound tool args (prevents data exfiltration — e.g. an injected prompt encoding secrets into a search query). Injection events visible in dashboard Security Events panel.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v1": {
               "content": "Outbound scanning (prevent data exfiltration via tool args). Configurable rule sets per tool. Injection frequency tracking. Auto-disable tools exceeding threshold. Dashboard integration.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             },
             "v2": {
               "content": "Optional LLM classifier stage. Adaptive rules based on observed attack patterns. Per-tool confidence scoring. Full audit trail with payload samples.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {
@@ -1297,14 +1513,18 @@
           "color": "red",
           "icon": "📋",
           "description": "Blocked injections logged to State Store. Meta-Agent can auto-disable compromised tools via injection feedback loop — reads sanitiser alerts and learns to avoid them. Dashboard shows real-time security events feed.",
-          "tags": "[\"auto-disable\",\"injection feedback loop\",\"real-time\"]",
+          "tags": [
+            "auto-disable",
+            "injection feedback loop",
+            "real-time"
+          ],
           "sort_order": 92,
           "versions": {
             "overview": {
               "content": "Blocked injections logged to State Store. Meta-Agent can auto-disable compromised tools via injection feedback loop — reads sanitiser alerts and learns to avoid them. Dashboard shows real-time security events.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1315,9 +1535,10 @@
           "content": "3-stage sanitiser: regex heuristics → structural strip → optional LLM classifier. Fail-closed. Isolated subprocess. Scans inbound + outbound. Worker proxy only. Security model: Meta-Agent has no sanitiser (internal tools only). Worker has full 3-stage sanitiser. Cross-instance isolation: Worker cannot reach Meta-Agent's tools even if fully compromised. Escalation tools are safe: they write structured data to State Store, not free-text to Meta-Agent's prompt. Dashboard is read-only — cannot be used as attack vector. Graph writes: Worker cannot write to either graph — cannot poison knowledge even if fully compromised. In full-auto mode: sanitiser is the only defence against prompt injection. Write fence still applies for destructive ops. Injection feedback loop lets Meta-Agent auto-disable compromised tools.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "downstream-tools",
@@ -1327,7 +1548,11 @@
       "color": "amber",
       "icon": "🔧",
       "description": "External tool servers — search, email, database, filesystem, code execution, custom. Hot-swappable — Meta-Agent adds/removes at runtime via proxy_admin.",
-      "tags": "[\"external\",\"hot-swappable\",\"runtime managed\"]",
+      "tags": [
+        "external",
+        "hot-swappable",
+        "runtime managed"
+      ],
       "sort_order": 100,
       "children": [
         {
@@ -1338,14 +1563,16 @@
           "color": "amber",
           "icon": "🔍",
           "description": "External search MCP server.",
-          "tags": "[\"ext\"]",
+          "tags": [
+            "ext"
+          ],
           "sort_order": 101,
           "versions": {
             "overview": {
               "content": "External search MCP server.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1358,14 +1585,16 @@
           "color": "amber",
           "icon": "✉",
           "description": "External email MCP server.",
-          "tags": "[\"ext\"]",
+          "tags": [
+            "ext"
+          ],
           "sort_order": 102,
           "versions": {
             "overview": {
               "content": "External email MCP server.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1378,14 +1607,16 @@
           "color": "amber",
           "icon": "🗄",
           "description": "External database MCP server.",
-          "tags": "[\"write\"]",
+          "tags": [
+            "write"
+          ],
           "sort_order": 103,
           "versions": {
             "overview": {
               "content": "External database MCP server.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1398,14 +1629,16 @@
           "color": "amber",
           "icon": "📂",
           "description": "External filesystem MCP server.",
-          "tags": "[\"write\"]",
+          "tags": [
+            "write"
+          ],
           "sort_order": 104,
           "versions": {
             "overview": {
               "content": "External filesystem MCP server.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1418,14 +1651,16 @@
           "color": "amber",
           "icon": "💻",
           "description": "External code execution MCP server.",
-          "tags": "[\"write\"]",
+          "tags": [
+            "write"
+          ],
           "sort_order": 105,
           "versions": {
             "overview": {
               "content": "External code execution MCP server.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1438,14 +1673,16 @@
           "color": "amber",
           "icon": "🧩",
           "description": "Custom MCP servers — hot-swappable, added/removed by Meta-Agent at runtime.",
-          "tags": "[\"dynamic\"]",
+          "tags": [
+            "dynamic"
+          ],
           "sort_order": 106,
           "versions": {
             "overview": {
               "content": "Custom MCP servers — hot-swappable, added/removed by Meta-Agent at runtime.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1456,9 +1693,10 @@
           "content": "External MCP tool servers. Search, email, database, filesystem, code execution, custom. Hot-swappable — Meta-Agent adds/removes at runtime.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     },
     {
       "id": "bdd-tdd-pipeline",
@@ -1468,7 +1706,11 @@
       "color": "teal",
       "icon": "🔄",
       "description": "Strict 8-phase pipeline enforced by Meta-Agent, executed by Worker. Each phase is a separate dispatch. Worker sees only the current phase — never what comes next. Every phase ends with a git commit creating a clean rollback point. Meta-Agent verifies phase gate before advancing. If gate fails, re-dispatch same phase. Phases ⑦ and ⑧ are audit-only — violations feed back as targeted fix dispatches, then re-audit.",
-      "tags": "[\"phase isolation\",\"git commits\",\"gate verification\"]",
+      "tags": [
+        "phase isolation",
+        "git commits",
+        "gate verification"
+      ],
       "sort_order": 110,
       "children": [
         {
@@ -1479,14 +1721,17 @@
           "color": "gold",
           "icon": "📝",
           "description": "Write the .feature file. Describe the behaviour in Gherkin. DO NOT write any tests or code. Gate: .feature file exists. Git commit after phase.",
-          "tags": "[\"gherkin\",\"gate: .feature exists\"]",
+          "tags": [
+            "gherkin",
+            "gate: .feature exists"
+          ],
           "sort_order": 111,
           "versions": {
             "overview": {
               "content": "Write the .feature file. Describe the behaviour in Gherkin. DO NOT write any tests or code. Gate: .feature file exists. Git commit after phase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1499,14 +1744,17 @@
           "color": "cyan",
           "icon": "🧪",
           "description": "Write failing step definitions for this feature file. DO NOT implement any production code. Gate: step files exist. Git commit after phase.",
-          "tags": "[\"failing tests\",\"gate: step files exist\"]",
+          "tags": [
+            "failing tests",
+            "gate: step files exist"
+          ],
           "sort_order": 112,
           "versions": {
             "overview": {
               "content": "Write failing step definitions for this feature file. DO NOT implement any production code. Gate: step files exist. Git commit after phase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1519,14 +1767,17 @@
           "color": "purple",
           "icon": "🧪",
           "description": "Write failing unit tests for the components you'll need. DO NOT implement any production code. Gate: test files exist. Git commit after phase.",
-          "tags": "[\"failing tests\",\"gate: test files exist\"]",
+          "tags": [
+            "failing tests",
+            "gate: test files exist"
+          ],
           "sort_order": 113,
           "versions": {
             "overview": {
               "content": "Write failing unit tests for the components you'll need. DO NOT implement any production code. Gate: test files exist. Git commit after phase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1539,14 +1790,17 @@
           "color": "red",
           "icon": "🔴",
           "description": "Run all tests. Confirm they fail. Report which tests fail and why. DO NOT fix anything. Gate: tests fail. Git commit after phase.",
-          "tags": "[\"confirm failure\",\"gate: tests fail\"]",
+          "tags": [
+            "confirm failure",
+            "gate: tests fail"
+          ],
           "sort_order": 114,
           "versions": {
             "overview": {
               "content": "Run all tests. Confirm they fail. Report which tests fail and why. DO NOT fix anything. Gate: tests fail. Git commit after phase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1559,14 +1813,17 @@
           "color": "green",
           "icon": "🟢",
           "description": "Write the minimum production code to make all tests pass. DO NOT refactor or optimise. Gate: tests pass. Git commit after phase.",
-          "tags": "[\"minimum code\",\"gate: tests pass\"]",
+          "tags": [
+            "minimum code",
+            "gate: tests pass"
+          ],
           "sort_order": 115,
           "versions": {
             "overview": {
               "content": "Write the minimum production code to make all tests pass. DO NOT refactor or optimise. Gate: tests pass. Git commit after phase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1579,14 +1836,18 @@
           "color": "sky",
           "icon": "🔧",
           "description": "Refactor for clarity, DRY, naming. All tests must still pass. DO NOT add new functionality. Gate: tests still pass. Git commit after phase.",
-          "tags": "[\"clarity\",\"dry\",\"gate: tests still pass\"]",
+          "tags": [
+            "clarity",
+            "dry",
+            "gate: tests still pass"
+          ],
           "sort_order": 116,
           "versions": {
             "overview": {
               "content": "Refactor for clarity, DRY, naming. All tests must still pass. DO NOT add new functionality. Gate: tests still pass. Git commit after phase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1599,14 +1860,18 @@
           "color": "orange",
           "icon": "🏛",
           "description": "LLM-driven audit agent (not a linter). Audit against Clean Architecture standards. Report violations: dependency direction (inner layers importing outer), layer boundary leaks (business logic in controllers, HTTP in domain), abstraction leaks (SQL in repository interface), use case isolation. Traverses Code Graph DATA_FLOW and IMPORTS edges to verify dependency direction structurally. DO NOT fix — only report. Report format: {violations: [{file, line, rule, severity, explanation}], passed: bool}. If violations found, Meta-Agent dispatches targeted fix phases then re-runs this review. Gate: 0 violations. Git commit after phase.",
-          "tags": "[\"audit-only\",\"clean architecture\",\"gate: 0 violations\"]",
+          "tags": [
+            "audit-only",
+            "clean architecture",
+            "gate: 0 violations"
+          ],
           "sort_order": 117,
           "versions": {
             "overview": {
               "content": "LLM-driven audit agent. Audit against Clean Architecture: dependency direction (inner layers importing outer = violation), layer boundaries (business logic in controllers), abstraction leaks (SQL in repository interface), use case isolation. Traverses Code Graph DATA_FLOW and IMPORTS edges structurally. DO NOT fix — only report. Report: {violations: [{file, line, rule, severity, explanation}], passed: bool}. Gate: 0 violations. Git commit after phase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1619,14 +1884,19 @@
           "color": "rose",
           "icon": "🔒",
           "description": "LLM-driven security audit agent. Check: injection vectors (SQL, XSS, command injection, path traversal), auth/authz gaps (endpoints without auth middleware, missing permission checks, privilege escalation), secrets exposure (hardcoded keys, tokens in logs, secrets in error messages, .env leaks), unsafe dependencies (known CVEs, deprecated crypto, insecure defaults). Checks compliance requirements from User KG (e.g. \"client requires SOC2\" → enforce specific controls). DO NOT fix — only report. Same report format as Arch Review. Gate: 0 findings. Git commit after phase.",
-          "tags": "[\"audit-only\",\"security\",\"gate: 0 findings\",\"user kg compliance\"]",
+          "tags": [
+            "audit-only",
+            "security",
+            "gate: 0 findings",
+            "user kg compliance"
+          ],
           "sort_order": 118,
           "versions": {
             "overview": {
               "content": "LLM-driven security audit. Injection vectors (SQL, XSS, command injection, path traversal), auth/authz gaps (missing middleware, privilege escalation), secrets exposure (hardcoded keys, tokens in logs, .env leaks), unsafe dependencies (CVEs, deprecated crypto). Checks User KG compliance requirements (e.g. SOC2). DO NOT fix — only report. Same report format. Gate: 0 findings. Git commit after phase.",
               "progress": 0,
               "status": "planned",
-              "updated_at": "2026-02-10 09:56:50"
+              "updated_at": "2026-02-11 12:10:32"
             }
           },
           "features": {}
@@ -1637,9 +1907,10 @@
           "content": "Strict 8-phase pipeline enforced by Meta-Agent: Feature → Steps → Units → Red → Green → Refactor → Arch Review → Sec Review. Every phase ends with a git commit. LLM agents are bad at process discipline. Given \"build a login feature\", they'll jump straight to implementation, skip tests, or refactor before proving anything works. Phase isolation prevents this — the Worker can't skip ahead because it doesn't know what \"ahead\" is. The forbidden_actions field explicitly blocks forward-leaking behaviour. This turns the Meta-Agent into a process enforcer, not just a task decomposer. Review phases ⑦ ⑧ are audit-only — dispatched as read-only inspections. Worker reports violations but is forbidden from modifying code. Meta-Agent reads the report, dispatches separate fix phases with specific violations as constraints. Prevents the \"fix one thing, break another\" cascade. Phases are extensible: add performance review, accessibility audit, API design review — same pattern.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
-      }
+      },
+      "features": {}
     }
   ],
   "nodes": [
@@ -1651,14 +1922,18 @@
       "color": "sky",
       "icon": "📊",
       "description": "Runtime Visibility — read-only web UI that observes but never mutates. The single pane of glass for both observation and control.",
-      "tags": "[\"read-only\",\"web ui\",\"live updates\"]",
+      "tags": [
+        "read-only",
+        "web ui",
+        "live updates"
+      ],
       "sort_order": 10,
       "versions": {
         "overview": {
           "content": "Read-only web UI. Process view, goal feed, tool timeline, security events, graph explorers. The dashboard is a thin web UI (React / plain HTML) that reads from two sources: the State Store (goals, tasks, tool logs, escalations, checkpoints) and the Supervisor's health API (process status, heartbeat data, resource usage). It writes nothing — pure read-only observer. Optional: SSE/WebSocket push from State Store for live updates without polling. The Human Gate approval actions can be embedded here too, making it the single pane of glass for both observation and control.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1671,32 +1946,36 @@
       "color": "sky",
       "icon": "📊",
       "description": "Real-time view of the entire runtime. Read-only — it observes but never mutates. Built as a simple web app (React / plain HTML) that polls the State Store + Supervisor health API. Runs as a separate process managed by the Supervisor. Think: the runtime equivalent of the process tree diagram, but live. Reads from two sources: State Store (goals, tasks, tool logs, escalations, checkpoints) and Supervisor health API (process status, heartbeat data, resource usage). It writes nothing — pure read-only observer. Optional: SSE/WebSocket push from State Store for live updates without polling. Human Gate approval actions can be embedded here, making it the single pane of glass for both observation and control.",
-      "tags": "[\"read-only\",\"web ui\",\"sse/websocket\"]",
+      "tags": [
+        "read-only",
+        "web ui",
+        "sse/websocket"
+      ],
       "sort_order": 11,
       "versions": {
         "mvp": {
           "content": "Single-page web app showing process status (up/down) and current goal. Polls Supervisor health API every 5s. Basic goal queue display from State Store. Static HTML + vanilla JS.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Real-time view of the entire runtime. Read-only — it observes but never mutates. Built as a simple web app (React / plain HTML) that polls the State Store + Supervisor health API. Runs as a separate process managed by the Supervisor. Think: the runtime equivalent of the process tree diagram, but live. Data sources: State Store → goals, tasks, tool call logs, escalations, checkpoints, fast-path records, injection events. Supervisor Health API → process status, uptime, restart count, memory, current model per instance. No direct process inspection — dashboard never connects to OpenCode or proxies directly. Push vs Poll: SSE from State Store for live updates; poll Supervisor health every 5s. Human Gate embedded: approval buttons for gated tasks + escalation responses in same UI.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Full process tree view with live status. Goal & task feed with click-to-inspect. Tool call timeline with filtering. Security events panel. Escalation queue with response actions.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "SSE/WebSocket for real-time push updates. Entity Explorer for User KG. Repo Map for Code Graph. Embedded Human Gate approval UI. Performance metrics and resource graphs.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -1717,14 +1996,19 @@
       "color": "sky",
       "icon": "🔴",
       "description": "Process tree with real-time status: running, recovering, crashed, paused for every child. Uptime, restart count, current model, memory usage per instance.",
-      "tags": "[\"running\",\"recovering\",\"crashed\",\"paused\"]",
+      "tags": [
+        "running",
+        "recovering",
+        "crashed",
+        "paused"
+      ],
       "sort_order": 12,
       "versions": {
         "overview": {
           "content": "Process tree with real-time status: running, recovering, crashed, paused for every child. Uptime, restart count, current model, memory usage per instance.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1737,14 +2021,18 @@
       "color": "sky",
       "icon": "📋",
       "description": "Live stream of the Goal Queue. Current goal, decomposed sub-tasks, completion status. See what the Meta-Agent is planning and what the Worker is executing. Clickable to inspect full task payloads.",
-      "tags": "[\"live stream\",\"clickable\",\"task payloads\"]",
+      "tags": [
+        "live stream",
+        "clickable",
+        "task payloads"
+      ],
       "sort_order": 13,
       "versions": {
         "overview": {
           "content": "Live stream of the Goal Queue. Current goal, decomposed sub-tasks, completion status. See what the Meta-Agent is planning and what the Worker is executing. Clickable to inspect full task payloads.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1757,14 +2045,18 @@
       "color": "sky",
       "icon": "🔧",
       "description": "Chronological feed of every tool call (both instances). Shows: tool name, args (truncated), response status, latency, sanitiser verdict (pass/block). Filterable by instance, tool, and status. This is your debugging lifeline.",
-      "tags": "[\"chronological\",\"filterable\",\"debugging lifeline\"]",
+      "tags": [
+        "chronological",
+        "filterable",
+        "debugging lifeline"
+      ],
       "sort_order": 14,
       "versions": {
         "overview": {
           "content": "Chronological feed of every tool call (both instances). Shows: tool name, args (truncated), response status, latency, sanitiser verdict (pass/block). Filterable by instance, tool, and status. This is your debugging lifeline.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1777,14 +2069,18 @@
       "color": "sky",
       "icon": "🛡",
       "description": "Sanitiser verdicts, blocked injections with raw payload preview, injection frequency per tool, auto-disable events. Links to full audit log entries. Alerts when injection rate exceeds threshold.",
-      "tags": "[\"audit log\",\"injection frequency\",\"auto-disable\"]",
+      "tags": [
+        "audit log",
+        "injection frequency",
+        "auto-disable"
+      ],
       "sort_order": 15,
       "versions": {
         "overview": {
           "content": "Sanitiser verdicts, blocked injections with raw payload preview, injection frequency per tool, auto-disable events. Links to full audit log entries. Alerts when injection rate exceeds threshold.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1797,14 +2093,18 @@
       "color": "sky",
       "icon": "⏸",
       "description": "Worker escalation requests waiting for Meta-Agent or human review. Shows the Worker's question, context snapshot, and available actions: respond, override, or abort task.",
-      "tags": "[\"respond\",\"override\",\"abort\"]",
+      "tags": [
+        "respond",
+        "override",
+        "abort"
+      ],
       "sort_order": 16,
       "versions": {
         "overview": {
           "content": "Worker escalation requests waiting for Meta-Agent or human review. Shows the Worker's question, context snapshot, and available actions: respond, override, or abort task.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1817,14 +2117,18 @@
       "color": "sky",
       "icon": "👤",
       "description": "Browse the User Knowledge Graph. See people, projects, preferences, and their relationships. Understand what the agents \"know about you\".",
-      "tags": "[\"new\",\"user kg\",\"browse\"]",
+      "tags": [
+        "new",
+        "user kg",
+        "browse"
+      ],
       "sort_order": 17,
       "versions": {
         "overview": {
           "content": "Browse the User Knowledge Graph. See people, projects, preferences, and their relationships. Understand what the agents \"know about you\".",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1837,14 +2141,18 @@
       "color": "sky",
       "icon": "🗺",
       "description": "Visualise the Code Graph. Module hierarchy, file deps, data flows. See the agent's structural understanding of your codebase.",
-      "tags": "[\"new\",\"code graph\",\"visualise\"]",
+      "tags": [
+        "new",
+        "code graph",
+        "visualise"
+      ],
       "sort_order": 18,
       "versions": {
         "overview": {
           "content": "Visualise the Code Graph. Module hierarchy, file deps, data flows. See the agent's structural understanding of your codebase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1857,14 +2165,17 @@
       "color": "sky",
       "icon": "⛳",
       "description": "Approval queue + escalation responses. Gate actions embeddable in dashboard UI.",
-      "tags": "[\"approval\",\"embedded\"]",
+      "tags": [
+        "approval",
+        "embedded"
+      ],
       "sort_order": 19,
       "versions": {
         "overview": {
           "content": "Approval queue + escalation responses. Gate actions embeddable in dashboard UI.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1877,14 +2188,18 @@
       "color": "purple",
       "icon": "👁",
       "description": "The Only Immortal Process — process management, signal handling, recovery state machine. No LLM, no planning. If it dies, systemd/Docker restarts it.",
-      "tags": "[\"immortal\",\"no llm\",\"process manager\"]",
+      "tags": [
+        "immortal",
+        "no llm",
+        "process manager"
+      ],
       "sort_order": 20,
       "versions": {
         "overview": {
           "content": "The only immortal process. No LLM. Process manager + crash recovery + heartbeat. Exposes health API on :9100. Kill switch: /stop HTTP endpoint + SIGTERM handler. If it dies, systemd/Docker restarts it. Recovery sequence on crash detection: (1) Kill hung process if still alive. (2) Read last checkpoint from State Store. (3) Rebuild config via DSL. (4) Inject resume context via Context Rebuilder. (5) Respawn fresh OpenCode process (new PID, clean slate, resume prompt). (6) Exponential backoff if repeated failures, max 5 retries → alert Human Gate.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1897,32 +2212,37 @@
       "color": "purple",
       "icon": "👁",
       "description": "Manages all child processes. Heartbeat + crash recovery with tiered priority. No LLM, no planning — just process management, signal handling, and the recovery state machine. This is what makes it stable: it has almost no reasons to crash. If it does, systemd/Docker restarts it. Exposes a health API (HTTP on :9100) for the dashboard. Kill switch: /stop HTTP endpoint + SIGTERM handler → instant halt of all children. Emergency brake for runaway agents.",
-      "tags": "[\"immortal\",\"health api\",\"kill switch\",\"no llm\"]",
+      "tags": [
+        "immortal",
+        "health api",
+        "kill switch",
+        "no llm"
+      ],
       "sort_order": 21,
       "versions": {
         "mvp": {
           "content": "Spawn and monitor two child processes (meta-agent, worker). Detect crashes via waitpid(). Restart crashed children with basic retry logic. Expose /health HTTP endpoint returning JSON process status. Handle SIGTERM for graceful shutdown of all children.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Manages all child processes. Heartbeat + crash recovery with tiered priority. No LLM, no planning — just process management, signal handling, and the recovery state machine. This is what makes it stable: it has almost no reasons to crash. If it does, systemd/Docker restarts it. Exposes a health API (HTTP on :9100) for the dashboard. Kill switch: /stop HTTP endpoint + SIGTERM handler → instant halt of all children. Why a Supervisor, not a cron job? (1) Instant detection: waitpid() returns the moment a child exits. Cron's worst-case latency = poll interval. (2) Crash loop handling: Supervisor tracks restart count + applies exponential backoff. (3) Multi-step recovery: kill → checkpoint read → config rebuild → context inject → respawn. (4) Lifecycle ownership: Supervisor owns the full process tree — PIDs, health, state. (5) Signal handling: catches SIGTERM/SIGCHLD and coordinates graceful shutdown. Stability hierarchy: Tier ∞ (Supervisor) immortal → Tier 0 (Meta-Agent) recovered first → Tier 1 (Worker) expendable. Recovery order: Supervisor → Meta-Agent → Worker. Each tier can recover the one below it.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Add exponential backoff on repeated crashes. Liveness probe (hang detection via output timeout_ms). Recovery state machine with tiered priority (meta-agent first). Checkpoint-aware recovery — read last checkpoint before respawn. Human Gate alerting after max 5 retries.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Full config-as-code DSL for spawn configuration. Resource monitoring (memory, CPU per child). Kill switch /stop HTTP endpoint. Dashboard SSE push for process events. Per-instance gate policies. Runtime flag switching for gate modes.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -1943,20 +2263,26 @@
       "color": "purple",
       "icon": "💓",
       "description": "Monitors both OpenCode instances independently via waitpid() + liveness probes. Instant crash detection (zero latency) — waitpid() returns the moment a child exits. Periodic liveness probe for hang detection — if no output for timeout_ms, treat as hung. Detects: exit, hang, OOM. If the Worker crashes → recover using Meta-Agent's last plan. If the Meta-Agent crashes → recover it first (higher priority), then it re-dispatches the Worker. Exponential backoff, max 5 retries → alert Human Gate.",
-      "tags": "[\"waitpid\",\"zero latency\",\"meta first\",\"worker second\",\"exponential backoff\"]",
+      "tags": [
+        "waitpid",
+        "zero latency",
+        "meta first",
+        "worker second",
+        "exponential backoff"
+      ],
       "sort_order": 22,
       "versions": {
         "mvp": {
           "content": "waitpid() loop for crash detection. Basic restart on exit. Retry counter with max limit. Log crash events.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Monitors both OpenCode instances independently via waitpid() + liveness probes. Instant crash detection (zero latency) — waitpid() returns the moment a child exits. Periodic liveness probe for hang detection — if no output for timeout_ms, treat as hung. Detects: exit, hang, OOM. If Worker crashes → recover using Meta-Agent's last plan. If Meta-Agent crashes → recover it first (higher priority), then it re-dispatches Worker. Exponential backoff, max 5 retries → alert Human Gate.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -1969,32 +2295,38 @@
       "color": "pink",
       "icon": "⛳",
       "description": "Three modes: full-auto, approve-goals, approve-all. Plus write fence: dangerous ops require approval even in full-auto. Also surfaces escalation requests from the Worker. Write fence per-instance: Meta-Agent config mutations and Worker destructive ops can have independent gate policies. Gate mode is a runtime flag — switch between modes without restarting any process.",
-      "tags": "[\"full-auto\",\"approve-goals\",\"approve-all\",\"write fence\",\"runtime flag\"]",
+      "tags": [
+        "full-auto",
+        "approve-goals",
+        "approve-all",
+        "write fence",
+        "runtime flag"
+      ],
       "sort_order": 23,
       "versions": {
         "mvp": {
           "content": "Basic approval queue. CLI-based approve/reject. Write fence for destructive operations (hardcoded list). Block until approved or timeout.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Three modes: full-auto, approve-goals, approve-all. Plus write fence: dangerous ops require approval even in full-auto. Also surfaces escalation requests from the Worker. Write fence per-instance: Meta-Agent config mutations and Worker destructive ops have independent gate policies. Gate mode is a runtime flag — switch between modes without restarting.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Runtime mode switching (full-auto, approve-goals, approve-all). Per-instance gate policies. Escalation forwarding from Meta-Agent. Dashboard-embeddable approval UI.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Configurable write fence per tool category. Approval delegation rules. Audit trail of all gate decisions. Timeout policies with configurable fallback actions.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2015,20 +2347,27 @@
       "color": "lime",
       "icon": "⚡",
       "description": "Rule engine (no LLM). Classifies tasks as fast, full, or gated. Scores incoming tasks by complexity signals: single-step? (e.g. \"format this file\"), no ambiguity? (clear input/output), no tool mutation needed? (current tools suffice). If all signals pass → direct to Worker, skipping Meta-Agent. Meta-Agent notified after completion via State Store. Cuts latency and cost for simple tasks by ~50%. Configurable: fast_path: \"aggressive\" | \"conservative\" | \"off\". Can query User KG for context (\"does user prefer X for this type of task?\"). If fast-path task fails, re-routed through Meta-Agent.",
-      "tags": "[\"fast\",\"full\",\"gated\",\"rule engine\",\"~50% savings\",\"new\"]",
+      "tags": [
+        "fast",
+        "full",
+        "gated",
+        "rule engine",
+        "~50% savings",
+        "new"
+      ],
       "sort_order": 24,
       "versions": {
         "mvp": {
           "content": "Simple rule engine: match task text against patterns (single verb, no conditionals, target file exists). Three outputs: fast, full, gated. Configurable threshold.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Rule engine (no LLM). Classifies tasks as fast, full, or gated. Scores by complexity signals: single-step, no ambiguity, no tool mutation needed. Configurable: fast_path: \"aggressive\" | \"conservative\" | \"off\". Can query User KG for context. Cuts latency and cost ~50% for simple tasks. Fallback: failed fast-path tasks re-route through Meta-Agent.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2041,14 +2380,18 @@
       "color": "lime",
       "icon": "⚡",
       "description": "Fast Path Decision Point — lightweight rule engine (no LLM) routes tasks by complexity: trivial goes direct to Worker, complex goes to Meta-Agent, dangerous requires human approval.",
-      "tags": "[\"rule engine\",\"no llm\",\"classifier\"]",
+      "tags": [
+        "rule engine",
+        "no llm",
+        "classifier"
+      ],
       "sort_order": 30,
       "versions": {
         "overview": {
           "content": "Fast path decision point. Rule engine (no LLM) routes tasks by complexity. Classifier is NOT an LLM — it's a rule engine (regex + heuristics on task text). Signals: single verb (\"format\", \"lint\", \"rename\"), no conditional language, target file exists, current tools suffice. Configurable threshold: fast_path: \"aggressive\" | \"conservative\" | \"off\". Meta-Agent stays aware: fast-path completions logged to State Store. Fallback: if fast-path task fails, re-routed through Meta-Agent.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2061,14 +2404,18 @@
       "color": "lime",
       "icon": "⚡",
       "description": "Rule engine says: single-step, unambiguous, existing tools suffice. Task goes directly to Worker. Meta-Agent notified post-completion via State Store. Flow: task → classifier → FAST → Worker → done → State Store → Meta-Agent reads.",
-      "tags": "[\"trivial\",\"direct\",\"skip planner\"]",
+      "tags": [
+        "trivial",
+        "direct",
+        "skip planner"
+      ],
       "sort_order": 31,
       "versions": {
         "overview": {
           "content": "Rule engine says: single-step, unambiguous, existing tools suffice. Task goes directly to Worker. Meta-Agent notified post-completion via State Store. Flow: task → classifier → FAST → Worker → done → State Store → Meta-Agent reads.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2081,14 +2428,18 @@
       "color": "orange",
       "icon": "🧠",
       "description": "Classifier says: multi-step, ambiguous, or needs tool changes. Task goes to Meta-Agent for decomposition. Normal planning loop. Flow: task → classifier → FULL → Meta-Agent → plan → dispatch → Worker → State Store.",
-      "tags": "[\"complex\",\"decomposition\",\"planning loop\"]",
+      "tags": [
+        "complex",
+        "decomposition",
+        "planning loop"
+      ],
       "sort_order": 32,
       "versions": {
         "overview": {
           "content": "Classifier says: multi-step, ambiguous, or needs tool changes. Task goes to Meta-Agent for decomposition. Normal planning loop. Flow: task → classifier → FULL → Meta-Agent → plan → dispatch → Worker → State Store.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2101,14 +2452,18 @@
       "color": "purple",
       "icon": "⛳",
       "description": "Classifier or Human Gate flags: destructive, high-cost, or security-sensitive. Task pauses for human approval before any routing. Flow: task → classifier → GATE → Human Gate → approve → (fast or full path).",
-      "tags": "[\"dangerous\",\"approval required\",\"security-sensitive\"]",
+      "tags": [
+        "dangerous",
+        "approval required",
+        "security-sensitive"
+      ],
       "sort_order": 33,
       "versions": {
         "overview": {
           "content": "Classifier or Human Gate flags: destructive, high-cost, or security-sensitive. Task pauses for human approval. Flow: task → classifier → GATE → Human Gate → approve → (fast or full path).",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2121,14 +2476,18 @@
       "color": "gold",
       "icon": "🧠",
       "description": "Dual graph stores: User Knowledge Graph (domain context — people, projects, preferences) + RPG Code Graph (repo structure — files, modules, deps, data flows).",
-      "tags": "[\"dual stores\",\"domain context\",\"repo structure\"]",
+      "tags": [
+        "dual stores",
+        "domain context",
+        "repo structure"
+      ],
       "sort_order": 40,
       "versions": {
         "overview": {
           "content": "Dual graph stores. User Knowledge Graph holds domain context (people, projects, preferences). RPG Code Graph holds repo structure (files, modules, deps, data flows). Three stores, three purposes: State Store (operational — what's happening now, prunable), User KG (domain — who you are, long-lived), Code Graph (repo structure — what the codebase looks like, disposable and re-derivable from code).",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2141,32 +2500,38 @@
       "color": "gold",
       "icon": "👤",
       "description": "A persistent graph of the user's world. Nodes are domain entities — people, projects, clients, teams, products, preferences, business rules, conventions, deadlines. Edges are typed relationships with metadata. This is not about code — it's about understanding who you are and what you care about so agents make contextually appropriate decisions. Entity types: person, project, org, team, preference, convention, deadline, stack, compliance, product, domain-concept, decision. Relationship types: OWNS, PREFERS, WORKS_WITH, HAS_CLIENT, USES_STACK, REQUIRES, CONVENTION, HAS_DEADLINE, DECIDED, DISLIKES. Populated by: (1) User directly — onboarding flow or dashboard edits. (2) Meta-Agent — infers entities from conversations and patterns over time. (3) Never by Worker — same injection-safety principle. Worker reads, never writes. Confidence layering: user-explicit (1.0) > meta-agent-inferred (0.8) > auto-extracted (0.6).",
-      "tags": "[\"new\",\"persistent\",\"entity types\",\"relationship types\",\"confidence layering\"]",
+      "tags": [
+        "new",
+        "persistent",
+        "entity types",
+        "relationship types",
+        "confidence layering"
+      ],
       "sort_order": 41,
       "versions": {
         "mvp": {
           "content": "SQLite-backed entity store. Add/query entities with typed relationships. Basic traversal (1-hop neighbours). Manual entity creation via CLI or dashboard. Simple text search across entities.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "A persistent graph of the user's world. Nodes are domain entities — people, projects, clients, teams, products, preferences, business rules, conventions, deadlines. Edges are typed relationships with metadata. This is not about code — it's about understanding who you are and what you care about so agents make contextually appropriate decisions. Entity types: person, project, org, team, preference, convention, deadline, stack, compliance, product, domain-concept, decision. Relationship types: OWNS, PREFERS, WORKS_WITH, HAS_CLIENT, USES_STACK, REQUIRES, CONVENTION, HAS_DEADLINE, DECIDED, DISLIKES. Populated by: (1) User directly — onboarding flow or dashboard edits. (2) Meta-Agent — infers entities from conversations and patterns. (3) Never by Worker — injection safety. Confidence layering: user-explicit (1.0) > meta-agent-inferred (0.8) > auto-extracted (0.6). What it solves: Personalisation (\"Alice prefers typed SQL over ORMs\"), project awareness (\"acme-saas uses Next.js + Postgres, client needs SOC2\"), team context (\"Bob is backend lead, prefers PRs\"), decision memory (\"We decided JWT over sessions on Jan 15\"), convention enforcement (\"No ORMs, minimal comments, Tailwind\"), deadline awareness (Meta-Agent prioritises based on known deadlines).",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Meta-Agent write access for inferred entities. Confidence layering (user-explicit 1.0 > meta-inferred 0.8). Multi-hop traversal queries. Convention enforcement lookups. Deadline awareness queries.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Full graph query language. Temporal awareness (when was this preference set?). Conflict resolution for contradictory preferences. Export/import for portability. Dashboard entity editor.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2187,32 +2552,39 @@
       "color": "emerald",
       "icon": "🗺",
       "description": "An RPG-style structural graph of the current codebase. Encodes file hierarchy, module boundaries, inter-module data flows, function signatures, class inheritance, and import dependencies. Inspired by Microsoft RPG/ZeroRepo (https://arxiv.org/abs/2509.16198). This is a code quality feature — it helps the Worker write structurally coherent code by understanding what exists, what depends on what, and where new code should go. Node types: module, file, function, class, interface, package, route, schema, test. Edge types: CONTAINS, IMPORTS, EXPORTS, DATA_FLOW, EXTENDS, IMPLEMENTS, DEPENDS_ON, TESTS, CALLS. Populated by: (1) Static analysis on init — AST parse via tree-sitter on repo load (~seconds for repos under 100K LoC). (2) Worker's Checkpointer — auto-updates after file edits (re-parse only changed files, diff old vs new, update edges incrementally). (3) Meta-Agent — can annotate with higher-level module boundaries and data flow intentions. Lightweight — no LLM needed for extraction. Query patterns: topo_order(module), data_flow(A,B), dependents(file), pattern(type,dir), where_to_add(capability).",
-      "tags": "[\"new\",\"tree-sitter\",\"ast parsing\",\"disposable\",\"re-derivable\",\"query patterns\"]",
+      "tags": [
+        "new",
+        "tree-sitter",
+        "ast parsing",
+        "disposable",
+        "re-derivable",
+        "query patterns"
+      ],
       "sort_order": 42,
       "versions": {
         "mvp": {
           "content": "Static analysis on repo load using tree-sitter. Build initial graph from imports, exports, class hierarchy. Basic queries: list files in module, show imports for file. SQLite-backed.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "An RPG-style structural graph of the current codebase. Encodes file hierarchy, module boundaries, inter-module data flows, function signatures, class inheritance, and import dependencies. Inspired by Microsoft RPG/ZeroRepo (arxiv.org/abs/2509.16198). This is a code quality feature — it helps the Worker write structurally coherent code. Node types: module, file, function, class, interface, package, route, schema, test. Edge types: CONTAINS, IMPORTS, EXPORTS, DATA_FLOW, EXTENDS, IMPLEMENTS, DEPENDS_ON, TESTS, CALLS. What it solves: Dependency awareness (Worker knows what imports what before editing), placement decisions (\"where should rate limiting go?\" → traverse module→file→function), topological code generation (build in dependency order), data flow understanding (inter-module edges), pattern consistency (existing patterns visible), blast radius estimation (Meta-Agent traverses deps). Implementation: (1) Initial build on repo load — tree-sitter AST parse, extract files/imports/exports/classes/functions, infer modules from directory structure, ~seconds for repos under 100K LoC. (2) Incremental update on edit — Checkpointer detects file-edit tool calls, re-parses only changed files, diffs old vs new, updates edges incrementally. (3) Query patterns — topo_order(module), data_flow(A,B), dependents(file), pattern(type,dir), where_to_add(capability).",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Incremental updates via Checkpointer (re-parse only changed files). Dependency traversal (topo_order, dependents). Data flow edges between modules. Pattern queries.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Full where_to_add capability suggestions. Blast radius estimation. Meta-Agent annotations. Multi-language AST support. Dashboard Repo Map visualization.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2233,14 +2605,18 @@
       "color": "orange",
       "icon": "🧠",
       "description": "Two stock OpenCode instances. Meta-Agent (Planner) uses cheap/fast model (Haiku/Sonnet), plans and dispatches. Worker (Executor) uses strong model (Sonnet/Opus), executes one phase at a time. They share no tools — isolation by design.",
-      "tags": "[\"stock opencode\",\"dual instances\",\"tool isolation\"]",
+      "tags": [
+        "stock opencode",
+        "dual instances",
+        "tool isolation"
+      ],
       "sort_order": 50,
       "versions": {
         "overview": {
           "content": "Two stock OpenCode instances. Meta-Agent (Planner) uses cheap model (Haiku/Sonnet), plans and dispatches. Worker (Executor) uses strong model (Sonnet/Opus), executes one phase at a time. Why two instances? (1) Separation of concerns: planning and execution have different tool sets, models, cost profiles, and risk levels. (2) Blast radius: a prompt injection in the Worker can't reach the Planner — they share no tools or MCP connection. (3) Independent recovery: Worker can crash and be re-dispatched without losing Meta-Agent's plan state. (4) Cost optimisation: Planner uses cheap model, Worker uses capable model. (5) Dogfooding: you build one runtime, not two systems. Both instances use the same config DSL, proxy, and checkpoint infra.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2253,32 +2629,39 @@
       "color": "orange",
       "icon": "🧠",
       "description": "Stock OpenCode, planning system prompt, cheap/fast model (Haiku/Sonnet). This instance never touches the codebase or external APIs directly. It only plans, evaluates, and dispatches. Tier-0: recovered first. If this is down, the Worker has no direction. Only internal tools, no injection surface. Traverses User KG to align plans with user preferences, deadlines, team context. Reads Code Graph to understand repo structure before decomposing coding tasks. Also handles escalation responses: reads Worker's request_clarification entries from State Store, reasons about them, and writes guidance back — which the Worker receives on its next checkpoint resume or via check_escalation_response tool. System prompt: \"You are a task planner. Use your tools to: read the goal queue, check worker status, decompose goals into tasks, dispatch tasks, evaluate results, and generate follow-up goals. You may also evolve the worker's tools and config when needed.\" The loop emerges from the prompt + tool availability.",
-      "tags": "[\"tier-0\",\"10 internal tools\",\"reads/writes user kg\",\"reads code graph\",\"haiku/sonnet\",\"new\"]",
+      "tags": [
+        "tier-0",
+        "10 internal tools",
+        "reads/writes user kg",
+        "reads code graph",
+        "haiku/sonnet",
+        "new"
+      ],
       "sort_order": 51,
       "versions": {
         "mvp": {
           "content": "Single OpenCode instance with planning system prompt. Read goal queue, decompose into sub-tasks, dispatch to Worker via State Store. Read Worker progress from checkpoints. Basic goal → task decomposition.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Stock OpenCode, planning system prompt, cheap/fast model (Haiku/Sonnet). This instance never touches the codebase or external APIs directly. It only plans, evaluates, and dispatches. Tier-0: recovered first. If this is down, the Worker has no direction. Only internal tools, no injection surface. Traverses User KG to align plans with user preferences, deadlines, team context. Reads Code Graph to understand repo structure before decomposing coding tasks. Also handles escalation responses: reads Worker's request_clarification entries from State Store, reasons about them, and writes guidance back. System prompt: \"You are a task planner. Use your tools to: read the goal queue, check worker status, decompose goals into tasks, dispatch tasks, evaluate results, and generate follow-up goals. You may also evolve the worker's tools and config when needed.\" The loop emerges from the prompt + tool availability. How Meta-Agent uses both graphs: Before planning — \"What stack? Deadlines? Preferences?\" Before decomposing — \"Which modules? Dependency order? Blast radius?\" Task dispatch enrichment — includes relevant KG + Code Graph context in Worker's task prompt. Tool selection — User KG says \"prefers Brave over Google\" → configures proxy. Knowledge curation — writes inferred preferences to User KG. Self-evolution: tool discovery via tool_registry.search, config mutation via typed builder DSL (not raw JSON), sub-goal generation, prompt evolution based on observed results. Guardrails: budget limits, scope limits, allowed tool categories, model whitelist.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Phase-locked BDD/TDD dispatch pipeline. Gate verification between phases. Escalation response handling. User KG reads for planning context. Code Graph reads for repo-aware decomposition.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Self-evolution: tool discovery + hot-swap via proxy_admin. Config mutation via DSL. Prompt evolution based on observed results. Knowledge curation — write inferred preferences to User KG. Budget and scope guardrails.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2299,32 +2682,42 @@
       "color": "cyan",
       "icon": "⚡",
       "description": "Stock OpenCode, execution system prompt, strong model (Sonnet/Opus). Tier-1, ephemeral, no fork. Lower stability priority — if it crashes, the Meta-Agent re-dispatches. Treated as ephemeral and replaceable. On recovery, the agent continues without knowing it crashed — the Context Rebuilder injects a resume prompt that makes it look like a natural continuation. External tools, sanitiser required. Reads User KG to respect user preferences during execution (naming conventions, tech choices). Traverses Code Graph to write structurally coherent code (dependency-aware edits, correct placement). Has two escalation tools: request_clarification to pause and ask the planner for guidance, and check_escalation_response to poll for an answer. System prompt: \"If you're uncertain about scope, direction, or trade-offs, use request_clarification. Don't guess — ask.\" Receives tasks as structured system prompt injections: phase, task, constraints, forbidden_actions, available_tools, success_criteria. Single-phase isolation: the Worker sees \"Write failing step tests for this feature file. DO NOT implement any production code.\" It literally cannot skip ahead because it doesn't know what \"ahead\" is. The forbidden_actions field explicitly lists what it must not do (e.g. [\"create production files\", \"modify existing src/\", \"run tests in watch mode\"]).",
-      "tags": "[\"tier-1\",\"dynamic tools\",\"reads user kg\",\"reads code graph\",\"sanitiser required\",\"ephemeral\",\"no fork\",\"sonnet/opus\",\"new\"]",
+      "tags": [
+        "tier-1",
+        "dynamic tools",
+        "reads user kg",
+        "reads code graph",
+        "sanitiser required",
+        "ephemeral",
+        "no fork",
+        "sonnet/opus",
+        "new"
+      ],
       "sort_order": 52,
       "versions": {
         "mvp": {
           "content": "Single OpenCode instance with execution system prompt. Receive task from State Store, execute with available tools, report results. Basic tool access via MCP proxy.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Stock OpenCode, execution system prompt, strong model (Sonnet/Opus). Tier-1, ephemeral, no fork. Lower stability priority — if it crashes, the Meta-Agent re-dispatches. Treated as ephemeral and replaceable. On recovery, the agent continues without knowing it crashed — the Context Rebuilder injects a resume prompt that makes it look like a natural continuation. External tools, sanitiser required. Reads User KG to respect user preferences during execution. Traverses Code Graph for structurally coherent code. Has escalation tools: request_clarification and check_escalation_response. System prompt: \"If you're uncertain about scope, direction, or trade-offs, use request_clarification. Don't guess — ask.\" Receives tasks as structured injections: phase, task, constraints, forbidden_actions, available_tools, success_criteria. Single-phase isolation: Worker sees only current phase, never what comes next. Example forbidden_actions: [\"create production files\", \"modify existing src/\", \"run tests in watch mode\"]. The Worker literally cannot skip ahead because it doesn't know what \"ahead\" is.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Phase-locked execution (single phase per dispatch, forbidden_actions enforcement). Escalation tools (request_clarification, check_escalation_response). User KG reads for preference-aware execution. Code Graph reads for structural coherence.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Context-aware resume after crash (transparent to agent). Dynamic tool manifest — handles hot-swap mid-session. Confidence scoring on outputs. Full sanitiser integration on all external I/O.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2345,14 +2738,16 @@
       "color": "orange",
       "icon": "📋",
       "description": "push, pop, peek, reprioritise — manages the persistent goal queue.",
-      "tags": "[\"meta-agent tool\"]",
+      "tags": [
+        "meta-agent tool"
+      ],
       "sort_order": 53,
       "versions": {
         "overview": {
           "content": "push, pop, peek, reprioritise — manages the persistent goal queue.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2365,14 +2760,16 @@
       "color": "orange",
       "icon": "📖",
       "description": "get_checkpoint, get_task_log, get_escalations — reads Worker's progress.",
-      "tags": "[\"meta-agent tool\"]",
+      "tags": [
+        "meta-agent tool"
+      ],
       "sort_order": 54,
       "versions": {
         "overview": {
           "content": "get_checkpoint, get_task_log, get_escalations — reads Worker's progress.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2385,14 +2782,17 @@
       "color": "orange",
       "icon": "🔧",
       "description": "dispatch, abort, respond_escalation — sends phase-locked work to Worker. Dispatch includes phase, forbidden_actions, success_criteria.",
-      "tags": "[\"meta-agent tool\",\"phase-locked\"]",
+      "tags": [
+        "meta-agent tool",
+        "phase-locked"
+      ],
       "sort_order": 55,
       "versions": {
         "overview": {
           "content": "dispatch, abort, respond_escalation — sends phase-locked work to Worker. Dispatch includes phase, forbidden_actions, success_criteria.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2405,14 +2805,17 @@
       "color": "orange",
       "icon": "📡",
       "description": "register, deregister, list — mutates Worker's tool manifest at runtime.",
-      "tags": "[\"meta-agent tool\",\"hot-swap\"]",
+      "tags": [
+        "meta-agent tool",
+        "hot-swap"
+      ],
       "sort_order": 56,
       "versions": {
         "overview": {
           "content": "register, deregister, list — mutates Worker's tool manifest at runtime.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2425,14 +2828,18 @@
       "color": "orange",
       "icon": "⚙",
       "description": "update_prompt, update_model, update_agents — evolves Worker's config via typed builder DSL. Validated, versioned, rollback-safe. Not raw JSON editing.",
-      "tags": "[\"meta-agent tool\",\"dsl\",\"rollback-safe\"]",
+      "tags": [
+        "meta-agent tool",
+        "dsl",
+        "rollback-safe"
+      ],
       "sort_order": 57,
       "versions": {
         "overview": {
           "content": "update_prompt, update_model, update_agents — evolves Worker's config via typed builder DSL. Validated, versioned, rollback-safe.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2445,14 +2852,17 @@
       "color": "orange",
       "icon": "🔍",
       "description": "search, inspect, install — discovers new MCP servers from a catalogue.",
-      "tags": "[\"meta-agent tool\",\"discovery\"]",
+      "tags": [
+        "meta-agent tool",
+        "discovery"
+      ],
       "sort_order": 58,
       "versions": {
         "overview": {
           "content": "search, inspect, install — discovers new MCP servers from a catalogue.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2465,14 +2875,17 @@
       "color": "gold",
       "icon": "👤",
       "description": "query, traverse, search — Meta-Agent reads User KG for planning context.",
-      "tags": "[\"meta-agent tool\",\"new\"]",
+      "tags": [
+        "meta-agent tool",
+        "new"
+      ],
       "sort_order": 59,
       "versions": {
         "overview": {
           "content": "query, traverse, search — Meta-Agent reads User KG for planning context.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2485,14 +2898,18 @@
       "color": "teal",
       "icon": "🙋",
       "description": "Worker ↔ Meta-Agent communication via shared state. Worker hits ambiguity → calls request_clarification({question, context, options}) → State Store records escalation → Worker pauses → Meta-Agent picks it up on next cycle → reasons → responds via worker_control.respond_escalation → State Store updates → Worker calls check_escalation_response → receives guidance → resumes. Timeout handling: if Meta-Agent does not respond within escalation_timeout_ms, Worker can (a) proceed with best guess, (b) abort, or (c) escalate to Human Gate. Policy set in Worker system prompt.",
-      "tags": "[\"async\",\"no blocking rpc\",\"structured payload\"]",
+      "tags": [
+        "async",
+        "no blocking rpc",
+        "structured payload"
+      ],
       "sort_order": 60,
       "versions": {
         "overview": {
           "content": "Worker ↔ Meta-Agent communication via shared state. Escalation sequence: Worker hits ambiguity → calls request_clarification({question, context, options}) → State Store records with status pending → Worker pauses (returns control to idle loop) → Meta-Agent's state_reader.get_escalations() picks it up → Meta-Agent reasons → calls worker_control.respond_escalation({task_id, guidance}) → State Store updates to resolved → Worker calls check_escalation_response() → receives guidance → resumes. Timeout: if no response within escalation_timeout_ms, Worker can: (a) proceed_best_guess, (b) abort, or (c) escalate_to_human. Design: Worker stays isolated (writes to State Store, not to Meta-Agent directly). Async by design (no blocking RPC). Structured payload: {question, context_snapshot, suggested_options[], urgency}. Crash safety: Checkpointer snapshots escalation state.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2505,14 +2922,17 @@
       "color": "gold",
       "icon": "✏",
       "description": "add_entity, add_edge, annotate — Meta-Agent writes inferred entities to User KG.",
-      "tags": "[\"meta-agent tool\",\"new\"]",
+      "tags": [
+        "meta-agent tool",
+        "new"
+      ],
       "sort_order": 60,
       "versions": {
         "overview": {
           "content": "add_entity, add_edge, annotate — Meta-Agent writes inferred entities to User KG.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2525,14 +2945,17 @@
       "color": "emerald",
       "icon": "🗺",
       "description": "expand, path, topo_order — Meta-Agent reads Code Graph for repo-aware decomposition.",
-      "tags": "[\"meta-agent tool\",\"new\"]",
+      "tags": [
+        "meta-agent tool",
+        "new"
+      ],
       "sort_order": 61,
       "versions": {
         "overview": {
           "content": "expand, path, topo_order — Meta-Agent reads Code Graph for repo-aware decomposition.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2545,14 +2968,17 @@
       "color": "emerald",
       "icon": "✏",
       "description": "annotate_module, set_data_flow — Meta-Agent annotates Code Graph with module boundaries and data flow intentions.",
-      "tags": "[\"meta-agent tool\",\"new\"]",
+      "tags": [
+        "meta-agent tool",
+        "new"
+      ],
       "sort_order": 62,
       "versions": {
         "overview": {
           "content": "annotate_module, set_data_flow — Meta-Agent annotates Code Graph with module boundaries and data flow intentions.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2565,14 +2991,17 @@
       "color": "teal",
       "icon": "🙋",
       "description": "Writes question + context snapshot to State Store. Sets task status to paused:awaiting_guidance. Worker halts current execution and waits.",
-      "tags": "[\"worker tool\",\"escalation\"]",
+      "tags": [
+        "worker tool",
+        "escalation"
+      ],
       "sort_order": 63,
       "versions": {
         "overview": {
           "content": "Writes question + context snapshot to State Store. Sets task status to paused:awaiting_guidance. Worker halts current execution and waits.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2585,14 +3014,17 @@
       "color": "teal",
       "icon": "📨",
       "description": "Polls State Store for Meta-Agent's response. Returns guidance or still_pending. Worker resumes when guidance arrives.",
-      "tags": "[\"worker tool\",\"escalation\"]",
+      "tags": [
+        "worker tool",
+        "escalation"
+      ],
       "sort_order": 64,
       "versions": {
         "overview": {
           "content": "Polls State Store for Meta-Agent's response. Returns guidance or still_pending. Worker resumes when guidance arrives.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2605,14 +3037,18 @@
       "color": "gold",
       "icon": "👤",
       "description": "Read-only. No writes (injection safety). Worker reads preferences but cannot poison the knowledge graph even if fully compromised.",
-      "tags": "[\"worker tool\",\"read-only\",\"new\"]",
+      "tags": [
+        "worker tool",
+        "read-only",
+        "new"
+      ],
       "sort_order": 65,
       "versions": {
         "overview": {
           "content": "Read-only. No writes (injection safety). Worker reads preferences but cannot poison the knowledge graph.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2625,14 +3061,18 @@
       "color": "emerald",
       "icon": "🗺",
       "description": "Read-only. Checkpointer writes on Worker's behalf after file edits trigger AST re-parse.",
-      "tags": "[\"worker tool\",\"read-only\",\"new\"]",
+      "tags": [
+        "worker tool",
+        "read-only",
+        "new"
+      ],
       "sort_order": 66,
       "versions": {
         "overview": {
           "content": "Read-only. Checkpointer writes on Worker's behalf after file edits trigger AST re-parse.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2645,14 +3085,18 @@
       "color": "blue",
       "icon": "💾",
       "description": "The Bridge — SQLite WAL / Postgres. Goals, tasks, tool logs, checkpoints, escalations. Both instances communicate by sharing a database, not a connection.",
-      "tags": "[\"sqlite wal\",\"postgres\",\"append-only\"]",
+      "tags": [
+        "sqlite wal",
+        "postgres",
+        "append-only"
+      ],
       "sort_order": 70,
       "versions": {
         "overview": {
           "content": "SQLite WAL / Postgres. Goals, tasks, tool logs, checkpoints, escalations. The bridge between both instances — they share a database, not a connection. Context preservation: What IS saved — task ID + current step index, tool call log (name, args, result hash), plan summary (goal queue snapshot), goal queue pointer, timestamps, escalation state. What is NOT saved — LLM hidden state (non-serialisable), full conversation history (too large), in-flight reasoning (ephemeral by nature). Tool results are facts; LLM reasoning can be re-derived.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2665,32 +3109,36 @@
       "color": "blue",
       "icon": "💾",
       "description": "Append-only log that both instances read/write. The Meta-Agent writes goals and reads results. The Worker's Checkpointer writes tool call logs and progress. This is how the two OpenCode instances communicate without direct coupling — they share a database, not a connection. Also stores escalation records (question, context, response, status) and fast-path completion records so the Meta-Agent stays aware of tasks it didn't plan. Dashboard reads everything here.",
-      "tags": "[\"checkpointer\",\"context rebuilder\",\"crash recovery\"]",
+      "tags": [
+        "checkpointer",
+        "context rebuilder",
+        "crash recovery"
+      ],
       "sort_order": 71,
       "versions": {
         "mvp": {
           "content": "SQLite WAL database with tables for goals, tasks, and tool_logs. Basic CRUD operations. Both agents read/write via simple SQL. No pruning, no optimization.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Append-only log that both instances read/write. The Meta-Agent writes goals and reads results. The Worker's Checkpointer writes tool call logs and progress. This is how the two OpenCode instances communicate without direct coupling — they share a database, not a connection. Also stores escalation records (question, context, response, status) and fast-path completion records so the Meta-Agent stays aware of tasks it didn't plan. Dashboard reads everything here.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Add checkpoints table, escalation records, fast-path completion records. Context rebuilder queries. Pruning policy (keep last N days). Indexes for common query patterns.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "SSE/WebSocket push for live dashboard updates. Postgres option for multi-machine deployments. Full audit trail with retention policies. Query optimization for dashboard views.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2711,32 +3159,37 @@
       "color": "blue",
       "icon": "📸",
       "description": "Taps Worker's Proxy. Writes after every tool response: task ID, tool name, args, result hash, timestamp, plan summary. Also snapshots escalation state so crash recovery can restore a paused-and-waiting Worker correctly. If tool was a file edit, also triggers AST re-parse and Code Graph update. Strategy: tool results are facts; LLM reasoning can be re-derived. So we save the facts (tool call + result) and let the Context Rebuilder regenerate the reasoning frame on recovery. Runs async — doesn't block the agent. The proxy fires-and-forgets to the checkpointer; the Worker never waits for a checkpoint write to complete.",
-      "tags": "[\"async\",\"fire-and-forget\",\"non-blocking\",\"code graph update\"]",
+      "tags": [
+        "async",
+        "fire-and-forget",
+        "non-blocking",
+        "code graph update"
+      ],
       "sort_order": 72,
       "versions": {
         "mvp": {
           "content": "Intercept tool responses from Worker proxy. Write task_id, tool_name, args_hash, result_hash, timestamp to State Store. Fire-and-forget (async, non-blocking).",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Taps Worker's Proxy. Writes after every tool response: task ID, tool name, args, result hash, timestamp, plan summary. Also snapshots escalation state so crash recovery can restore a paused-and-waiting Worker correctly. If tool was a file edit, triggers AST re-parse and Code Graph update. Strategy: tool results are facts; LLM reasoning can be re-derived. So we save the facts and let the Context Rebuilder regenerate the reasoning frame on recovery. Runs async — the proxy fires-and-forgets; the Worker never waits for a checkpoint write to complete.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Escalation state snapshots. File-edit detection triggering Code Graph AST re-parse. Plan summary snapshots for context rebuilder. Idempotency markers for crash recovery.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Configurable checkpoint granularity. Compressed checkpoint storage. Checkpoint pruning with retention policy. Metrics on checkpoint write latency.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2757,32 +3210,36 @@
       "color": "blue",
       "icon": "📝",
       "description": "On crash recovery of either instance: generates resume prompt from compressed checkpoint + relevant graph context. For Worker: \"you were doing X, completed Y, next step Z\". For Meta-Agent: \"current goal is X, worker status is Y, pending goals are Z\". If Worker was in paused:awaiting_guidance state, resume prompt includes the escalation question and any response received while it was down. Lossy by design. You can't clone LLM hidden state — it's non-serialisable. This is like a save game, not a VM snapshot. The rebuilt context is \"good enough\" — the agent continues without knowing it crashed, picking up from the last checkpoint with a compressed summary of what came before.",
-      "tags": "[\"lossy by design\",\"save game\",\"resume prompt\"]",
+      "tags": [
+        "lossy by design",
+        "save game",
+        "resume prompt"
+      ],
       "sort_order": 73,
       "versions": {
         "mvp": {
           "content": "Read last checkpoint from State Store. Generate basic resume prompt: \"you were doing X, completed Y, next step Z\". Inject as system prompt on respawn.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "On crash recovery of either instance: generates resume prompt from compressed checkpoint + relevant graph context. For Worker: \"you were doing X, completed Y, next step Z\". For Meta-Agent: \"current goal is X, worker status is Y, pending goals are Z\". If Worker was in paused:awaiting_guidance state, resume prompt includes the escalation question and any response received while it was down. Lossy by design. You can't clone LLM hidden state — it's non-serialisable. This is like a save game, not a VM snapshot.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Include relevant User KG context in resume prompt. Include Code Graph context for coding tasks. Handle paused:awaiting_guidance state.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Compressed multi-checkpoint summaries. Relevance-ranked context selection. Token budget management for resume prompts.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2803,14 +3260,18 @@
       "color": "orange",
       "icon": "⇄",
       "description": "Tool proxy layer for both agent instances. Meta-Agent gets static manifest (10 internal tools, no sanitiser). Worker gets dynamic manifest (hot-swappable, sanitiser required, circuit breaker).",
-      "tags": "[\"static manifest\",\"dynamic manifest\",\"hot-swappable\"]",
+      "tags": [
+        "static manifest",
+        "dynamic manifest",
+        "hot-swappable"
+      ],
       "sort_order": 80,
       "versions": {
         "overview": {
           "content": "Tool proxy layer. Meta-Agent gets static manifest (10 internal tools, no sanitiser, low risk). Worker gets dynamic manifest (hot-swappable, sanitiser required, circuit breaker, checkpoint tap).",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2823,20 +3284,24 @@
       "color": "orange",
       "icon": "⇄",
       "description": "Hosts 10 planning tools (6 planning + 4 graph). These are your custom MCP servers — small, stable, purpose-built. No external API calls, no injection risk.",
-      "tags": "[\"static\",\"no sanitiser\",\"low risk\"]",
+      "tags": [
+        "static",
+        "no sanitiser",
+        "low risk"
+      ],
       "sort_order": 81,
       "versions": {
         "mvp": {
           "content": "Static MCP server hosting goal_queue, state_reader, worker_control tools. Simple stdio transport. No hot-swap needed.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Hosts 10 planning tools (6 planning + 4 graph). These are your custom MCP servers — small, stable, purpose-built. No external API calls, no injection risk.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2849,20 +3314,25 @@
       "color": "cyan",
       "icon": "⇄",
       "description": "Hosts all external-facing tools + escalation + graph reads. Dynamic manifest — the Meta-Agent's proxy_admin tool adds/removes servers here at runtime. All responses pass through the Sanitiser. Health & circuit breaker: heartbeats downstream servers; dead endpoints auto-removed from manifest, Meta-Agent notified via State Store so it can find replacements.",
-      "tags": "[\"sanitiser required\",\"hot-swappable\",\"checkpoint tap\",\"circuit breaker\"]",
+      "tags": [
+        "sanitiser required",
+        "hot-swappable",
+        "checkpoint tap",
+        "circuit breaker"
+      ],
       "sort_order": 82,
       "versions": {
         "mvp": {
           "content": "MCP proxy with configurable tool list. Route tool calls to downstream servers. Pass responses through sanitiser. Basic health check on downstream servers.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Hosts all external-facing tools + escalation + graph reads. Dynamic manifest — Meta-Agent's proxy_admin adds/removes servers at runtime. All responses pass through Sanitiser. Health & circuit breaker: heartbeats downstream servers; dead endpoints auto-removed from manifest, Meta-Agent notified via State Store so it can find replacements.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2875,14 +3345,18 @@
       "color": "red",
       "icon": "🛡",
       "description": "3-stage sanitiser pipeline (Worker proxy only). Regex heuristics → structural strip (role tags, cap length) → optional LLM classifier. Fail-closed. Isolated subprocess. Scans inbound responses (injection defence) AND outbound tool args (prevents data exfiltration via tricked agent).",
-      "tags": "[\"fail-closed\",\"isolated subprocess\",\"bidirectional\"]",
+      "tags": [
+        "fail-closed",
+        "isolated subprocess",
+        "bidirectional"
+      ],
       "sort_order": 90,
       "versions": {
         "overview": {
           "content": "3-stage sanitiser: regex heuristics → structural strip → optional LLM classifier. Fail-closed. Isolated subprocess. Scans inbound + outbound. Worker proxy only. Security model: Meta-Agent has no sanitiser (internal tools only). Worker has full 3-stage sanitiser. Cross-instance isolation: Worker cannot reach Meta-Agent's tools even if fully compromised. Escalation tools are safe: they write structured data to State Store, not free-text to Meta-Agent's prompt. Dashboard is read-only — cannot be used as attack vector. Graph writes: Worker cannot write to either graph — cannot poison knowledge even if fully compromised. In full-auto mode: sanitiser is the only defence against prompt injection. Write fence still applies for destructive ops. Injection feedback loop lets Meta-Agent auto-disable compromised tools.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2895,32 +3369,37 @@
       "color": "red",
       "icon": "🛡",
       "description": "Sits between Worker's Proxy and downstream servers. Stage 1: Heuristic regex for common injection patterns. Stage 2: Structural strip (remove role tags, cap response length). Stage 3: Optional LLM classifier for sophisticated detection. The Meta-Agent's proxy does NOT need a sanitiser — its tools are all internal, no external input. Isolated subprocess. Fail-closed. Scans inbound responses (injection defence) and outbound tool args (prevents data exfiltration via a tricked agent — e.g. an injected prompt that encodes secrets into a search query). Injection events visible in dashboard Security Events panel.",
-      "tags": "[\"3-stage\",\"fail-closed\",\"isolated subprocess\",\"bidirectional\"]",
+      "tags": [
+        "3-stage",
+        "fail-closed",
+        "isolated subprocess",
+        "bidirectional"
+      ],
       "sort_order": 91,
       "versions": {
         "mvp": {
           "content": "Regex-based heuristic scanner for common injection patterns. Structural strip (remove role tags, cap response length). Pass/block verdict on each tool response. Logging to State Store.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "overview": {
           "content": "Sits between Worker's Proxy and downstream servers. Stage 1: Heuristic regex for common injection patterns. Stage 2: Structural strip (remove role tags, cap response length). Stage 3: Optional LLM classifier for sophisticated detection. The Meta-Agent's proxy does NOT need a sanitiser — its tools are all internal, no external input. Isolated subprocess. Fail-closed. Scans inbound responses (injection defence) and outbound tool args (prevents data exfiltration — e.g. an injected prompt encoding secrets into a search query). Injection events visible in dashboard Security Events panel.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v1": {
           "content": "Outbound scanning (prevent data exfiltration via tool args). Configurable rule sets per tool. Injection frequency tracking. Auto-disable tools exceeding threshold. Dashboard integration.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         },
         "v2": {
           "content": "Optional LLM classifier stage. Adaptive rules based on observed attack patterns. Per-tool confidence scoring. Full audit trail with payload samples.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {
@@ -2941,14 +3420,18 @@
       "color": "red",
       "icon": "📋",
       "description": "Blocked injections logged to State Store. Meta-Agent can auto-disable compromised tools via injection feedback loop — reads sanitiser alerts and learns to avoid them. Dashboard shows real-time security events feed.",
-      "tags": "[\"auto-disable\",\"injection feedback loop\",\"real-time\"]",
+      "tags": [
+        "auto-disable",
+        "injection feedback loop",
+        "real-time"
+      ],
       "sort_order": 92,
       "versions": {
         "overview": {
           "content": "Blocked injections logged to State Store. Meta-Agent can auto-disable compromised tools via injection feedback loop — reads sanitiser alerts and learns to avoid them. Dashboard shows real-time security events.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2961,14 +3444,18 @@
       "color": "amber",
       "icon": "🔧",
       "description": "External tool servers — search, email, database, filesystem, code execution, custom. Hot-swappable — Meta-Agent adds/removes at runtime via proxy_admin.",
-      "tags": "[\"external\",\"hot-swappable\",\"runtime managed\"]",
+      "tags": [
+        "external",
+        "hot-swappable",
+        "runtime managed"
+      ],
       "sort_order": 100,
       "versions": {
         "overview": {
           "content": "External MCP tool servers. Search, email, database, filesystem, code execution, custom. Hot-swappable — Meta-Agent adds/removes at runtime.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -2981,14 +3468,16 @@
       "color": "amber",
       "icon": "🔍",
       "description": "External search MCP server.",
-      "tags": "[\"ext\"]",
+      "tags": [
+        "ext"
+      ],
       "sort_order": 101,
       "versions": {
         "overview": {
           "content": "External search MCP server.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3001,14 +3490,16 @@
       "color": "amber",
       "icon": "✉",
       "description": "External email MCP server.",
-      "tags": "[\"ext\"]",
+      "tags": [
+        "ext"
+      ],
       "sort_order": 102,
       "versions": {
         "overview": {
           "content": "External email MCP server.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3021,14 +3512,16 @@
       "color": "amber",
       "icon": "🗄",
       "description": "External database MCP server.",
-      "tags": "[\"write\"]",
+      "tags": [
+        "write"
+      ],
       "sort_order": 103,
       "versions": {
         "overview": {
           "content": "External database MCP server.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3041,14 +3534,16 @@
       "color": "amber",
       "icon": "📂",
       "description": "External filesystem MCP server.",
-      "tags": "[\"write\"]",
+      "tags": [
+        "write"
+      ],
       "sort_order": 104,
       "versions": {
         "overview": {
           "content": "External filesystem MCP server.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3061,14 +3556,16 @@
       "color": "amber",
       "icon": "💻",
       "description": "External code execution MCP server.",
-      "tags": "[\"write\"]",
+      "tags": [
+        "write"
+      ],
       "sort_order": 105,
       "versions": {
         "overview": {
           "content": "External code execution MCP server.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3081,14 +3578,16 @@
       "color": "amber",
       "icon": "🧩",
       "description": "Custom MCP servers — hot-swappable, added/removed by Meta-Agent at runtime.",
-      "tags": "[\"dynamic\"]",
+      "tags": [
+        "dynamic"
+      ],
       "sort_order": 106,
       "versions": {
         "overview": {
           "content": "Custom MCP servers — hot-swappable, added/removed by Meta-Agent at runtime.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3101,14 +3600,18 @@
       "color": "teal",
       "icon": "🔄",
       "description": "Strict 8-phase pipeline enforced by Meta-Agent, executed by Worker. Each phase is a separate dispatch. Worker sees only the current phase — never what comes next. Every phase ends with a git commit creating a clean rollback point. Meta-Agent verifies phase gate before advancing. If gate fails, re-dispatch same phase. Phases ⑦ and ⑧ are audit-only — violations feed back as targeted fix dispatches, then re-audit.",
-      "tags": "[\"phase isolation\",\"git commits\",\"gate verification\"]",
+      "tags": [
+        "phase isolation",
+        "git commits",
+        "gate verification"
+      ],
       "sort_order": 110,
       "versions": {
         "overview": {
           "content": "Strict 8-phase pipeline enforced by Meta-Agent: Feature → Steps → Units → Red → Green → Refactor → Arch Review → Sec Review. Every phase ends with a git commit. LLM agents are bad at process discipline. Given \"build a login feature\", they'll jump straight to implementation, skip tests, or refactor before proving anything works. Phase isolation prevents this — the Worker can't skip ahead because it doesn't know what \"ahead\" is. The forbidden_actions field explicitly blocks forward-leaking behaviour. This turns the Meta-Agent into a process enforcer, not just a task decomposer. Review phases ⑦ ⑧ are audit-only — dispatched as read-only inspections. Worker reports violations but is forbidden from modifying code. Meta-Agent reads the report, dispatches separate fix phases with specific violations as constraints. Prevents the \"fix one thing, break another\" cascade. Phases are extensible: add performance review, accessibility audit, API design review — same pattern.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3121,14 +3624,17 @@
       "color": "gold",
       "icon": "📝",
       "description": "Write the .feature file. Describe the behaviour in Gherkin. DO NOT write any tests or code. Gate: .feature file exists. Git commit after phase.",
-      "tags": "[\"gherkin\",\"gate: .feature exists\"]",
+      "tags": [
+        "gherkin",
+        "gate: .feature exists"
+      ],
       "sort_order": 111,
       "versions": {
         "overview": {
           "content": "Write the .feature file. Describe the behaviour in Gherkin. DO NOT write any tests or code. Gate: .feature file exists. Git commit after phase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3141,14 +3647,17 @@
       "color": "cyan",
       "icon": "🧪",
       "description": "Write failing step definitions for this feature file. DO NOT implement any production code. Gate: step files exist. Git commit after phase.",
-      "tags": "[\"failing tests\",\"gate: step files exist\"]",
+      "tags": [
+        "failing tests",
+        "gate: step files exist"
+      ],
       "sort_order": 112,
       "versions": {
         "overview": {
           "content": "Write failing step definitions for this feature file. DO NOT implement any production code. Gate: step files exist. Git commit after phase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3161,14 +3670,17 @@
       "color": "purple",
       "icon": "🧪",
       "description": "Write failing unit tests for the components you'll need. DO NOT implement any production code. Gate: test files exist. Git commit after phase.",
-      "tags": "[\"failing tests\",\"gate: test files exist\"]",
+      "tags": [
+        "failing tests",
+        "gate: test files exist"
+      ],
       "sort_order": 113,
       "versions": {
         "overview": {
           "content": "Write failing unit tests for the components you'll need. DO NOT implement any production code. Gate: test files exist. Git commit after phase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3181,14 +3693,17 @@
       "color": "red",
       "icon": "🔴",
       "description": "Run all tests. Confirm they fail. Report which tests fail and why. DO NOT fix anything. Gate: tests fail. Git commit after phase.",
-      "tags": "[\"confirm failure\",\"gate: tests fail\"]",
+      "tags": [
+        "confirm failure",
+        "gate: tests fail"
+      ],
       "sort_order": 114,
       "versions": {
         "overview": {
           "content": "Run all tests. Confirm they fail. Report which tests fail and why. DO NOT fix anything. Gate: tests fail. Git commit after phase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3201,14 +3716,17 @@
       "color": "green",
       "icon": "🟢",
       "description": "Write the minimum production code to make all tests pass. DO NOT refactor or optimise. Gate: tests pass. Git commit after phase.",
-      "tags": "[\"minimum code\",\"gate: tests pass\"]",
+      "tags": [
+        "minimum code",
+        "gate: tests pass"
+      ],
       "sort_order": 115,
       "versions": {
         "overview": {
           "content": "Write the minimum production code to make all tests pass. DO NOT refactor or optimise. Gate: tests pass. Git commit after phase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3221,14 +3739,18 @@
       "color": "sky",
       "icon": "🔧",
       "description": "Refactor for clarity, DRY, naming. All tests must still pass. DO NOT add new functionality. Gate: tests still pass. Git commit after phase.",
-      "tags": "[\"clarity\",\"dry\",\"gate: tests still pass\"]",
+      "tags": [
+        "clarity",
+        "dry",
+        "gate: tests still pass"
+      ],
       "sort_order": 116,
       "versions": {
         "overview": {
           "content": "Refactor for clarity, DRY, naming. All tests must still pass. DO NOT add new functionality. Gate: tests still pass. Git commit after phase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3241,14 +3763,18 @@
       "color": "orange",
       "icon": "🏛",
       "description": "LLM-driven audit agent (not a linter). Audit against Clean Architecture standards. Report violations: dependency direction (inner layers importing outer), layer boundary leaks (business logic in controllers, HTTP in domain), abstraction leaks (SQL in repository interface), use case isolation. Traverses Code Graph DATA_FLOW and IMPORTS edges to verify dependency direction structurally. DO NOT fix — only report. Report format: {violations: [{file, line, rule, severity, explanation}], passed: bool}. If violations found, Meta-Agent dispatches targeted fix phases then re-runs this review. Gate: 0 violations. Git commit after phase.",
-      "tags": "[\"audit-only\",\"clean architecture\",\"gate: 0 violations\"]",
+      "tags": [
+        "audit-only",
+        "clean architecture",
+        "gate: 0 violations"
+      ],
       "sort_order": 117,
       "versions": {
         "overview": {
           "content": "LLM-driven audit agent. Audit against Clean Architecture: dependency direction (inner layers importing outer = violation), layer boundaries (business logic in controllers), abstraction leaks (SQL in repository interface), use case isolation. Traverses Code Graph DATA_FLOW and IMPORTS edges structurally. DO NOT fix — only report. Report: {violations: [{file, line, rule, severity, explanation}], passed: bool}. Gate: 0 violations. Git commit after phase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}
@@ -3261,14 +3787,19 @@
       "color": "rose",
       "icon": "🔒",
       "description": "LLM-driven security audit agent. Check: injection vectors (SQL, XSS, command injection, path traversal), auth/authz gaps (endpoints without auth middleware, missing permission checks, privilege escalation), secrets exposure (hardcoded keys, tokens in logs, secrets in error messages, .env leaks), unsafe dependencies (known CVEs, deprecated crypto, insecure defaults). Checks compliance requirements from User KG (e.g. \"client requires SOC2\" → enforce specific controls). DO NOT fix — only report. Same report format as Arch Review. Gate: 0 findings. Git commit after phase.",
-      "tags": "[\"audit-only\",\"security\",\"gate: 0 findings\",\"user kg compliance\"]",
+      "tags": [
+        "audit-only",
+        "security",
+        "gate: 0 findings",
+        "user kg compliance"
+      ],
       "sort_order": 118,
       "versions": {
         "overview": {
           "content": "LLM-driven security audit. Injection vectors (SQL, XSS, command injection, path traversal), auth/authz gaps (missing middleware, privilege escalation), secrets exposure (hardcoded keys, tokens in logs, .env leaks), unsafe dependencies (CVEs, deprecated crypto). Checks User KG compliance requirements (e.g. SOC2). DO NOT fix — only report. Same report format. Gate: 0 findings. Git commit after phase.",
           "progress": 0,
           "status": "planned",
-          "updated_at": "2026-02-10 09:56:50"
+          "updated_at": "2026-02-11 12:10:32"
         }
       },
       "features": {}

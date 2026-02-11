@@ -1,0 +1,63 @@
+{
+  "name": "roadmap",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Living documentation for the Open Autonomous Runtime architecture",
+  "scripts": {
+    "build:db": "rm -f db/architecture.db && sqlite3 db/architecture.db < schema.sql && sqlite3 db/architecture.db < seed.sql",
+    "seed:features": "tsx src/adapters/cli/seed-features.ts",
+    "export": "tsx src/adapters/cli/export.ts",
+    "build:data": "npm run build:db && npm run seed:features && npm run export",
+    "build:ts": "tsc && tsc-alias",
+    "build": "npm run build:ts && npm run build:data",
+    "serve": "python3 -m http.server 8080 --directory web",
+    "test": "npm run test:unit && npm run test:features",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:features": "NODE_OPTIONS='--import tsx/esm' cucumber-js --import 'tests/step-definitions/**/*.ts' --tags 'not @WIP'",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
+    "check:code-quality": "bash scripts/check-code-quality.sh",
+    "pre-commit": "npm run check:code-quality && npm run lint && npm run format:check && npm run typecheck && npm run build:ts && npm run test:unit",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.6.0",
+    "@eslint/js": "^9.28.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.2.3",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.28.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-boundaries": "^5.4.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^17.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0",
+    "vitest": "^4.0.18"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
