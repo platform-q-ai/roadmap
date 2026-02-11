@@ -7,31 +7,31 @@ Feature: Render Deployment
 
   Scenario: API server serves index.html at root
     Given the API server is running with static file serving
-    When I send a GET request to "/"
-    Then the response status is 200
-    And the response content type contains "text/html"
+    When I request the path "/"
+    Then the render response status is 200
+    And the render response content type contains "text/html"
 
   Scenario: API server serves data.json from web directory
     Given the API server is running with static file serving
-    When I send a GET request to "/data.json"
-    Then the response status is 200
-    And the response content type contains "application/json"
+    When I request the path "/data.json"
+    Then the render response status is 200
+    And the render response content type contains "application/json"
 
   Scenario: API routes still work alongside static serving
     Given the API server is running with static file serving
-    When I send a GET request to "/api/health"
-    Then the response status is 200
-    And the response body has field "status" with value "ok"
+    When I request the path "/api/health"
+    Then the render response status is 200
+    And the render response body has field "status" with value "ok"
 
   Scenario: Unknown static file returns 404
     Given the API server is running with static file serving
-    When I send a GET request to "/nonexistent-file.xyz"
-    Then the response status is 404
+    When I request the path "/nonexistent-file.xyz"
+    Then the render response status is 404
 
   Scenario: Path traversal attempts are rejected
     Given the API server is running with static file serving
-    When I send a GET request to "/../package.json"
-    Then the response status is 404
+    When I request the path "/../package.json"
+    Then the render response status is 404
 
   # ── Render Blueprint ─────────────────────────────────────────────────
 
@@ -52,12 +52,12 @@ Feature: Render Deployment
 
   Scenario: Server listens on PORT environment variable
     Given the API server is running with static file serving on a dynamic port
-    When I send a GET request to "/api/health"
-    Then the response status is 200
+    When I request the path "/api/health"
+    Then the render response status is 200
 
   # ── CORS headers on static files ─────────────────────────────────────
 
   Scenario: Static file responses include CORS headers
     Given the API server is running with static file serving
-    When I send a GET request to "/data.json"
-    Then the response includes CORS headers
+    When I request the path "/data.json"
+    Then the render response includes CORS headers
