@@ -178,9 +178,10 @@ describe('README reflects Render deployment', () => {
 
   it('README deployment section mentions Render', () => {
     const content = readFileSync(readmePath, 'utf-8');
-    const deployMatch = content.match(/^## Deployment[\s\S]*?(?=^## |$)/m);
-    expect(deployMatch).not.toBeNull();
-    expect(deployMatch?.[0]).toContain('Render');
+    const sections = content.split(/^## /m);
+    const deploySection = sections.find(s => s.startsWith('Deployment'));
+    expect(deploySection).toBeDefined();
+    expect(deploySection).toContain('Render');
   });
 
   it('README does not reference CI/CD to GitHub Pages in tech stack', () => {

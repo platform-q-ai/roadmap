@@ -6,7 +6,7 @@ Delete a component from the architecture database, removing all related versions
 
 **User request**: $ARGUMENTS
 
-**API base URL**: `http://localhost:3000`
+**API base URL**: `https://roadmap-5vvp.onrender.com`
 
 Follow these steps:
 
@@ -14,7 +14,7 @@ Follow these steps:
 
 2. **Verify** the component exists:
    ```
-   curl http://localhost:3000/api/components/<id>
+   curl https://roadmap-5vvp.onrender.com/api/components/<id>
    ```
    - Returns `200` with component details if it exists
    - Returns `404` if the component does not exist
@@ -23,7 +23,7 @@ Follow these steps:
 
 4. **Delete the component** via DELETE /api/components/:id:
    ```
-   curl -X DELETE http://localhost:3000/api/components/<id>
+   curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/<id>
    ```
    - Returns `204` (no content) on success
    - Returns `404` if the component does not exist

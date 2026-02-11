@@ -2,7 +2,7 @@
 
 Living documentation for the **Open Autonomous Runtime** architecture. Every component in the system is a node in a SQLite graph database with versioned specs (MVP / v1 / v2), Gherkin feature files, and progress tracking. A static web view renders the full architecture as an interactive diagram where every box can be expanded to explore documentation, build status, and BDD specs.
 
-**Live:** [platform-q-ai.github.io/roadmap](https://platform-q-ai.github.io/roadmap/)
+**Live:** [roadmap-5vvp.onrender.com](https://roadmap-5vvp.onrender.com)
 
 Built in the open.
 
@@ -160,9 +160,11 @@ See [AGENTS.md](AGENTS.md) for detailed instructions and schema reference.
 
 ## Deployment
 
-The site deploys to GitHub Pages automatically on push to `master` via `.github/workflows/pages.yml`. It serves the `web/` directory as a static site.
+The application is deployed on Render as a Docker-based web service. On every push to `master`, Render automatically builds the Docker image and deploys the API server, which also serves the static web view.
 
-To deploy manually or to another static host, just serve the `web/` directory -- it contains only `index.html` and `data.json` with no build step or dependencies.
+**Live URL:** https://roadmap-5vvp.onrender.com
+
+The Render blueprint (`render.yaml`) defines the service configuration. The `Dockerfile` builds the full application including the SQLite database, TypeScript compilation, and static assets.
 
 ## Tech Stack
 
@@ -170,4 +172,5 @@ To deploy manually or to another static host, just serve the `web/` directory --
 - **Node.js** (ESM) -- clean architecture application layer
 - **Vanilla HTML/CSS/JS** -- single-file web view, zero frameworks
 - **Gherkin** -- BDD feature specs per component
-- **GitHub Actions** -- CI/CD to GitHub Pages
+- **Render** -- Docker-based deployment with auto-deploy from `master`
+- **GitHub Actions** -- PR quality gate (lint, test, coverage)

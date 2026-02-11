@@ -6,7 +6,7 @@ Update the progress and status for a specific component version milestone.
 
 **User request**: $ARGUMENTS
 
-**API base URL**: `http://localhost:3000`
+**API base URL**: `https://roadmap-5vvp.onrender.com`
 
 Follow these steps:
 
@@ -18,7 +18,7 @@ Follow these steps:
 
 2. **Update progress** via PATCH /api/components/:id/versions/:version/progress:
    ```
-   curl -X PATCH http://localhost:3000/api/components/<nodeId>/versions/<version>/progress \
+   curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/<nodeId>/versions/<version>/progress \
      -H "Content-Type: application/json" \
      -d '{"progress":<progress>,"status":"<status>"}'
    ```

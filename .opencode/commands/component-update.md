@@ -6,7 +6,7 @@ Update a component's properties in the architecture database.
 
 **User request**: $ARGUMENTS
 
-**API base URL**: `http://localhost:3000`
+**API base URL**: `https://roadmap-5vvp.onrender.com`
 
 This command supports updating:
 - **Progress and status** for a specific version (mvp, v1, v2)
@@ -22,7 +22,7 @@ Follow these steps:
 
 2. **Update progress** via PATCH /api/components/:id/versions/:version/progress:
    ```
-   curl -X PATCH http://localhost:3000/api/components/<nodeId>/versions/<version>/progress \
+   curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/<nodeId>/versions/<version>/progress \
      -H "Content-Type: application/json" \
      -d '{"progress":<progress>,"status":"<status>"}'
    ```

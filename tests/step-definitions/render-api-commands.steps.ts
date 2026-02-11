@@ -108,7 +108,7 @@ Then(
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function extractSection(markdown: string, heading: string): string | null {
-  const pattern = new RegExp(`^## ${heading}[\\s\\S]*?(?=^## |$)`, 'm');
-  const match = markdown.match(pattern);
-  return match ? match[0] : null;
+  const sections = markdown.split(/^## /m);
+  const section = sections.find(s => s.startsWith(heading));
+  return section ? `## ${section}` : null;
 }
