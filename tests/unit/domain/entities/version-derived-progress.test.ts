@@ -72,10 +72,37 @@ describe('Version.deriveProgress', () => {
     });
   });
 
+  describe('patch-level granularity', () => {
+    it('adds patch digit to minor * 10 for sub-10% precision', () => {
+      expect(Version.deriveProgress('0.7.5', 'mvp')).toBe(75);
+    });
+
+    it('returns 33 for version 0.3.3', () => {
+      expect(Version.deriveProgress('0.3.3', 'mvp')).toBe(33);
+    });
+
+    it('returns 1 for version 0.0.1', () => {
+      expect(Version.deriveProgress('0.0.1', 'mvp')).toBe(1);
+    });
+
+    it('works for v1 phase with patch', () => {
+      expect(Version.deriveProgress('1.4.5', 'v1')).toBe(45);
+    });
+
+    it('works for v2 phase with patch', () => {
+      expect(Version.deriveProgress('2.6.3', 'v2')).toBe(63);
+    });
+
+    it('handles missing patch as 0', () => {
+      expect(Version.deriveProgress('0.5', 'mvp')).toBe(50);
+    });
+  });
+
   describe('edge cases', () => {
     it('clamps progress to 100 maximum', () => {
-      // Even if somehow a version had minor > 10, progress should not exceed 100
       expect(Version.deriveProgress('0.5.0', 'mvp')).toBeLessThanOrEqual(100);
+      // minor 9 + patch 9 = 99, still under 100
+      expect(Version.deriveProgress('0.9.9', 'mvp')).toBe(99);
     });
 
     it('returns 0 for unrecognised version tags', () => {

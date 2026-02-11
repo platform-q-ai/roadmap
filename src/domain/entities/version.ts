@@ -60,7 +60,7 @@ export class Version {
    * Derive phase progress from a node's current_version semver string.
    *
    * Each version tag (mvp, v1, v2) maps to a major version number.
-   * The minor digit of current_version * 10 = progress % for the active phase.
+   * Progress = minor * 10 + patch (e.g. 0.7.5 = 75%).
    * Completed phases (major > phase major) = 100%.
    * Future phases (major < phase major) = 0%.
    * Unrecognised tags (overview, v3, etc.) return 0.
@@ -78,6 +78,7 @@ export class Version {
     const parts = currentVersion.split('.');
     const major = parseInt(parts[0], 10);
     const minor = parseInt(parts[1], 10);
+    const patch = parts.length > 2 ? parseInt(parts[2], 10) : 0;
 
     if (isNaN(major) || isNaN(minor)) {
       return 0;
@@ -90,7 +91,7 @@ export class Version {
       return 0;
     }
 
-    return Math.min(minor * 10, 100);
+    return Math.min(minor * 10 + (isNaN(patch) ? 0 : patch), 100);
   }
 
   /**

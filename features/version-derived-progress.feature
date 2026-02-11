@@ -4,17 +4,18 @@ Feature: Version-Derived Progress
   So that version numbers are the single source of truth for build progress
 
   The mapping rule is:
-    - major 0 = MVP phase, minor digit * 10 = MVP progress %
-    - major 1 = v1 phase, minor digit * 10 = v1 progress %
-    - major 2 = v2 phase, minor digit * 10 = v2 progress %
+    - major 0 = MVP phase, progress = minor * 10 + patch
+    - major 1 = v1 phase, progress = minor * 10 + patch
+    - major 2 = v2 phase, progress = minor * 10 + patch
     - Once a phase's major version is reached, that phase is 100%
     - Phases beyond the current major are 0%
     - No current_version means all phases are 0%
 
   Examples:
     current_version 0.5.0 -> MVP 50%, v1 0%, v2 0%
+    current_version 0.7.5 -> MVP 75%, v1 0%, v2 0%
     current_version 1.0.0 -> MVP 100%, v1 0%, v2 0%
-    current_version 1.3.0 -> MVP 100%, v1 30%, v2 0%
+    current_version 1.3.3 -> MVP 100%, v1 33%, v2 0%
     current_version 2.7.0 -> MVP 100%, v1 100%, v2 70%
     current_version 3.0.0 -> MVP 100%, v1 100%, v2 100%
 
@@ -101,6 +102,16 @@ Feature: Version-Derived Progress
       Given a node with current_version "0.9.0"
       When I derive phase progress for version "mvp"
       Then the derived progress should be 90
+
+    Scenario: Patch digit adds sub-10% precision
+      Given a node with current_version "0.7.5"
+      When I derive phase progress for version "mvp"
+      Then the derived progress should be 75
+
+    Scenario: Patch digit works across phases
+      Given a node with current_version "1.4.5"
+      When I derive phase progress for version "v1"
+      Then the derived progress should be 45
 
     Scenario: Overview version is unaffected by derivation
       Given a node with current_version "1.5.0"
