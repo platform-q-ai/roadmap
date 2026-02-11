@@ -96,13 +96,15 @@ async function startRenderServer(world: RenderWorld): Promise<void> {
   const repos = buildStubRepos();
   const app = createApp(repos, { staticDir: webDir });
   await new Promise<void>(resolve => {
-    world.renderServer = app.listen(0, () => {
-      const addr = world.renderServer!.address();
-      if (typeof addr === 'object' && addr !== null) {
+    const server = app.listen(0, () => {
+      const addr = server.address();
+      assert.ok(addr, 'Server failed to bind to a port');
+      if (typeof addr === 'object') {
         world.renderBaseUrl = `http://127.0.0.1:${addr.port}`;
       }
       resolve();
     });
+    world.renderServer = server;
   });
 }
 

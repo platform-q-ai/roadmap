@@ -1,4 +1,5 @@
-import { createReadStream, existsSync } from 'node:fs';
+import { createReadStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import http from 'node:http';
 import { extname, normalize, resolve } from 'node:path';
 
@@ -30,7 +31,11 @@ function getMimeType(filePath: string): string {
   return MIME_TYPES[ext] ?? 'application/octet-stream';
 }
 
-function serveStatic(staticDir: string, urlPath: string, res: http.ServerResponse): boolean {
+async function serveStatic(
+  staticDir: string,
+  urlPath: string,
+  res: http.ServerResponse
+): Promise<boolean> {
   const safePath = normalize(urlPath === '/' ? '/index.html' : urlPath);
 
   // Prevent path traversal: resolved path must stay within staticDir
@@ -40,7 +45,12 @@ function serveStatic(staticDir: string, urlPath: string, res: http.ServerRespons
     return false;
   }
 
-  if (!existsSync(resolved)) {
+  try {
+    const fileStat = await stat(resolved);
+    if (!fileStat.isFile()) {
+      return false;
+    }
+  } catch {
     return false;
   }
 
@@ -115,7 +125,7 @@ export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
 
     if (staticDir && method === 'GET') {
       const urlPath = url.split('?')[0];
-      if (serveStatic(staticDir, urlPath, res)) {
+      if (await serveStatic(staticDir, urlPath, res)) {
         return;
       }
     }
