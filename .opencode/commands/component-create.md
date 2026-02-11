@@ -23,7 +23,7 @@ Follow these steps:
 
 3. **Publish** the changes to the website:
    ```
-   npx tsx src/adapters/cli/component-publish.ts
+   npx tsx src/adapters/cli/export.ts
    ```
 
 4. **Report** the result to the user.

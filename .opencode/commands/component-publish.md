@@ -15,7 +15,7 @@ Follow these steps:
 
 2. **Export** the architecture data to JSON:
    ```
-   npx tsx src/adapters/cli/component-publish.ts
+   npx tsx src/adapters/cli/export.ts
    ```
 
 3. **Report** the result including the count of nodes, edges, versions, and features exported.

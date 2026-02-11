@@ -1,9 +1,6 @@
-import { Node } from '@domain/entities/node.js';
-import { Version } from '@domain/entities/version.js';
-import type { IEdgeRepository } from '@domain/repositories/edge-repository.js';
-import type { INodeRepository } from '@domain/repositories/node-repository.js';
-import type { IVersionRepository } from '@domain/repositories/version-repository.js';
-import { CreateComponent } from '@use-cases/create-component.js';
+import type { IEdgeRepository, INodeRepository, IVersionRepository } from '@domain/index.js';
+import { Node, Version } from '@domain/index.js';
+import { CreateComponent } from '@use-cases/index.js';
 import { describe, expect, it, vi } from 'vitest';
 
 function createMockRepos(existingNodeIds: string[] = []) {

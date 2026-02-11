@@ -4,20 +4,17 @@ import { join } from 'node:path';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
-import { Edge } from '../../src/domain/entities/edge.js';
-import { Feature } from '../../src/domain/entities/feature.js';
-import type { NodeType } from '../../src/domain/entities/node.js';
-import { Node } from '../../src/domain/entities/node.js';
-import type { VersionTag } from '../../src/domain/entities/version.js';
-import { Version } from '../../src/domain/entities/version.js';
-import type { IEdgeRepository } from '../../src/domain/repositories/edge-repository.js';
-import type { IFeatureRepository } from '../../src/domain/repositories/feature-repository.js';
-import type { INodeRepository } from '../../src/domain/repositories/node-repository.js';
-import type { IVersionRepository } from '../../src/domain/repositories/version-repository.js';
-import { CreateComponent } from '../../src/use-cases/create-component.js';
-import { DeleteComponent } from '../../src/use-cases/delete-component.js';
-import { ExportArchitecture } from '../../src/use-cases/export-architecture.js';
-import type { ArchitectureData } from '../../src/use-cases/get-architecture.js';
+import type {
+  IEdgeRepository,
+  IFeatureRepository,
+  INodeRepository,
+  IVersionRepository,
+  NodeType,
+  VersionTag,
+} from '../../src/domain/index.js';
+import { Edge, Feature, Node, Version } from '../../src/domain/index.js';
+import type { ArchitectureData } from '../../src/use-cases/index.js';
+import { CreateComponent, DeleteComponent, ExportArchitecture } from '../../src/use-cases/index.js';
 
 interface World {
   nodes: Node[];

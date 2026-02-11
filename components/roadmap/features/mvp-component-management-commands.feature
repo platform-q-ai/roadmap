@@ -88,4 +88,4 @@ Feature: Component Management Commands
     Then a CLI adapter "component-create.ts" exists in src/adapters/cli
     And a CLI adapter "component-delete.ts" exists in src/adapters/cli
     And a CLI adapter "component-update.ts" exists in src/adapters/cli
-    And a CLI adapter "component-publish.ts" exists in src/adapters/cli
+    And a CLI adapter "export.ts" exists in src/adapters/cli

@@ -1,10 +1,11 @@
-import { Edge } from '@domain/entities/edge.js';
-import { Node } from '@domain/entities/node.js';
-import type { IEdgeRepository } from '@domain/repositories/edge-repository.js';
-import type { IFeatureRepository } from '@domain/repositories/feature-repository.js';
-import type { INodeRepository } from '@domain/repositories/node-repository.js';
-import type { IVersionRepository } from '@domain/repositories/version-repository.js';
-import { DeleteComponent } from '@use-cases/delete-component.js';
+import type {
+  IEdgeRepository,
+  IFeatureRepository,
+  INodeRepository,
+  IVersionRepository,
+} from '@domain/index.js';
+import { Edge, Node } from '@domain/index.js';
+import { DeleteComponent } from '@use-cases/index.js';
 import { describe, expect, it, vi } from 'vitest';
 
 function createMockRepos(existingNodes: Node[] = [], existingEdges: Edge[] = []) {

@@ -22,7 +22,7 @@ Follow these steps:
 
 4. **Publish** the changes to the website:
    ```
-   npx tsx src/adapters/cli/component-publish.ts
+   npx tsx src/adapters/cli/export.ts
    ```
 
 5. **Report** the result to the user, confirming what was removed.

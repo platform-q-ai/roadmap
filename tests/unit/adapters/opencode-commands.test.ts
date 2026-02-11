@@ -19,7 +19,7 @@ const CLI_ADAPTERS = [
   'component-create.ts',
   'component-delete.ts',
   'component-update.ts',
-  'component-publish.ts',
+  'export.ts',
 ];
 
 describe('OpenCode command files', () => {
@@ -109,8 +109,8 @@ describe('CLI adapter scripts', () => {
       expect(content).toContain('UpdateProgress');
     });
 
-    it('component-publish.ts imports ExportArchitecture use case', () => {
-      const content = readFileSync(join(CLI_DIR, 'component-publish.ts'), 'utf-8');
+    it('export.ts imports ExportArchitecture use case', () => {
+      const content = readFileSync(join(CLI_DIR, 'export.ts'), 'utf-8');
       expect(content).toContain('ExportArchitecture');
     });
   });
