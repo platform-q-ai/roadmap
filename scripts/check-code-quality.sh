@@ -331,16 +331,20 @@ else
 fi
 
 # 7b: Every feature file has at least one Scenario
+FEATURE_SCENARIOS_OK=1
 for feature_file in features/*.feature; do
   if [ -f "$feature_file" ]; then
     SCENARIO_COUNT=$(grep -cE "^\s*(Scenario|Scenario Outline):" "$feature_file" 2>/dev/null || echo "0")
     if [ "$SCENARIO_COUNT" -eq 0 ]; then
       echo -e "${RED}❌ No Scenario found in ${feature_file}${NC}"
       ERRORS_FOUND=1
+      FEATURE_SCENARIOS_OK=0
     fi
   fi
 done
-echo -e "${GREEN}✓ All feature files contain at least one Scenario${NC}"
+if [ "$FEATURE_SCENARIOS_OK" -eq 1 ]; then
+  echo -e "${GREEN}✓ All feature files contain at least one Scenario${NC}"
+fi
 
 # 7c: Cucumber dry-run to find undefined/pending steps
 echo ""
@@ -455,7 +459,7 @@ echo -e "${YELLOW}🏛️  CHECK 12: dependency-cruiser architecture validation.
 echo ""
 
 if [ -f ".dependency-cruiser.cjs" ]; then
-  DEPCRUISE_OUTPUT=$(npx depcruise src --config 2>&1)
+  DEPCRUISE_OUTPUT=$(npx depcruise src --config 2>&1) || true
   DEPCRUISE_EXIT=$?
 
   if [ "$DEPCRUISE_EXIT" -ne 0 ]; then
