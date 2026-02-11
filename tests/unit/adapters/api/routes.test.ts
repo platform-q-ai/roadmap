@@ -1,5 +1,6 @@
 import http from 'node:http';
 
+import { createApp } from '@adapters/api/index.js';
 import type {
   IEdgeRepository,
   IFeatureRepository,
@@ -8,8 +9,6 @@ import type {
 } from '@domain/index.js';
 import { Edge, Feature, Node, Version } from '@domain/index.js';
 import { describe, expect, it, vi } from 'vitest';
-
-import { createApp } from '@adapters/api/index.js';
 
 // ─── Helper: in-memory repos ────────────────────────────────────────
 

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
+import { createApp } from '../../src/adapters/api/index.js';
 import { Edge } from '../../src/domain/entities/edge.js';
 import { Feature } from '../../src/domain/entities/feature.js';
 import { Node } from '../../src/domain/entities/node.js';
@@ -15,7 +16,6 @@ import type {
   INodeRepository,
   IVersionRepository,
 } from '../../src/domain/index.js';
-import { createApp } from '../../src/adapters/api/index.js';
 
 interface ApiWorld {
   nodes: Node[];

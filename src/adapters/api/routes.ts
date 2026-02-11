@@ -56,6 +56,32 @@ function parseJsonBody(raw: string): Record<string, unknown> | null {
   }
 }
 
+function errorStatus(msg: string): number {
+  if (msg.includes('already exists')) {
+    return 409;
+  }
+  if (msg.includes('not found') || msg.includes('Not found')) {
+    return 404;
+  }
+  return 400;
+}
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+function buildCreateInput(body: Record<string, unknown>) {
+  const { id, name, type, layer, description, tags } = body;
+  return {
+    id: String(id),
+    name: String(name),
+    type: String(type),
+    layer: String(layer),
+    description: description ? String(description) : undefined,
+    tags: Array.isArray(tags) ? tags.map(String) : undefined,
+  };
+}
+
 export function buildRoutes(deps: ApiDeps): Route[] {
   const { nodeRepo, edgeRepo, versionRepo, featureRepo } = deps;
 
@@ -127,29 +153,18 @@ export function buildRoutes(deps: ApiDeps): Route[] {
           json(res, 400, { error: 'Invalid JSON body' });
           return;
         }
-        const { id, name, type, layer, description, tags } = body;
-        if (!id || !name || !type || !layer) {
+        if (!body.id || !body.name || !body.type || !body.layer) {
           json(res, 400, { error: 'Missing required fields: id, name, type, layer' });
           return;
         }
+        const input = buildCreateInput(body);
         const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
         try {
-          await uc.execute({
-            id: String(id),
-            name: String(name),
-            type: String(type) as Parameters<typeof uc.execute>[0]['type'],
-            layer: String(layer),
-            description: description ? String(description) : undefined,
-            tags: Array.isArray(tags) ? tags.map(String) : undefined,
-          });
-          json(res, 201, { id, name, type, layer });
+          await uc.execute(input as Parameters<typeof uc.execute>[0]);
+          json(res, 201, { id: input.id, name: input.name, type: input.type, layer: input.layer });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (msg.includes('already exists')) {
-            json(res, 409, { error: msg });
-          } else {
-            json(res, 400, { error: msg });
-          }
+          const msg = errorMessage(err);
+          json(res, errorStatus(msg), { error: msg });
         }
       },
     },
@@ -166,12 +181,8 @@ export function buildRoutes(deps: ApiDeps): Route[] {
           res.writeHead(204);
           res.end();
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (msg.includes('not found') || msg.includes('Not found')) {
-            json(res, 404, { error: msg });
-          } else {
-            json(res, 400, { error: msg });
-          }
+          const msg = errorMessage(err);
+          json(res, errorStatus(msg), { error: msg });
         }
       },
     },
@@ -199,12 +210,8 @@ export function buildRoutes(deps: ApiDeps): Route[] {
           await uc.execute(nodeId, version, progress, status as Parameters<typeof uc.execute>[3]);
           json(res, 200, { nodeId, version, progress, status });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (msg.includes('not found') || msg.includes('Not found')) {
-            json(res, 404, { error: msg });
-          } else {
-            json(res, 400, { error: msg });
-          }
+          const msg = errorMessage(err);
+          json(res, errorStatus(msg), { error: msg });
         }
       },
     },
