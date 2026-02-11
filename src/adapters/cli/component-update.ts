@@ -1,0 +1,47 @@
+#!/usr/bin/env tsx
+// CLI adapter: Update progress for a component version.
+// Usage: npx tsx src/adapters/cli/component-update.ts <nodeId> <version> <progress> <status>
+// Example: npx tsx src/adapters/cli/component-update.ts supervisor mvp 50 in-progress
+
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+import type { VersionStatus, VersionTag } from '../../domain/index.js';
+import {
+  createConnection,
+  SqliteNodeRepository,
+  SqliteVersionRepository,
+} from '../../infrastructure/sqlite/index.js';
+import { UpdateProgress } from '../../use-cases/index.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, '..', '..', '..');
+const DB_PATH = join(ROOT, 'db', 'architecture.db');
+
+const args = process.argv.slice(2);
+if (args.length < 4) {
+  console.error('Usage: component-update <nodeId> <version> <progress> <status>');
+  process.exit(1);
+}
+
+const [nodeId, version, progressStr, status] = args;
+const progress = parseInt(progressStr, 10);
+
+if (isNaN(progress)) {
+  console.error(`Invalid progress value: ${progressStr}`);
+  process.exit(1);
+}
+
+const db = createConnection(DB_PATH);
+
+const updateProgress = new UpdateProgress({
+  nodeRepo: new SqliteNodeRepository(db),
+  versionRepo: new SqliteVersionRepository(db),
+});
+
+try {
+  await updateProgress.execute(nodeId, version as VersionTag, progress, status as VersionStatus);
+  console.log(`Updated ${nodeId}/${version}: progress=${progress}%, status=${status}`);
+} finally {
+  db.close();
+}
