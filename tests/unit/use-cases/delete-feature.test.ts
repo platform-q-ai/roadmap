@@ -1,6 +1,5 @@
-import type { IFeatureRepository } from '@domain/repositories/feature-repository.js';
-import type { INodeRepository } from '@domain/repositories/node-repository.js';
-import { DeleteFeature } from '@use-cases/delete-feature.js';
+import type { IFeatureRepository, INodeRepository } from '@domain/index.js';
+import { DeleteFeature } from '@use-cases/index.js';
 import { describe, expect, it, vi } from 'vitest';
 
 function buildMockRepos(opts: { nodeExists?: boolean; featureDeleted?: boolean }) {

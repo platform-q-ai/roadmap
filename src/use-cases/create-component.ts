@@ -6,6 +6,8 @@ import type {
 } from '../domain/index.js';
 import { Edge, Node, Version } from '../domain/index.js';
 
+import { NodeExistsError, NodeTypeError } from './errors.js';
+
 export interface CreateComponentInput {
   id: string;
   name: string;
@@ -77,19 +79,5 @@ export class CreateComponent {
       });
       await this.versionRepo.save(version);
     }
-  }
-}
-
-class NodeTypeError extends Error {
-  constructor(type: string) {
-    super(`Invalid node type: ${type}`);
-    this.name = 'NodeTypeError';
-  }
-}
-
-class NodeExistsError extends Error {
-  constructor(id: string) {
-    super(`Node already exists: ${id}`);
-    this.name = 'NodeExistsError';
   }
 }

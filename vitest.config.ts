@@ -16,7 +16,6 @@ export default defineConfig({
         'src/**/index.ts',
         'src/domain/repositories/**',
         'src/infrastructure/drizzle/schema.ts',
-        'src/infrastructure/sqlite/connection.ts',
       ],
       thresholds: {
         statements: 90,
