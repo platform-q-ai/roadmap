@@ -1,8 +1,9 @@
-import type {
-  IEdgeRepository,
-  IFeatureRepository,
-  INodeRepository,
-  IVersionRepository,
+import {
+  Version,
+  type IEdgeRepository,
+  type IFeatureRepository,
+  type INodeRepository,
+  type IVersionRepository,
 } from '../domain/index.js';
 
 interface VersionSummary {
@@ -118,6 +119,26 @@ export class GetArchitecture {
     return index;
   }
 
+  private applyDerivedProgress(
+    versions: Record<string, VersionSummary>,
+    currentVersion: string | null
+  ): Record<string, VersionSummary> {
+    if (!currentVersion) return versions;
+
+    const result: Record<string, VersionSummary> = {};
+    for (const [tag, summary] of Object.entries(versions)) {
+      const derived = Version.deriveProgress(currentVersion, tag);
+      if (derived > 0 || tag === 'mvp' || tag === 'v1' || tag === 'v2') {
+        const progress = derived;
+        const status = Version.deriveStatus(progress);
+        result[tag] = { ...summary, progress, status };
+      } else {
+        result[tag] = summary;
+      }
+    }
+    return result;
+  }
+
   private buildFeatureIndex(
     features: Array<{
       node_id: string;
@@ -167,10 +188,13 @@ export class GetArchitecture {
         }
       }
 
+      const nodeVersions = versionsByNode[n.id] || {};
+      const enrichedVersions = this.applyDerivedProgress(nodeVersions, n.current_version);
+
       return {
         ...n.toJSON(),
         display_state: n.displayState(),
-        versions: versionsByNode[n.id] || {},
+        versions: enrichedVersions,
         features: nodeFeatures,
       };
     });
