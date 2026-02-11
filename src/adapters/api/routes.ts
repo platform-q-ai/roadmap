@@ -24,7 +24,7 @@ export interface ApiDeps {
   featureRepo: IFeatureRepository;
 }
 
-interface Route {
+export interface Route {
   method: string;
   pattern: RegExp;
   handler: (req: IncomingMessage, res: ServerResponse, match: RegExpMatchArray) => Promise<void>;
