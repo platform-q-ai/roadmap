@@ -218,19 +218,14 @@ describe('Render Configuration Files', () => {
     expect(content).toContain('type: web');
   });
 
-  it('render.yaml specifies a build command', () => {
+  it('render.yaml specifies the Docker runtime', () => {
     const content = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
-    expect(content.includes('buildCommand:') || content.includes('build_command:')).toBe(true);
+    expect(content).toContain('runtime: docker');
   });
 
   it('render.yaml specifies a start command', () => {
     const content = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
     expect(content.includes('startCommand:') || content.includes('start_command:')).toBe(true);
-  });
-
-  it('render.yaml specifies Node.js environment', () => {
-    const content = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
-    expect(content.includes('node') || content.includes('Node')).toBe(true);
   });
 
   it('package.json has a start script', () => {

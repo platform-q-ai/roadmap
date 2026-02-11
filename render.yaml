@@ -1,8 +1,7 @@
 services:
   - type: web
     name: roadmap
-    runtime: node
-    buildCommand: npm install && npm run build
+    runtime: docker
     startCommand: npm start
     envVars:
       - key: NODE_ENV
