@@ -402,4 +402,91 @@ Edge types: `CONTAINS`, `CONTROLS`, `DEPENDS_ON`, `READS_FROM`, `WRITES_TO`, `DI
 5. Implement Domain -> Use Cases -> Infrastructure -> Adapters
 6. Run `npm test` -- see GREEN
 7. Refactor while keeping tests green
-8. Commit with conventional message
+8. Ship with `/ship` (or follow the manual shipping workflow below)
+
+## Shipping Workflow (Post-Commit)
+
+After all tests pass and work is complete, use the `/ship` command to automate the full delivery pipeline:
+
+```
+/ship
+```
+
+This runs the following steps automatically:
+
+```
+1. PRE-FLIGHT          npm run pre-commit (all 6 gates must pass)
+           |
+2. COMMIT              Stage changes + conventional commit message
+           |
+3. PUSH                git push -u origin <branch>
+           |
+4. CREATE PR           gh pr create --title "..." --body "..."
+           |
+5. ARCHITECTURE REVIEW @architecture-reviewer reads the diff and
+                        leaves comments on the PR via gh CLI
+           |
+6. ADDRESS FEEDBACK    For each review comment:
+                        - Make the code fix
+                        - Run lint + tests
+                        - Commit the fix
+                        - Resolve the comment on GitHub
+           |
+7. PUSH FIXES          git push (all fix commits)
+           |
+8. REPORT              PR URL + summary of review and fixes
+```
+
+### Manual Shipping (without /ship)
+
+If you prefer to do it step by step:
+
+1. Run `npm run pre-commit` -- all gates must pass
+2. `git add -A && git commit -m "<type>(<scope>): <description>"`
+3. `git push -u origin <branch>`
+4. `gh pr create --title "..." --body "## Summary ..."`
+5. Invoke `@architecture-reviewer` with the PR number
+6. Address each comment, commit fixes, resolve comments
+7. `git push`
+
+### Architecture Reviewer
+
+The `architecture-reviewer` subagent (`.opencode/agents/architecture-reviewer.md`) is a read-only reviewer that:
+
+- Reads the PR diff via `gh pr diff <number>`
+- Checks Clean Architecture boundary compliance
+- Checks code quality rules (complexity, depth, params, etc.)
+- Checks barrel exports, constructor injection, repository pattern
+- Checks for incomplete work markers and type safety bypasses
+- Checks test coverage for new code
+- Leaves specific, actionable comments on the PR via `gh pr review`
+- Approves if clean: `gh pr review <number> --approve`
+
+After the reviewer leaves comments, the build agent addresses each one:
+
+1. Read the comment
+2. Make the code change
+3. Verify with `npm run lint && npm run test:unit`
+4. Commit: `fix(<scope>): address review -- <what>`
+5. Resolve the comment via `gh api`
+
+## OpenCode Configuration
+
+### Agents
+
+| Agent | Mode | Location | Purpose |
+|-------|------|----------|---------|
+| `architecture-reviewer` | subagent | `.opencode/agents/architecture-reviewer.md` | PR review for Clean Architecture and code quality |
+
+### Commands
+
+| Command | Location | Purpose |
+|---------|----------|---------|
+| `/ship` | `.opencode/commands/ship.md` | Full delivery pipeline: commit, push, PR, review, fix |
+
+### File Roles (OpenCode)
+
+| File | Role | Edit? |
+|------|------|-------|
+| `.opencode/agents/*.md` | Subagent definitions | Yes -- add/edit agents |
+| `.opencode/commands/*.md` | Custom slash commands | Yes -- add/edit commands |
