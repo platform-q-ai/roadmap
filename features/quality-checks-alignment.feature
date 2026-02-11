@@ -28,14 +28,14 @@ Feature: Quality Checks Alignment
 
   # ─── Coverage thresholds ─────────────────────────────────
 
-  Scenario: Coverage thresholds are set at 80%
+  Scenario: Coverage thresholds are set at 90%
     Given the vitest config file
     Then the coverage thresholds should be:
       | metric     | value |
-      | statements | 80    |
-      | branches   | 80    |
-      | functions  | 80    |
-      | lines      | 80    |
+      | statements | 90    |
+      | branches   | 90    |
+      | functions  | 90    |
+      | lines      | 90    |
 
   Scenario: Coverage excludes CLI adapter entry points
     Given the vitest config file

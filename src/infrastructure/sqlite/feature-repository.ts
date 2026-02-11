@@ -43,4 +43,11 @@ export class SqliteFeatureRepository implements IFeatureRepository {
   async deleteByNode(nodeId: string): Promise<void> {
     this.db.prepare('DELETE FROM features WHERE node_id = ?').run(nodeId);
   }
+
+  async deleteByNodeAndFilename(nodeId: string, filename: string): Promise<boolean> {
+    const result = this.db
+      .prepare('DELETE FROM features WHERE node_id = ? AND filename = ?')
+      .run(nodeId, filename);
+    return result.changes > 0;
+  }
 }

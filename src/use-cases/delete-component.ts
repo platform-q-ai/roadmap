@@ -5,6 +5,8 @@ import type {
   IVersionRepository,
 } from '../domain/index.js';
 
+import { NodeNotFoundError } from './errors.js';
+
 interface Deps {
   nodeRepo: INodeRepository;
   edgeRepo: IEdgeRepository;
@@ -51,12 +53,5 @@ export class DeleteComponent {
     }
 
     await this.nodeRepo.delete(nodeId);
-  }
-}
-
-class NodeNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Node not found: ${id}`);
-    this.name = 'NodeNotFoundError';
   }
 }

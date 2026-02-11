@@ -47,6 +47,7 @@ function buildEmptyRepos() {
     save: vi.fn(async () => {}),
     deleteAll: vi.fn(async () => {}),
     deleteByNode: vi.fn(async () => {}),
+    deleteByNodeAndFilename: vi.fn(async () => false),
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
@@ -174,6 +175,14 @@ describe('Static File Serving', () => {
         expect(res.status).toBe(404);
       });
     });
+
+    it('returns 404 for dot path that resolves to the static directory itself', async () => {
+      const repos = buildEmptyRepos();
+      await withServer(repos, tempDir, async server => {
+        const res = await request(server, 'GET', '/.');
+        expect(res.status).toBe(404);
+      });
+    });
   });
 
   describe('missing files', () => {
@@ -181,6 +190,14 @@ describe('Static File Serving', () => {
       const repos = buildEmptyRepos();
       await withServer(repos, tempDir, async server => {
         const res = await request(server, 'GET', '/nonexistent.xyz');
+        expect(res.status).toBe(404);
+      });
+    });
+
+    it('returns 404 for a directory path (not a file)', async () => {
+      const repos = buildEmptyRepos();
+      await withServer(repos, tempDir, async server => {
+        const res = await request(server, 'GET', '/css');
         expect(res.status).toBe(404);
       });
     });

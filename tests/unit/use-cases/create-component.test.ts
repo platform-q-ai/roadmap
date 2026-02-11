@@ -147,6 +147,21 @@ describe('CreateComponent', () => {
     ).rejects.toThrow('already exists');
   });
 
+  it('defaults description to null and tags to empty when not provided', async () => {
+    const { nodeRepo, edgeRepo, versionRepo, savedNodes } = createMockRepos();
+    const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
+
+    await uc.execute({
+      id: 'no-optionals',
+      name: 'No Optionals',
+      type: 'component',
+      layer: 'sup-layer',
+    });
+
+    expect(savedNodes[0].description).toBeNull();
+    expect(savedNodes[0].tags).toEqual([]);
+  });
+
   it('throws for invalid node type', async () => {
     const { nodeRepo, edgeRepo, versionRepo } = createMockRepos();
     const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });

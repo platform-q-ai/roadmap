@@ -75,6 +75,11 @@ function buildTestRepos(data: WorldData) {
     deleteByNode: vi.fn(async (nid: string) => {
       data.features = data.features.filter(f => f.node_id !== nid);
     }),
+    deleteByNodeAndFilename: vi.fn(async (nid: string, filename: string) => {
+      const before = data.features.length;
+      data.features = data.features.filter(f => !(f.node_id === nid && f.filename === filename));
+      return data.features.length < before;
+    }),
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
@@ -366,6 +371,15 @@ describe('API Routes', () => {
         expect(body).toHaveProperty('outbound');
       });
     });
+
+    it('returns 404 for nonexistent component', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/components/ghost/edges');
+        expect(res.status).toBe(404);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
   });
 
   describe('GET /api/components/:id/dependencies', () => {
@@ -385,6 +399,81 @@ describe('API Routes', () => {
         expect(body).toHaveProperty('dependents');
       });
     });
+
+    it('returns 404 for nonexistent component', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/components/ghost/dependencies');
+        expect(res.status).toBe(404);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+  });
+
+  describe('DELETE /api/components/:id/features/:filename', () => {
+    it('deletes a feature and returns 204', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'DELETE',
+          '/api/components/comp-a/features/mvp-test.feature'
+        );
+        expect(res.status).toBe(204);
+      });
+    });
+
+    it('returns 404 for nonexistent component', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'DELETE',
+          '/api/components/ghost/features/mvp-test.feature'
+        );
+        expect(res.status).toBe(404);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('returns 404 for nonexistent feature file', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'DELETE',
+          '/api/components/comp-a/features/mvp-missing.feature'
+        );
+        expect(res.status).toBe(404);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('does not affect other features for the same component', async () => {
+      const data = seedData();
+      data.features.push(
+        new Feature({
+          node_id: 'comp-a',
+          version: 'v1',
+          filename: 'v1-other.feature',
+          title: 'Other',
+          content: 'Feature: Other',
+        })
+      );
+      const repos = buildTestRepos(data);
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'DELETE',
+          '/api/components/comp-a/features/mvp-test.feature'
+        );
+        expect(res.status).toBe(204);
+        const listRes = await request(server, 'GET', '/api/components/comp-a/features');
+        const features = listRes.body as Array<Record<string, unknown>>;
+        expect(features).toHaveLength(1);
+        expect(features[0].filename).toBe('v1-other.feature');
+      });
+    });
   });
 
   describe('Unknown routes', () => {
@@ -393,6 +482,68 @@ describe('API Routes', () => {
       await withServer(repos, async server => {
         const res = await request(server, 'GET', '/api/nonexistent');
         expect(res.status).toBe(404);
+      });
+    });
+  });
+
+  describe('OPTIONS (CORS preflight)', () => {
+    it('returns 204 for OPTIONS requests', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'OPTIONS', '/api/components');
+        expect(res.status).toBe(204);
+      });
+    });
+  });
+
+  describe('POST /api/components with invalid JSON', () => {
+    it('returns 400 for non-JSON body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'POST', '/api/components', 'not json');
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('returns 400 for JSON array body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'POST', '/api/components', '[1,2,3]');
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+  });
+
+  describe('Server error handling', () => {
+    it('returns 500 when a route handler throws', async () => {
+      const repos = buildTestRepos(seedData());
+      repos.nodeRepo.findAll = vi.fn(async () => {
+        throw new Error('DB connection lost');
+      });
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/components');
+        expect(res.status).toBe(500);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+  });
+
+  describe('POST /api/components with description and tags', () => {
+    it('creates a component with optional description and tags', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          id: 'tagged',
+          name: 'Tagged',
+          type: 'app',
+          layer: 'sup-layer',
+          description: 'A desc',
+          tags: ['a', 'b'],
+        });
+        const res = await request(server, 'POST', '/api/components', body);
+        expect(res.status).toBe(201);
       });
     });
   });

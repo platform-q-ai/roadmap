@@ -4,31 +4,23 @@ Feature: Render API Commands and README Update
   And the README to reflect the live Render deployment
   So that commands work against the deployed service and documentation is accurate
 
-  # ── Commands use Render production URL ──────────────────────────────
+  # ── API documentation uses Render production URL ────────────────────
 
-  Scenario: All component commands use the Render production URL
-    Given the project has an .opencode/commands directory
-    Then every component command file references the Render production URL
+  Scenario: AGENTS.md documents API with Render production URL
+    Given the project source directory
+    Then the file "AGENTS.md" contains "https://roadmap-5vvp.onrender.com"
 
-  Scenario: No component command references localhost
-    Given the project has an .opencode/commands directory
-    Then no component command file contains "http://localhost:3000"
+  Scenario: AGENTS.md curl examples use the Render production URL
+    Given the project source directory
+    Then the file "AGENTS.md" contains "curl"
+    And the file "AGENTS.md" contains "https://roadmap-5vvp.onrender.com/api/components"
 
-  Scenario: component-create.md curl examples use Render URL
+  Scenario: Individual component command files no longer exist
     Given the project has an .opencode/commands directory
-    Then the command file "component-create.md" contains the Render base URL in curl examples
-
-  Scenario: component-delete.md curl examples use Render URL
-    Given the project has an .opencode/commands directory
-    Then the command file "component-delete.md" contains the Render base URL in curl examples
-
-  Scenario: component-update.md curl examples use Render URL
-    Given the project has an .opencode/commands directory
-    Then the command file "component-update.md" contains the Render base URL in curl examples
-
-  Scenario: component-publish.md curl examples use Render URL
-    Given the project has an .opencode/commands directory
-    Then the command file "component-publish.md" contains the Render base URL in curl examples
+    Then no file "component-create.md" exists in .opencode/commands
+    And no file "component-delete.md" exists in .opencode/commands
+    And no file "component-update.md" exists in .opencode/commands
+    And no file "component-publish.md" exists in .opencode/commands
 
   # ── README reflects Render deployment ───────────────────────────────
 

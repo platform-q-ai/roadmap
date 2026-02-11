@@ -58,23 +58,37 @@ Feature: Component Management Commands
     Then the export produces a JSON file
     And the exported data contains the latest node data
 
-  # ── OpenCode command files exist ────────────────────────────────
+  # ── Individual command files removed in favour of AGENTS.md ─────
 
-  Scenario: OpenCode command files are present for component management
+  Scenario: Individual component command files have been removed
     Given the project has an .opencode/commands directory
-    Then a command file "component-create.md" exists
-    And a command file "component-delete.md" exists
-    And a command file "component-update.md" exists
-    And a command file "component-publish.md" exists
+    Then no file "component-create.md" exists in .opencode/commands
+    And no file "component-delete.md" exists in .opencode/commands
+    And no file "component-update.md" exists in .opencode/commands
+    And no file "component-publish.md" exists in .opencode/commands
 
-  Scenario: Each command file has required frontmatter
+  Scenario: Only bdd and ship command files remain
     Given the project has an .opencode/commands directory
-    Then each component command file has a "description" in frontmatter
-    And each component command file references "$ARGUMENTS" for parameters
+    Then only command files "bdd.md" and "ship.md" exist
 
-  # ── Command files use adapter layer, not raw DB access ──────────
+  # ── AGENTS.md documents all API endpoints ─────────────────────
 
-  Scenario: Command files must not contain raw sqlite3 CLI references
+  Scenario: AGENTS.md documents the REST API endpoints
+    Given the project source directory
+    Then the file "AGENTS.md" contains "REST API"
+    And the file "AGENTS.md" contains "POST" "/api/components"
+    And the file "AGENTS.md" contains "DELETE" "/api/components"
+    And the file "AGENTS.md" contains "GET" "/api/architecture"
+    And the file "AGENTS.md" contains "GET" "/api/health"
+
+  Scenario: AGENTS.md contains curl examples for API usage
+    Given the project source directory
+    Then the file "AGENTS.md" contains "curl"
+    And the file "AGENTS.md" contains "https://roadmap-5vvp.onrender.com"
+
+  # ── Remaining command files use adapter layer, not raw DB access ─
+
+  Scenario: Remaining command files must not contain raw sqlite3 CLI references
     Given the project has an .opencode/commands directory
     Then no command file contains a raw "sqlite3" CLI invocation
 
@@ -85,33 +99,3 @@ Feature: Component Management Commands
     Then a CLI adapter "component-create.ts" exists in src/adapters/cli
     And a CLI adapter "component-delete.ts" exists in src/adapters/cli
     And a CLI adapter "export.ts" exists in src/adapters/cli
-
-  # ── Commands use API routes instead of CLI adapters ─────────────
-
-  Scenario: Component-create command uses POST /api/components
-    Given the project has an .opencode/commands directory
-    Then the command file "component-create.md" references API route "POST" "/api/components"
-    And the command file "component-create.md" does not reference "npx tsx"
-
-  Scenario: Component-delete command uses DELETE /api/components/:id
-    Given the project has an .opencode/commands directory
-    Then the command file "component-delete.md" references API route "DELETE" "/api/components"
-    And the command file "component-delete.md" does not reference "npx tsx"
-
-  Scenario: Component-update command uses PUT version API route
-    Given the project has an .opencode/commands directory
-    Then the command file "component-update.md" references API route "PUT" "/api/components"
-    And the command file "component-update.md" does not reference "npx tsx"
-
-  Scenario: Component-publish command references the API base URL
-    Given the project has an .opencode/commands directory
-    Then the command file "component-publish.md" references the API base URL
-    And the command file "component-publish.md" does not reference "npx tsx"
-
-  Scenario: All component commands reference the API base URL
-    Given the project has an .opencode/commands directory
-    Then every component command file references the API base URL
-
-  Scenario: No component command references CLI adapter scripts
-    Given the project has an .opencode/commands directory
-    Then no component command file contains "npx tsx src/adapters/cli"

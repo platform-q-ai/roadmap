@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -6,138 +6,154 @@ import { describe, expect, it } from 'vitest';
 const ROOT = join(import.meta.dirname, '..', '..', '..');
 const COMMANDS_DIR = join(ROOT, '.opencode', 'commands');
 const CLI_DIR = join(ROOT, 'src', 'adapters', 'cli');
+const AGENTS_MD = join(ROOT, 'AGENTS.md');
 
-const COMPONENT_COMMANDS = [
+const WORKFLOW_COMMANDS = ['bdd.md', 'ship.md'];
+
+const REMOVED_COMMANDS = [
   'component-create.md',
   'component-delete.md',
   'component-update.md',
   'component-publish.md',
+  'component-list.md',
+  'component-show.md',
+  'component-edges.md',
+  'component-deps.md',
+  'feature-list.md',
+  'feature-upload.md',
+  'feature-delete.md',
 ];
 
 const CLI_ADAPTERS = ['component-create.ts', 'component-delete.ts', 'export.ts'];
 
+const RENDER_API_BASE_URL = 'https://roadmap-5vvp.onrender.com';
+
+// Every API endpoint that must be documented in AGENTS.md
+const API_ENDPOINTS = [
+  { method: 'GET', path: '/api/health' },
+  { method: 'GET', path: '/api/architecture' },
+  { method: 'GET', path: '/api/components' },
+  { method: 'GET', path: '/api/components/:id' },
+  { method: 'POST', path: '/api/components' },
+  { method: 'DELETE', path: '/api/components/:id' },
+  { method: 'GET', path: '/api/components/:id/features' },
+  { method: 'PUT', path: '/api/components/:id/features/:filename' },
+  { method: 'DELETE', path: '/api/components/:id/features/:filename' },
+  { method: 'GET', path: '/api/components/:id/edges' },
+  { method: 'GET', path: '/api/components/:id/dependencies' },
+];
+
 describe('OpenCode command files', () => {
-  describe('existence', () => {
-    for (const cmd of COMPONENT_COMMANDS) {
+  describe('workflow commands exist', () => {
+    for (const cmd of WORKFLOW_COMMANDS) {
       it(`${cmd} exists`, () => {
-        const filePath = join(COMMANDS_DIR, cmd);
-        expect(existsSync(filePath)).toBe(true);
+        expect(existsSync(join(COMMANDS_DIR, cmd))).toBe(true);
       });
     }
   });
 
-  describe('frontmatter', () => {
-    for (const cmd of COMPONENT_COMMANDS) {
+  describe('workflow commands have frontmatter', () => {
+    for (const cmd of WORKFLOW_COMMANDS) {
       it(`${cmd} has description in frontmatter`, () => {
-        const filePath = join(COMMANDS_DIR, cmd);
-        const content = readFileSync(filePath, 'utf-8');
+        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
         expect(content).toMatch(/^---\n[\s\S]*description:/m);
       });
     }
   });
 
-  describe('$ARGUMENTS placeholder', () => {
-    const cmdsWithArgs = COMPONENT_COMMANDS.filter(c => c !== 'component-publish.md');
-    for (const cmd of cmdsWithArgs) {
-      it(`${cmd} references $ARGUMENTS`, () => {
-        const filePath = join(COMMANDS_DIR, cmd);
-        const content = readFileSync(filePath, 'utf-8');
-        expect(content).toContain('$ARGUMENTS');
+  describe('component/feature command files removed', () => {
+    for (const cmd of REMOVED_COMMANDS) {
+      it(`${cmd} does not exist`, () => {
+        expect(existsSync(join(COMMANDS_DIR, cmd))).toBe(false);
       });
     }
   });
 
-  describe('command content structure', () => {
-    it('component-create.md instructs creating a component', () => {
-      const content = readFileSync(join(COMMANDS_DIR, 'component-create.md'), 'utf-8');
-      expect(content.toLowerCase()).toContain('create');
-      expect(content.toLowerCase()).toContain('component');
-    });
-
-    it('component-delete.md instructs deleting a component', () => {
-      const content = readFileSync(join(COMMANDS_DIR, 'component-delete.md'), 'utf-8');
-      expect(content.toLowerCase()).toContain('delete');
-      expect(content.toLowerCase()).toContain('component');
-    });
-
-    it('component-update.md instructs updating a component', () => {
-      const content = readFileSync(join(COMMANDS_DIR, 'component-update.md'), 'utf-8');
-      expect(content.toLowerCase()).toContain('update');
-    });
-
-    it('component-publish.md instructs publishing to web', () => {
-      const content = readFileSync(join(COMMANDS_DIR, 'component-publish.md'), 'utf-8');
-      expect(content.toLowerCase()).toContain('publish');
+  describe('only workflow commands remain', () => {
+    it('commands directory contains only bdd.md and ship.md', () => {
+      const files = readdirSync(COMMANDS_DIR).filter(f => f.endsWith('.md'));
+      expect(files.sort()).toEqual(WORKFLOW_COMMANDS.sort());
     });
   });
 });
 
-const RENDER_API_BASE_URL = 'https://roadmap-5vvp.onrender.com';
+describe('AGENTS.md documents all API endpoints', () => {
+  const content = readFileSync(AGENTS_MD, 'utf-8');
 
-const API_ROUTE_MAP: Record<string, { method: string; path: string }> = {
-  'component-create.md': { method: 'POST', path: '/api/components' },
-  'component-delete.md': { method: 'DELETE', path: '/api/components' },
-  'component-update.md': { method: 'PUT', path: '/api/components' },
-};
+  it('has a REST API section', () => {
+    expect(content).toContain('## REST API');
+  });
 
-describe('OpenCode commands use Render production API', () => {
-  describe('Render API base URL', () => {
-    for (const cmd of COMPONENT_COMMANDS) {
-      it(`${cmd} references the Render production URL`, () => {
-        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
-        expect(content).toContain(RENDER_API_BASE_URL);
+  it('contains the Render production URL', () => {
+    expect(content).toContain(RENDER_API_BASE_URL);
+  });
+
+  it('does not reference localhost for API', () => {
+    expect(content).not.toContain('http://localhost:3000');
+  });
+
+  it('contains curl examples', () => {
+    expect(content).toContain('curl');
+    expect(content).toContain(RENDER_API_BASE_URL);
+  });
+
+  describe('endpoint coverage', () => {
+    for (const ep of API_ENDPOINTS) {
+      it(`documents ${ep.method} ${ep.path}`, () => {
+        expect(content).toContain(ep.method);
+        expect(content).toContain(ep.path);
       });
     }
   });
 
-  describe('no localhost references', () => {
-    for (const cmd of COMPONENT_COMMANDS) {
-      it(`${cmd} does not reference localhost`, () => {
-        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
-        expect(content).not.toContain('http://localhost:3000');
-      });
-    }
-  });
+  describe('curl examples for key operations', () => {
+    it('has curl example for listing components', () => {
+      expect(content).toMatch(/curl\s+https:\/\/roadmap.*\/api\/components/);
+    });
 
-  describe('API route references', () => {
-    for (const [cmd, route] of Object.entries(API_ROUTE_MAP)) {
-      it(`${cmd} references ${route.method} ${route.path}`, () => {
-        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
-        expect(content).toContain(route.method);
-        expect(content).toContain(route.path);
-      });
-    }
+    it('has curl example for creating a component', () => {
+      expect(content).toContain('-X POST');
+      expect(content).toContain('/api/components');
+    });
 
-    it('component-publish.md references the Render API base URL', () => {
-      const content = readFileSync(join(COMMANDS_DIR, 'component-publish.md'), 'utf-8');
-      expect(content).toContain(RENDER_API_BASE_URL);
+    it('has curl example for deleting a component', () => {
+      expect(content).toContain('-X DELETE');
+      expect(content).toContain('/api/components/');
+    });
+
+    it('has curl example for uploading a feature', () => {
+      expect(content).toContain('-X PUT');
+      expect(content).toContain('/features/');
+    });
+
+    it('has curl example for getting edges', () => {
+      expect(content).toContain('/edges');
+    });
+
+    it('has curl example for getting dependencies', () => {
+      expect(content).toContain('/dependencies');
+    });
+
+    it('has curl example for full architecture export', () => {
+      expect(content).toContain('/api/architecture');
     });
   });
 
-  describe('no CLI adapter references', () => {
-    for (const cmd of COMPONENT_COMMANDS) {
-      it(`${cmd} does not reference npx tsx`, () => {
-        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
-        expect(content).not.toContain('npx tsx');
-      });
-    }
+  it('notes that CRUD is done via API, not slash commands', () => {
+    expect(content).toMatch(/REST API|API endpoints/i);
+    expect(content).toContain('no separate slash commands');
+  });
+});
 
-    for (const cmd of COMPONENT_COMMANDS) {
-      it(`${cmd} does not reference src/adapters/cli`, () => {
-        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
-        expect(content).not.toContain('src/adapters/cli');
-      });
-    }
+describe('AGENTS.md coverage thresholds', () => {
+  const content = readFileSync(AGENTS_MD, 'utf-8');
+
+  it('references 90% coverage thresholds', () => {
+    expect(content).toContain('90%');
   });
 
-  describe('curl examples use Render URL', () => {
-    for (const cmd of COMPONENT_COMMANDS) {
-      it(`${cmd} contains curl examples with Render URL`, () => {
-        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
-        expect(content).toContain('curl');
-        expect(content).toContain(RENDER_API_BASE_URL);
-      });
-    }
+  it('does not reference old 80% thresholds', () => {
+    expect(content).not.toContain('80%');
   });
 });
 
@@ -146,7 +162,7 @@ describe('README reflects Render deployment', () => {
 
   it('README contains the Render deployment URL', () => {
     const content = readFileSync(readmePath, 'utf-8');
-    expect(content).toContain('https://roadmap-5vvp.onrender.com');
+    expect(content).toContain(RENDER_API_BASE_URL);
   });
 
   it('README does not reference GitHub Pages URL', () => {
@@ -189,8 +205,7 @@ describe('CLI adapter scripts', () => {
   describe('existence', () => {
     for (const adapter of CLI_ADAPTERS) {
       it(`${adapter} exists`, () => {
-        const filePath = join(CLI_DIR, adapter);
-        expect(existsSync(filePath)).toBe(true);
+        expect(existsSync(join(CLI_DIR, adapter))).toBe(true);
       });
     }
   });

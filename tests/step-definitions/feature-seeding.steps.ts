@@ -41,6 +41,7 @@ function buildRepos(world: World) {
       world.savedFeatures = [];
     },
     deleteByNode: async () => {},
+    deleteByNodeAndFilename: async () => false,
   };
   return { nodeRepo, featureRepo };
 }

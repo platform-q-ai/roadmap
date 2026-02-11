@@ -59,6 +59,7 @@ function buildRepos(world: World) {
     save: async () => {},
     deleteAll: async () => {},
     deleteByNode: async () => {},
+    deleteByNodeAndFilename: async () => false,
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

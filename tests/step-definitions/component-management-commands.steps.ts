@@ -16,13 +16,6 @@ import { Edge, Feature, Node, Version } from '../../src/domain/index.js';
 import type { ArchitectureData } from '../../src/use-cases/index.js';
 import { CreateComponent, DeleteComponent, ExportArchitecture } from '../../src/use-cases/index.js';
 
-const COMPONENT_COMMANDS = [
-  'component-create.md',
-  'component-delete.md',
-  'component-update.md',
-  'component-publish.md',
-];
-
 interface World {
   nodes: Node[];
   edges: Edge[];
@@ -127,6 +120,7 @@ function buildTrackingRepos(world: World) {
     deleteByNode: async (nid: string) => {
       world.deletedFeatureNodeIds.push(nid);
     },
+    deleteByNodeAndFilename: async () => false,
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
@@ -373,37 +367,18 @@ Given('the project has an .opencode\\/commands directory', function (this: World
   assert.ok(existsSync(dir), `.opencode/commands directory does not exist at ${dir}`);
 });
 
-Then('a command file {string} exists', function (this: World, filename: string) {
-  const filePath = join(process.cwd(), '.opencode', 'commands', filename);
-  assert.ok(existsSync(filePath), `Command file ${filename} does not exist at ${filePath}`);
-});
-
 Then(
-  'each component command file has a {string} in frontmatter',
-  function (this: World, field: string) {
-    for (const cmd of COMPONENT_COMMANDS) {
-      const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
-      const content = readFileSync(filePath, 'utf-8');
-      assert.ok(
-        content.includes(`${field}:`),
-        `Command ${cmd} is missing "${field}" in frontmatter`
-      );
-    }
-  }
-);
-
-Then(
-  'each component command file references {string} for parameters',
-  function (this: World, placeholder: string) {
-    const cmdsWithArgs = COMPONENT_COMMANDS.filter(c => c !== 'component-publish.md');
-    for (const cmd of cmdsWithArgs) {
-      const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
-      const content = readFileSync(filePath, 'utf-8');
-      assert.ok(
-        content.includes(placeholder),
-        `Command ${cmd} does not reference "${placeholder}"`
-      );
-    }
+  'only command files {string} and {string} exist',
+  function (this: World, file1: string, file2: string) {
+    const commandsDir = join(process.cwd(), '.opencode', 'commands');
+    const files = readdirSync(commandsDir).filter(f => f.endsWith('.md'));
+    const expected = [file1, file2].sort();
+    const actual = files.sort();
+    assert.deepEqual(
+      actual,
+      expected,
+      `Expected only [${expected.join(', ')}] but found [${actual.join(', ')}]`
+    );
   }
 );
 
@@ -430,79 +405,18 @@ Then(
   }
 );
 
-// ─── Then (Commands use API routes) ──────────────────────────────────
-
-const API_BASE_URL_PATTERN = 'https://roadmap-5vvp.onrender.com';
+// ─── Then (AGENTS.md documents API) ──────────────────────────────────
 
 Then(
-  'the command file {string} references API route {string} {string}',
-  function (this: World, filename: string, method: string, path: string) {
-    const filePath = join(process.cwd(), '.opencode', 'commands', filename);
-    const content = readFileSync(filePath, 'utf-8');
-    assert.ok(
-      content.includes(method),
-      `Command ${filename} does not reference HTTP method "${method}"`
-    );
-    assert.ok(content.includes(path), `Command ${filename} does not reference API path "${path}"`);
+  'the file {string} contains {string} {string}',
+  function (this: World, filePath: string, expected1: string, expected2: string) {
+    const fullPath = join(process.cwd(), filePath);
+    assert.ok(existsSync(fullPath), `File ${filePath} does not exist`);
+    const content = readFileSync(fullPath, 'utf-8');
+    assert.ok(content.includes(expected1), `File ${filePath} must contain "${expected1}"`);
+    assert.ok(content.includes(expected2), `File ${filePath} must contain "${expected2}"`);
   }
 );
-
-Then(
-  'the command file {string} does not reference {string}',
-  function (this: World, filename: string, forbidden: string) {
-    const filePath = join(process.cwd(), '.opencode', 'commands', filename);
-    const content = readFileSync(filePath, 'utf-8');
-    assert.ok(
-      !content.includes(forbidden),
-      `Command ${filename} still references "${forbidden}" — should use API routes instead`
-    );
-  }
-);
-
-Then(
-  'the command file {string} references the API base URL',
-  function (this: World, filename: string) {
-    const filePath = join(process.cwd(), '.opencode', 'commands', filename);
-    const content = readFileSync(filePath, 'utf-8');
-    assert.ok(
-      content.includes(API_BASE_URL_PATTERN),
-      `Command ${filename} does not reference API base URL "${API_BASE_URL_PATTERN}"`
-    );
-  }
-);
-
-Then('every component command file references the API base URL', function (this: World) {
-  const violations: string[] = [];
-  for (const cmd of COMPONENT_COMMANDS) {
-    const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
-    const content = readFileSync(filePath, 'utf-8');
-    if (!content.includes(API_BASE_URL_PATTERN)) {
-      violations.push(cmd);
-    }
-  }
-  assert.equal(
-    violations.length,
-    0,
-    `These command files do not reference the API base URL: ${violations.join(', ')}`
-  );
-});
-
-Then('no component command file contains {string}', function (this: World, forbidden: string) {
-  const violations: string[] = [];
-  for (const cmd of COMPONENT_COMMANDS) {
-    const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
-    const content = readFileSync(filePath, 'utf-8');
-    if (content.includes(forbidden)) {
-      violations.push(cmd);
-    }
-  }
-  assert.equal(
-    violations.length,
-    0,
-    `These command files still contain "${forbidden}": ${violations.join(', ')}. ` +
-      'Commands should use API routes instead of CLI adapter scripts.'
-  );
-});
 
 // ─── Then (CLI adapter scripts) ─────────────────────────────────────
 

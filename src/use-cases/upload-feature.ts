@@ -1,6 +1,8 @@
 import type { IFeatureRepository, INodeRepository } from '../domain/index.js';
 import { Feature } from '../domain/index.js';
 
+import { NodeNotFoundError } from './errors.js';
+
 export interface UploadFeatureInput {
   nodeId: string;
   filename: string;
@@ -17,13 +19,6 @@ export interface UploadFeatureResult {
 interface Deps {
   featureRepo: IFeatureRepository;
   nodeRepo: INodeRepository;
-}
-
-class NodeNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Component not found: ${id}`);
-    this.name = 'NodeNotFoundError';
-  }
 }
 
 /**

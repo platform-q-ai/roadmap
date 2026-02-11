@@ -48,18 +48,3 @@ Then('the file {string} contains {string}', function (filePath: string, expected
   const content = readFileSync(fullPath, 'utf-8');
   assert.ok(content.includes(expected), `File ${filePath} must contain "${expected}"`);
 });
-
-// ─── Command file content assertions ────────────────────────────────
-
-Then(
-  'the command file {string} does not contain {string}',
-  function (filename: string, forbidden: string) {
-    const filePath = join(process.cwd(), '.opencode', 'commands', filename);
-    assert.ok(existsSync(filePath), `Command file ${filename} does not exist`);
-    const content = readFileSync(filePath, 'utf-8');
-    assert.ok(
-      !content.includes(forbidden),
-      `Command file ${filename} must not contain "${forbidden}"`
-    );
-  }
-);

@@ -112,6 +112,14 @@ describe('Drizzle Repositories', () => {
       await edgeRepo.delete(all[0].id!);
       expect(await edgeRepo.findAll()).toHaveLength(0);
     });
+
+    it('finds edges by type', async () => {
+      await edgeRepo.save(new Edge({ source_id: 'a', target_id: 'b', type: 'CONTAINS' }));
+      await edgeRepo.save(new Edge({ source_id: 'a', target_id: 'b', type: 'CONTROLS' }));
+      const contains = await edgeRepo.findByType('CONTAINS');
+      expect(contains).toHaveLength(1);
+      expect(contains[0].type).toBe('CONTAINS');
+    });
   });
 
   describe('DrizzleVersionRepository', () => {
@@ -143,6 +151,25 @@ describe('Drizzle Repositories', () => {
       await versionRepo.save(new Version({ node_id: 'comp-1', version: 'v1' }));
       await versionRepo.deleteByNode('comp-1');
       expect(await versionRepo.findByNode('comp-1')).toHaveLength(0);
+    });
+
+    it('retrieves all versions', async () => {
+      await versionRepo.save(new Version({ node_id: 'comp-1', version: 'mvp', content: 'A' }));
+      await versionRepo.save(new Version({ node_id: 'comp-1', version: 'v1', content: 'B' }));
+      const all = await versionRepo.findAll();
+      expect(all).toHaveLength(2);
+    });
+
+    it('upserts on save (updates existing)', async () => {
+      await versionRepo.save(
+        new Version({ node_id: 'comp-1', version: 'mvp', content: 'Old', progress: 10 })
+      );
+      await versionRepo.save(
+        new Version({ node_id: 'comp-1', version: 'mvp', content: 'New', progress: 50 })
+      );
+      const found = await versionRepo.findByNodeAndVersion('comp-1', 'mvp');
+      expect(found?.content).toBe('New');
+      expect(found?.progress).toBe(50);
     });
   });
 
@@ -184,6 +211,35 @@ describe('Drizzle Repositories', () => {
       );
       await featureRepo.deleteByNode('comp-1');
       expect(await featureRepo.findByNode('comp-1')).toHaveLength(0);
+    });
+
+    it('deletes a feature by node and filename', async () => {
+      await featureRepo.save(
+        new Feature({ node_id: 'comp-1', version: 'mvp', filename: 'a.feature', title: 'A' })
+      );
+      await featureRepo.save(
+        new Feature({ node_id: 'comp-1', version: 'v1', filename: 'b.feature', title: 'B' })
+      );
+      const deleted = await featureRepo.deleteByNodeAndFilename('comp-1', 'a.feature');
+      expect(deleted).toBe(true);
+      expect(await featureRepo.findByNode('comp-1')).toHaveLength(1);
+    });
+
+    it('returns false when deleting nonexistent feature by node and filename', async () => {
+      const deleted = await featureRepo.deleteByNodeAndFilename('comp-1', 'nope.feature');
+      expect(deleted).toBe(false);
+    });
+
+    it('retrieves all features across nodes', async () => {
+      await nodeRepo.save(new Node({ id: 'comp-2', name: 'C2', type: 'component' }));
+      await featureRepo.save(
+        new Feature({ node_id: 'comp-1', version: 'mvp', filename: 'a.feature', title: 'A' })
+      );
+      await featureRepo.save(
+        new Feature({ node_id: 'comp-2', version: 'mvp', filename: 'b.feature', title: 'B' })
+      );
+      const all = await featureRepo.findAll();
+      expect(all).toHaveLength(2);
     });
   });
 

@@ -81,6 +81,11 @@ function buildApiRepos(world: ApiWorld) {
     deleteByNode: async (nid: string) => {
       world.features = world.features.filter(f => f.node_id !== nid);
     },
+    deleteByNodeAndFilename: async (nid: string, filename: string) => {
+      const before = world.features.length;
+      world.features = world.features.filter(f => !(f.node_id === nid && f.filename === filename));
+      return world.features.length < before;
+    },
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
@@ -235,6 +240,26 @@ Given('the component {string} has feature files', function (this: ApiWorld, node
   );
 });
 
+Given(
+  'the component {string} has a feature {string}',
+  function (this: ApiWorld, nodeId: string, filename: string) {
+    if (!this.features) {
+      this.features = [];
+    }
+    const version = Feature.versionFromFilename(filename);
+    const title = Feature.titleFromContent('', filename);
+    this.features.push(
+      new Feature({
+        node_id: nodeId,
+        version,
+        filename,
+        title,
+        content: `Feature: ${title}\n  Scenario: placeholder\n    Given something`,
+      })
+    );
+  }
+);
+
 Given('the component {string} has edges', function (this: ApiWorld, nodeId: string) {
   if (!this.edges) {
     this.edges = [];
@@ -335,6 +360,25 @@ Then('the response body is a non-empty array', function (this: ApiWorld) {
 Then('a file {string} exists in the project', function (this: ApiWorld, filePath: string) {
   const fullPath = join(process.cwd(), filePath);
   assert.ok(existsSync(fullPath), `File ${filePath} does not exist at ${fullPath}`);
+});
+
+Then(
+  'the response body does not include feature {string}',
+  function (this: ApiWorld, filename: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Array<Record<string, unknown>>;
+    assert.ok(Array.isArray(body), `Expected array, got ${typeof body}`);
+    const found = body.some(f => f['filename'] === filename);
+    assert.ok(!found, `Feature "${filename}" should not be in the response but was found`);
+  }
+);
+
+Then('the response body includes feature {string}', function (this: ApiWorld, filename: string) {
+  assert.ok(this.response, 'No response received');
+  const body = this.response.body as Array<Record<string, unknown>>;
+  assert.ok(Array.isArray(body), `Expected array, got ${typeof body}`);
+  const found = body.some(f => f['filename'] === filename);
+  assert.ok(found, `Feature "${filename}" should be in the response but was not found`);
 });
 
 // ─── After (cleanup) ────────────────────────────────────────────────

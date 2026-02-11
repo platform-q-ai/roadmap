@@ -54,6 +54,7 @@ function createMockRepos(
     save: vi.fn(),
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),
+    deleteByNodeAndFilename: vi.fn(),
   };
 
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
@@ -173,6 +174,30 @@ describe('GetArchitecture', () => {
 
     expect(result.generated_at).toBeDefined();
     expect(new Date(result.generated_at).toISOString()).toBe(result.generated_at);
+  });
+
+  it('groups multiple features under the same node+version key', async () => {
+    const nodes = [new Node({ id: 'w', name: 'Worker', type: 'component' })];
+    const features = [
+      new Feature({
+        node_id: 'w',
+        version: 'mvp',
+        filename: 'mvp-a.feature',
+        title: 'Feature A',
+      }),
+      new Feature({
+        node_id: 'w',
+        version: 'mvp',
+        filename: 'mvp-b.feature',
+        title: 'Feature B',
+      }),
+    ];
+    const repos = createMockRepos({ nodes, features });
+    const result = await new GetArchitecture(repos).execute();
+
+    const enriched = result.nodes.find(n => n.id === 'w');
+    expect(enriched?.features['mvp']).toHaveLength(2);
+    expect(enriched?.features['mvp'].map(f => f.title)).toEqual(['Feature A', 'Feature B']);
   });
 
   it('handles empty database gracefully', async () => {
