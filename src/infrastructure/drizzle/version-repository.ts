@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 
-import type { IVersionRepository, VersionStatus, VersionTag } from '../../domain/index.js';
+import type { IVersionRepository, VersionTag } from '../../domain/index.js';
 import { Version } from '../../domain/index.js';
 
 import { nodeVersionsTable } from './schema.js';
@@ -62,19 +62,6 @@ export class DrizzleVersionRepository implements IVersionRepository {
           updated_at: sql`datetime('now')`,
         },
       })
-      .run();
-  }
-
-  async updateProgress(
-    nodeId: string,
-    version: VersionTag,
-    progress: number,
-    status: VersionStatus
-  ): Promise<void> {
-    this.db
-      .update(nodeVersionsTable)
-      .set({ progress, status, updated_at: sql`datetime('now')` })
-      .where(and(eq(nodeVersionsTable.node_id, nodeId), eq(nodeVersionsTable.version, version)))
       .run();
   }
 

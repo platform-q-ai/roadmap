@@ -56,7 +56,6 @@ function buildTestRepos(data: WorldData) {
     save: vi.fn(async (version: Version) => {
       data.versions.push(version);
     }),
-    updateProgress: vi.fn(async () => {}),
     deleteByNode: vi.fn(async (nid: string) => {
       data.versions = data.versions.filter(v => v.node_id !== nid);
     }),
@@ -298,38 +297,6 @@ describe('API Routes', () => {
       await withServer(repos, async server => {
         const res = await request(server, 'DELETE', '/api/components/ghost');
         expect(res.status).toBe(404);
-        expect(res.body).toHaveProperty('error');
-      });
-    });
-  });
-
-  describe('PATCH /api/components/:id/versions/:version/progress', () => {
-    it('updates progress and returns 200', async () => {
-      const repos = buildTestRepos(seedData());
-      await withServer(repos, async server => {
-        const body = JSON.stringify({ progress: 75, status: 'in-progress' });
-        const res = await request(
-          server,
-          'PATCH',
-          '/api/components/comp-a/versions/mvp/progress',
-          body
-        );
-        expect(res.status).toBe(200);
-        expect((res.body as Record<string, unknown>).progress).toBe(75);
-      });
-    });
-
-    it('returns 400 for invalid progress value', async () => {
-      const repos = buildTestRepos(seedData());
-      await withServer(repos, async server => {
-        const body = JSON.stringify({ progress: 150, status: 'in-progress' });
-        const res = await request(
-          server,
-          'PATCH',
-          '/api/components/comp-a/versions/mvp/progress',
-          body
-        );
-        expect(res.status).toBe(400);
         expect(res.body).toHaveProperty('error');
       });
     });

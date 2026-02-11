@@ -432,51 +432,6 @@ Feature: API Component and Graph Management
       And the response body has field "version" with value "v1"
       And the response body has field "content"
 
-    Scenario: Update version progress and status
-      Given the API server is running
-      And a valid API key with scope "write"
-      And component "prog-update" has version "mvp" at progress 30
-      When I send a PATCH request to "/api/components/prog-update/versions/mvp/progress" with body:
-        """
-        {"progress":80,"status":"in-progress"}
-        """
-      Then the response status is 200
-      And the response body has field "progress" with value "80"
-      And the response body has field "status" with value "in-progress"
-
-    Scenario: Reject progress value below 0
-      Given the API server is running
-      And a valid API key with scope "write"
-      And component "prog-bad" exists with version "mvp"
-      When I send a PATCH request to "/api/components/prog-bad/versions/mvp/progress" with body:
-        """
-        {"progress":-10,"status":"planned"}
-        """
-      Then the response status is 400
-      And the response body has field "error" containing "progress"
-
-    Scenario: Reject progress value above 100
-      Given the API server is running
-      And a valid API key with scope "write"
-      And component "prog-over" exists with version "mvp"
-      When I send a PATCH request to "/api/components/prog-over/versions/mvp/progress" with body:
-        """
-        {"progress":150,"status":"in-progress"}
-        """
-      Then the response status is 400
-      And the response body has field "error" containing "progress"
-
-    Scenario: Reject invalid status value
-      Given the API server is running
-      And a valid API key with scope "write"
-      And component "status-bad" exists with version "mvp"
-      When I send a PATCH request to "/api/components/status-bad/versions/mvp/progress" with body:
-        """
-        {"progress":50,"status":"unknown"}
-        """
-      Then the response status is 400
-      And the response body has field "error" containing "status"
-
     Scenario: Delete all versions for a component
       Given the API server is running
       And a valid API key with scope "write"
@@ -550,22 +505,6 @@ Feature: API Component and Graph Management
         """
       Then the response status is 201
       And the response body has field "created" with value 2
-
-    Scenario: Bulk update progress for multiple versions
-      Given the API server is running
-      And a valid API key with scope "write"
-      And components "bp-1" and "bp-2" exist with version "mvp"
-      When I send a POST request to "/api/bulk/progress" with body:
-        """
-        {
-          "updates": [
-            {"node_id":"bp-1","version":"mvp","progress":50,"status":"in-progress"},
-            {"node_id":"bp-2","version":"mvp","progress":100,"status":"complete"}
-          ]
-        }
-        """
-      Then the response status is 200
-      And the response body has field "updated" with value 2
 
     Scenario: Bulk operations are limited to 100 items
       Given the API server is running

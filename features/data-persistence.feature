@@ -60,10 +60,10 @@ Feature: Data Persistence
     And I find versions by node "versioned-comp"
     Then I receive 1 version with progress 25
 
-  Scenario: Update version progress
+  Scenario: Save version with progress
     Given a saved component node "progress-comp"
-    And a saved version "mvp" for node "progress-comp"
-    When I update progress for node "progress-comp" version "mvp" to 75 with status "in-progress"
+    And a version "mvp" for node "progress-comp" with progress 75 and status "in-progress"
+    When I save the version via the repository
     And I find the version for node "progress-comp" version "mvp"
     Then the version has progress 75 and status "in-progress"
 

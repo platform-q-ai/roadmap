@@ -48,7 +48,7 @@ function buildStubRepos() {
     findByNode: async () => [],
     findByNodeAndVersion: async () => null,
     save: async () => {},
-    updateProgress: async () => {},
+
     deleteByNode: async () => {},
   };
   const featureRepo: IFeatureRepository = {

@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Given, Then, When } from '@cucumber/cucumber';
@@ -288,7 +288,11 @@ Then('I can retrieve a specific version by node and version tag', async function
 });
 
 Then('I can update progress and status', async function (this: World) {
-  await this.versionRepo.updateProgress('comp-1', 'mvp', 75, 'in-progress');
+  const existing = await this.versionRepo.findByNodeAndVersion('comp-1', 'mvp');
+  assert.ok(existing, 'Version not found for update');
+  await this.versionRepo.save(
+    new Version({ ...existing, progress: 75, status: 'in-progress' as VersionStatus })
+  );
   const found = await this.versionRepo.findByNodeAndVersion('comp-1', 'mvp');
   assert.ok(found);
   assert.equal(found.progress, 75);
@@ -365,7 +369,11 @@ Given('a Drizzle database with schema and seed data', async function (this: Worl
 When(
   'I update progress for {string} version {string} to {int} with status {string} via Drizzle',
   async function (this: World, nodeId: string, version: string, progress: number, status: string) {
-    await this.versionRepo.updateProgress(nodeId, version, progress, status as VersionStatus);
+    const existing = await this.versionRepo.findByNodeAndVersion(nodeId, version);
+    assert.ok(existing, `Version ${version} for ${nodeId} not found`);
+    await this.versionRepo.save(
+      new Version({ ...existing, progress, status: status as VersionStatus })
+    );
   }
 );
 
@@ -475,43 +483,4 @@ Then('the build:db script should not contain {string}', function (forbidden: str
   const buildDb = pkg.scripts['build:db'] as string;
   assert.ok(buildDb, 'build:db script not found');
   assert.ok(!buildDb.includes(forbidden), `build:db contains "${forbidden}": ${buildDb}`);
-});
-
-// ─── Component update commands ───────────────────────────────────────
-
-Given('the CLI adapter for component-update', function () {
-  // Context-setting
-});
-
-Then('it should import from the Drizzle infrastructure module', function () {
-  const content = readFileSync(
-    join(process.cwd(), 'src', 'adapters', 'cli', 'component-update.ts'),
-    'utf-8'
-  );
-  assert.ok(
-    content.includes('infrastructure/drizzle') || content.includes('infrastructure/index'),
-    'component-update should import from Drizzle infrastructure'
-  );
-});
-
-Then('it should not import from better-sqlite3 directly', function () {
-  const content = readFileSync(
-    join(process.cwd(), 'src', 'adapters', 'cli', 'component-update.ts'),
-    'utf-8'
-  );
-  assert.ok(
-    !content.includes("from 'better-sqlite3'"),
-    'component-update should not import better-sqlite3 directly'
-  );
-});
-
-Given('the opencode command file for component-progress', function () {
-  // Context-setting
-});
-
-Then('it should reference the progress API route', function () {
-  const cmdPath = join(process.cwd(), '.opencode', 'commands', 'component-progress.md');
-  assert.ok(existsSync(cmdPath), 'component-progress.md not found');
-  const content = readFileSync(cmdPath, 'utf-8');
-  assert.ok(content.includes('/api/components'), 'Should reference the progress API route');
 });

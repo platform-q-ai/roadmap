@@ -26,10 +26,6 @@ Feature: Render API Commands and README Update
     Given the project has an .opencode/commands directory
     Then the command file "component-update.md" contains the Render base URL in curl examples
 
-  Scenario: component-progress.md curl examples use Render URL
-    Given the project has an .opencode/commands directory
-    Then the command file "component-progress.md" contains the Render base URL in curl examples
-
   Scenario: component-publish.md curl examples use Render URL
     Given the project has an .opencode/commands directory
     Then the command file "component-publish.md" contains the Render base URL in curl examples

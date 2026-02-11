@@ -50,14 +50,6 @@ Feature: Component Management Commands
     When I delete the component "ghost"
     Then the delete operation fails with error "Node not found"
 
-  # ── UpdateProgress (existing) via command ───────────────────────
-
-  Scenario: Update component progress via command workflow
-    Given a component node "supervisor" exists
-    And a version "mvp" exists for node "supervisor"
-    When I update progress for node "supervisor" version "mvp" to 50 percent with status "in-progress"
-    Then the version repository receives the update
-
   # ── Publish workflow ────────────────────────────────────────────
 
   Scenario: Publish rebuilds data and exports JSON
@@ -73,7 +65,6 @@ Feature: Component Management Commands
     Then a command file "component-create.md" exists
     And a command file "component-delete.md" exists
     And a command file "component-update.md" exists
-    And a command file "component-progress.md" exists
     And a command file "component-publish.md" exists
 
   Scenario: Each command file has required frontmatter
@@ -93,7 +84,6 @@ Feature: Component Management Commands
     Given the project source directory
     Then a CLI adapter "component-create.ts" exists in src/adapters/cli
     And a CLI adapter "component-delete.ts" exists in src/adapters/cli
-    And a CLI adapter "component-update.ts" exists in src/adapters/cli
     And a CLI adapter "export.ts" exists in src/adapters/cli
 
   # ── Commands use API routes instead of CLI adapters ─────────────
@@ -108,15 +98,10 @@ Feature: Component Management Commands
     Then the command file "component-delete.md" references API route "DELETE" "/api/components"
     And the command file "component-delete.md" does not reference "npx tsx"
 
-  Scenario: Component-update command uses PATCH progress API route
+  Scenario: Component-update command uses PUT version API route
     Given the project has an .opencode/commands directory
-    Then the command file "component-update.md" references API route "PATCH" "/api/components"
+    Then the command file "component-update.md" references API route "PUT" "/api/components"
     And the command file "component-update.md" does not reference "npx tsx"
-
-  Scenario: Component-progress command uses PATCH progress API route
-    Given the project has an .opencode/commands directory
-    Then the command file "component-progress.md" references API route "PATCH" "/api/components"
-    And the command file "component-progress.md" does not reference "npx tsx"
 
   Scenario: Component-publish command references the API base URL
     Given the project has an .opencode/commands directory

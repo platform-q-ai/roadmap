@@ -35,7 +35,6 @@ function createMockRepos() {
     findByNode: vi.fn(),
     findByNodeAndVersion: vi.fn(),
     save: vi.fn(),
-    updateProgress: vi.fn(),
     deleteByNode: vi.fn(),
   };
   const featureRepo: IFeatureRepository = {

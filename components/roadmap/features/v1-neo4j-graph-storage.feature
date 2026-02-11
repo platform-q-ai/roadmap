@@ -312,9 +312,9 @@ Feature: Neo4j Graph Storage
       When I call findByNodeAndVersion with "specific-ver" and "v1"
       Then the result has content "V1 spec"
 
-    Scenario: Update progress and status
+    Scenario: Update progress and status via save
       Given node "prog-node" has version "mvp" with progress 0 and status "planned"
-      When I call updateProgress with node "prog-node", version "mvp", progress 50, status "in-progress"
+      When I call save with node "prog-node", version "mvp", progress 50, status "in-progress"
       Then the version has progress 50 and status "in-progress"
       And the updated_at timestamp is refreshed
 
@@ -536,7 +536,7 @@ Feature: Neo4j Graph Storage
     Scenario: Neo4j version repository implements IVersionRepository
       Given the Neo4j version repository class
       Then it implements the IVersionRepository interface
-      And it has methods: findAll, findByNode, findByNodeAndVersion, save, updateProgress, deleteByNode
+      And it has methods: findAll, findByNode, findByNodeAndVersion, save, deleteByNode
 
     Scenario: Neo4j feature repository implements IFeatureRepository
       Given the Neo4j feature repository class

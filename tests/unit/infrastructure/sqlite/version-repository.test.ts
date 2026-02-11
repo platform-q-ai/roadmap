@@ -67,18 +67,6 @@ describe('SqliteVersionRepository', () => {
     expect(found).toBeNull();
   });
 
-  it('updates progress and status', async () => {
-    await versionRepo.save(
-      new Version({ node_id: 'comp-1', version: 'mvp', progress: 0, status: 'planned' })
-    );
-
-    await versionRepo.updateProgress('comp-1', 'mvp', 75, 'in-progress');
-
-    const updated = await versionRepo.findByNodeAndVersion('comp-1', 'mvp');
-    expect(updated?.progress).toBe(75);
-    expect(updated?.status).toBe('in-progress');
-  });
-
   it('sets updated_at on save', async () => {
     await versionRepo.save(new Version({ node_id: 'comp-1', version: 'mvp' }));
 

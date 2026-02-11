@@ -36,7 +36,6 @@ function createMockRepos(existingNodeIds: string[] = []) {
     save: vi.fn().mockImplementation(async (version: Version) => {
       savedVersions.push(version);
     }),
-    updateProgress: vi.fn(),
     deleteByNode: vi.fn(),
   };
 

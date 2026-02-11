@@ -1,34 +1,31 @@
 ---
-description: Update a component's properties such as progress, status, or version content
+description: Update a component's version content such as description text for a version milestone
 ---
 
-Update a component's properties in the architecture database.
+Update a component's version content in the architecture database.
 
 **User request**: $ARGUMENTS
 
 **API base URL**: `https://roadmap-5vvp.onrender.com`
 
-This command supports updating:
-- **Progress and status** for a specific version (mvp, v1, v2)
-- **Version content** (description text for a version milestone)
+This command supports updating **version content** (description text for a version milestone). Progress is derived automatically from the `current_version` field and cannot be set manually.
 
 Follow these steps:
 
 1. **Parse the request** to determine:
    - `nodeId` — the component to update
    - `version` — which version to update (overview, mvp, v1, v2)
-   - `progress` — percentage 0-100
-   - `status` — one of: planned, in-progress, complete
+   - `content` — the new description text
 
-2. **Update progress** via PATCH /api/components/:id/versions/:version/progress:
+2. **Update version content** via PUT /api/components/:id/versions/:version:
    ```
-   curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/<nodeId>/versions/<version>/progress \
+   curl -X PUT https://roadmap-5vvp.onrender.com/api/components/<nodeId>/versions/<version> \
      -H "Content-Type: application/json" \
-     -d '{"progress":<progress>,"status":"<status>"}'
+     -d '{"content":"<content>"}'
    ```
-   - Returns `200` on success with the updated values
-   - Returns `400` if progress or status values are invalid
+   - Returns `200` on success with the updated version
+   - Returns `404` if the component or version does not exist
 
 3. **Report** the result to the user.
 
-For bulk updates (e.g., marking multiple components as in-progress), send multiple PATCH requests.
+For bulk updates, send multiple PUT requests.

@@ -40,7 +40,6 @@ src/
 │   ├── get-architecture.ts     # Assemble full architecture graph
 │   ├── export-architecture.ts  # Get architecture + write JSON
 │   ├── seed-features.ts        # Parse + insert feature files
-│   ├── update-progress.ts      # Update component progress
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations

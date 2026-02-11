@@ -95,26 +95,6 @@ Feature: REST API Adapter
     Then the response status is 404
     And the response body has field "error"
 
-  Scenario: Update component progress via PATCH
-    Given the API server is running
-    And a component "progress-comp" exists in the database
-    When I send a PATCH request to "/api/components/progress-comp/versions/mvp/progress" with body:
-      """
-      {"progress":50,"status":"in-progress"}
-      """
-    Then the response status is 200
-    And the response body has field "progress" with value "50"
-
-  Scenario: Update progress with invalid value returns 400
-    Given the API server is running
-    And a component "progress-comp-bad" exists in the database
-    When I send a PATCH request to "/api/components/progress-comp-bad/versions/mvp/progress" with body:
-      """
-      {"progress":150,"status":"in-progress"}
-      """
-    Then the response status is 400
-    And the response body has field "error"
-
   # ── Feature File Management ───────────────────────────────────────
 
   Scenario: Get feature files for a component

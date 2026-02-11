@@ -6,7 +6,6 @@ export type { ArchitectureData, EnrichedNode, ProgressionTree } from './get-arch
 export { GetArchitecture } from './get-architecture.js';
 export type { FeatureFileInput } from './seed-features.js';
 export { SeedFeatures } from './seed-features.js';
-export { UpdateProgress } from './update-progress.js';
 export type { UploadFeatureInput, UploadFeatureResult } from './upload-feature.js';
 export { UploadFeature } from './upload-feature.js';
 

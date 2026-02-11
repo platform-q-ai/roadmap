@@ -49,7 +49,6 @@ function buildRepos(world: World) {
     findByNodeAndVersion: async (nid: string, ver: string) =>
       world.versions.find(v => v.node_id === nid && v.version === ver) ?? null,
     save: async () => {},
-    updateProgress: async () => {},
     deleteByNode: async () => {},
   };
   const featureRepo: IFeatureRepository = {

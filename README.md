@@ -59,8 +59,7 @@ roadmap/
 │   ├── use-cases/              # Business logic (depends only on domain)
 │   │   ├── get-architecture.js
 │   │   ├── export-architecture.js
-│   │   ├── seed-features.js
-│   │   └── update-progress.js
+│   │   └── seed-features.js
 │   ├── infrastructure/         # Concrete implementations
 │   │   └── sqlite/             # better-sqlite3 repository implementations
 │   └── adapters/               # Entry points
