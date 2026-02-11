@@ -10,12 +10,9 @@ Follow these steps:
 
 1. **Parse the request** to determine the component ID to delete.
 
-2. **Verify** the component exists by checking seed.sql or running:
-   ```
-   sqlite3 db/architecture.db "SELECT id, name FROM nodes WHERE id = '<id>'"
-   ```
+2. **Verify** the component exists by checking `web/data.json` or `seed.sql` for the id.
 
-3. **Run the CLI adapter** to delete the component:
+3. **Run the CLI adapter** to delete the component (it will error if the id does not exist):
    ```
    npx tsx src/adapters/cli/component-delete.ts "<id>"
    ```
