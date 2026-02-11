@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-11T17:04:33.680Z",
+  "generated_at": "2026-02-11T17:17:28.387Z",
   "layers": [
     {
       "id": "observability-dashboard",
@@ -2066,9 +2066,9 @@
       "versions": {
         "mvp": {
           "content": "Clean Architecture TypeScript codebase. SQLite graph database with 4 tables (nodes, edges, node_versions, features). BDD test suite (Cucumber + Vitest). CI merge gate. Static web view with architecture diagram. Progression tree home page with Cytoscape.js. Self-tracking as a component.",
-          "progress": 0,
+          "progress": 50,
           "status": "in-progress",
-          "updated_at": "2026-02-11 14:27:05"
+          "updated_at": "2026-02-11 17:16:36"
         },
         "overview": {
           "content": "Living documentation for the Open Autonomous Runtime. Self-tracking component with progression tree UI, versioned specs, Gherkin feature files, and BDD/TDD pipeline. Built with Clean Architecture (TypeScript), SQLite graph database, and Cytoscape.js for the progression tree visualization.",
@@ -4706,9 +4706,9 @@
         "versions": {
           "mvp": {
             "content": "Clean Architecture TypeScript codebase. SQLite graph database with 4 tables (nodes, edges, node_versions, features). BDD test suite (Cucumber + Vitest). CI merge gate. Static web view with architecture diagram. Progression tree home page with Cytoscape.js. Self-tracking as a component.",
-            "progress": 0,
+            "progress": 50,
             "status": "in-progress",
-            "updated_at": "2026-02-11 14:27:05"
+            "updated_at": "2026-02-11 17:16:36"
           },
           "overview": {
             "content": "Living documentation for the Open Autonomous Runtime. Self-tracking component with progression tree UI, versioned specs, Gherkin feature files, and BDD/TDD pipeline. Built with Clean Architecture (TypeScript), SQLite graph database, and Cytoscape.js for the progression tree visualization.",

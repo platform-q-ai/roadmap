@@ -24,6 +24,7 @@
     "check:code-quality": "bash scripts/check-code-quality.sh",
     "check:knip": "knip",
     "check:deps": "depcruise src --config",
+    "validate": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build",
     "pre-commit": "npm run check:code-quality && npm run lint && npm run format:check && npm run typecheck && npm run build:ts && npm run test:coverage && npm run test:features",
     "prepare": "husky"
   },
