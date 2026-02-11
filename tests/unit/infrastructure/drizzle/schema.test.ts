@@ -3,7 +3,7 @@ import {
   featuresTable,
   nodesTable,
   nodeVersionsTable,
-} from '@infrastructure/drizzle/schema.js';
+} from '@infrastructure/drizzle/index.js';
 import { describe, expect, it } from 'vitest';
 
 describe('Drizzle Schema', () => {
