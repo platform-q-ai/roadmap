@@ -12,11 +12,37 @@ import { Version } from '../../src/domain/entities/version.js';
 
 // Drizzle modules loaded dynamically to avoid crashing other scenarios during RED phase.
 
-let drizzleSchema: any = null;
+let drizzleSchema: typeof import('../../src/infrastructure/drizzle/schema.js') | null = null;
 
-let drizzleConnection: any = null;
+let drizzleConnection: typeof import('../../src/infrastructure/drizzle/connection.js') | null =
+  null;
 
-let drizzleRepos: any = null;
+interface DrizzleRepoModules {
+  DrizzleNodeRepository: typeof import('../../src/infrastructure/drizzle/node-repository.js').DrizzleNodeRepository;
+  DrizzleEdgeRepository: typeof import('../../src/infrastructure/drizzle/edge-repository.js').DrizzleEdgeRepository;
+  DrizzleVersionRepository: typeof import('../../src/infrastructure/drizzle/version-repository.js').DrizzleVersionRepository;
+  DrizzleFeatureRepository: typeof import('../../src/infrastructure/drizzle/feature-repository.js').DrizzleFeatureRepository;
+  eq: typeof import('drizzle-orm').eq;
+  and: typeof import('drizzle-orm').and;
+  sql: typeof import('drizzle-orm').sql;
+}
+
+let drizzleRepos: DrizzleRepoModules | null = null;
+
+function getSchema() {
+  assert.ok(drizzleSchema, 'Drizzle schema not loaded — call loadDrizzleModules first');
+  return drizzleSchema;
+}
+
+function getConnection() {
+  assert.ok(drizzleConnection, 'Drizzle connection not loaded — call loadDrizzleModules first');
+  return drizzleConnection;
+}
+
+function getRepos() {
+  assert.ok(drizzleRepos, 'Drizzle repos not loaded — call loadDrizzleModules first');
+  return drizzleRepos;
+}
 
 async function loadDrizzleModules() {
   if (drizzleSchema) {
@@ -41,15 +67,11 @@ async function loadDrizzleModules() {
 }
 
 interface World {
-  drizzleDb: any;
-
-  nodeRepo: any;
-
-  edgeRepo: any;
-
-  versionRepo: any;
-
-  featureRepo: any;
+  drizzleDb: import('drizzle-orm/better-sqlite3').BetterSQLite3Database;
+  nodeRepo: InstanceType<DrizzleRepoModules['DrizzleNodeRepository']>;
+  edgeRepo: InstanceType<DrizzleRepoModules['DrizzleEdgeRepository']>;
+  versionRepo: InstanceType<DrizzleRepoModules['DrizzleVersionRepository']>;
+  featureRepo: InstanceType<DrizzleRepoModules['DrizzleFeatureRepository']>;
   savedNode: Node | null;
   [key: string]: unknown;
 }
@@ -61,19 +83,19 @@ Given('the Drizzle schema module', async function (this: World) {
 });
 
 Then('it should export a nodes table definition', function () {
-  assert.ok(drizzleSchema.nodesTable, 'nodesTable not exported from schema');
+  assert.ok(getSchema().nodesTable, 'nodesTable not exported from schema');
 });
 
 Then('it should export an edges table definition', function () {
-  assert.ok(drizzleSchema.edgesTable, 'edgesTable not exported from schema');
+  assert.ok(getSchema().edgesTable, 'edgesTable not exported from schema');
 });
 
 Then('it should export a nodeVersions table definition', function () {
-  assert.ok(drizzleSchema.nodeVersionsTable, 'nodeVersionsTable not exported from schema');
+  assert.ok(getSchema().nodeVersionsTable, 'nodeVersionsTable not exported from schema');
 });
 
 Then('it should export a features table definition', function () {
-  assert.ok(drizzleSchema.featuresTable, 'featuresTable not exported from schema');
+  assert.ok(getSchema().featuresTable, 'featuresTable not exported from schema');
 });
 
 // ─── Nodes table columns ────────────────────────────────────────────
@@ -83,18 +105,21 @@ Given('the Drizzle schema nodes table', async function (this: World) {
 });
 
 Then('it should have a text primary key column {string}', function (col: string) {
-  assert.ok(drizzleSchema.nodesTable[col], `Column '${col}' not found on nodesTable`);
+  const table = getSchema().nodesTable as Record<string, unknown>;
+  assert.ok(table[col], `Column '${col}' not found on nodesTable`);
 });
 
 Then('it should have a text column {string} that is not null', function (col: string) {
-  assert.ok(drizzleSchema.nodesTable[col], `Column '${col}' not found on nodesTable`);
+  const table = getSchema().nodesTable as Record<string, unknown>;
+  assert.ok(table[col], `Column '${col}' not found on nodesTable`);
 });
 
 Then(
   'it should have optional text columns {string}, {string}, {string}, {string}',
   function (c1: string, c2: string, c3: string, c4: string) {
+    const table = getSchema().nodesTable as Record<string, unknown>;
     for (const col of [c1, c2, c3, c4]) {
-      assert.ok(drizzleSchema.nodesTable[col], `Column '${col}' not found on nodesTable`);
+      assert.ok(table[col], `Column '${col}' not found on nodesTable`);
     }
   }
 );
@@ -102,7 +127,8 @@ Then(
 Then(
   'it should have an integer column {string} defaulting to {int}',
   function (col: string, _def: number) {
-    assert.ok(drizzleSchema.nodesTable[col], `Column '${col}' not found on nodesTable`);
+    const table = getSchema().nodesTable as Record<string, unknown>;
+    assert.ok(table[col], `Column '${col}' not found on nodesTable`);
   }
 );
 
@@ -110,11 +136,11 @@ Then(
 
 Given('a Drizzle database with schema applied', async function (this: World) {
   await loadDrizzleModules();
-  this.drizzleDb = drizzleConnection.createDrizzleConnection(':memory:');
-  this.nodeRepo = new drizzleRepos.DrizzleNodeRepository(this.drizzleDb);
-  this.edgeRepo = new drizzleRepos.DrizzleEdgeRepository(this.drizzleDb);
-  this.versionRepo = new drizzleRepos.DrizzleVersionRepository(this.drizzleDb);
-  this.featureRepo = new drizzleRepos.DrizzleFeatureRepository(this.drizzleDb);
+  this.drizzleDb = getConnection().createDrizzleConnection(':memory:');
+  this.nodeRepo = new (getRepos().DrizzleNodeRepository)(this.drizzleDb);
+  this.edgeRepo = new (getRepos().DrizzleEdgeRepository)(this.drizzleDb);
+  this.versionRepo = new (getRepos().DrizzleVersionRepository)(this.drizzleDb);
+  this.featureRepo = new (getRepos().DrizzleFeatureRepository)(this.drizzleDb);
 });
 
 Given('a node {string} exists', async function (this: World, id: string) {
@@ -139,8 +165,8 @@ Given(
 When(
   'I upsert version {string} for {string} with new content {string} via Drizzle',
   function (this: World, version: string, nodeId: string, content: string) {
-    const { nodeVersionsTable: nvt } = drizzleSchema;
-    const { sql: sqlFn } = drizzleRepos;
+    const { nodeVersionsTable: nvt } = getSchema();
+    const { sql: sqlFn } = getRepos();
     this.drizzleDb
       .insert(nvt)
       .values({ node_id: nodeId, version, content, progress: 0, status: 'planned' })
@@ -153,18 +179,18 @@ When(
 );
 
 Then('the version should have content {string}', function (this: World, content: string) {
-  const rows = this.drizzleDb.select().from(drizzleSchema.nodeVersionsTable).all();
+  const rows = this.drizzleDb.select().from(getSchema().nodeVersionsTable).all();
   assert.ok(rows.length > 0, 'No versions found');
   assert.equal(rows[0].content, content);
 });
 
 Then('the version should have progress {int}', function (this: World, progress: number) {
-  const rows = this.drizzleDb.select().from(drizzleSchema.nodeVersionsTable).all();
+  const rows = this.drizzleDb.select().from(getSchema().nodeVersionsTable).all();
   assert.equal(rows[0].progress, progress);
 });
 
 Then('the version should have status {string}', function (this: World, status: string) {
-  const rows = this.drizzleDb.select().from(drizzleSchema.nodeVersionsTable).all();
+  const rows = this.drizzleDb.select().from(getSchema().nodeVersionsTable).all();
   assert.equal(rows[0].status, status);
 });
 
@@ -307,13 +333,13 @@ Then('I can delete features by node', async function (this: World) {
 
 Given('a Drizzle database with schema and seed data', async function (this: World) {
   await loadDrizzleModules();
-  this.drizzleDb = drizzleConnection.createDrizzleConnection(':memory:');
-  this.nodeRepo = new drizzleRepos.DrizzleNodeRepository(this.drizzleDb);
-  this.edgeRepo = new drizzleRepos.DrizzleEdgeRepository(this.drizzleDb);
-  this.versionRepo = new drizzleRepos.DrizzleVersionRepository(this.drizzleDb);
-  this.featureRepo = new drizzleRepos.DrizzleFeatureRepository(this.drizzleDb);
+  this.drizzleDb = getConnection().createDrizzleConnection(':memory:');
+  this.nodeRepo = new (getRepos().DrizzleNodeRepository)(this.drizzleDb);
+  this.edgeRepo = new (getRepos().DrizzleEdgeRepository)(this.drizzleDb);
+  this.versionRepo = new (getRepos().DrizzleVersionRepository)(this.drizzleDb);
+  this.featureRepo = new (getRepos().DrizzleFeatureRepository)(this.drizzleDb);
 
-  const { nodesTable: nt, nodeVersionsTable: nvt } = drizzleSchema;
+  const { nodesTable: nt, nodeVersionsTable: nvt } = getSchema();
   this.drizzleDb.insert(nt).values({ id: 'roadmap', name: 'Roadmap', type: 'component' }).run();
   this.drizzleDb
     .insert(nvt)
@@ -344,8 +370,8 @@ When(
 );
 
 When('I re-run the seed data via Drizzle upsert', function (this: World) {
-  const { nodeVersionsTable: nvt } = drizzleSchema;
-  const { sql: sqlFn } = drizzleRepos;
+  const { nodeVersionsTable: nvt } = getSchema();
+  const { sql: sqlFn } = getRepos();
   this.drizzleDb
     .insert(nvt)
     .values([
@@ -374,8 +400,8 @@ When('I re-run the seed data via Drizzle upsert', function (this: World) {
 When(
   'I re-seed with updated content for {string} version {string}',
   function (this: World, nodeId: string, version: string) {
-    const { nodeVersionsTable: nvt } = drizzleSchema;
-    const { sql: sqlFn } = drizzleRepos;
+    const { nodeVersionsTable: nvt } = getSchema();
+    const { sql: sqlFn } = getRepos();
     this.drizzleDb
       .insert(nvt)
       .values({
@@ -396,8 +422,8 @@ When(
 Then(
   'the version {string} for {string} should have progress {int}',
   function (this: World, version: string, nodeId: string, progress: number) {
-    const { nodeVersionsTable: nvt } = drizzleSchema;
-    const { eq: eqFn, and: andFn } = drizzleRepos;
+    const { nodeVersionsTable: nvt } = getSchema();
+    const { eq: eqFn, and: andFn } = getRepos();
     const rows = this.drizzleDb
       .select()
       .from(nvt)
@@ -411,8 +437,8 @@ Then(
 Then(
   'the version {string} for {string} should have status {string}',
   function (this: World, version: string, nodeId: string, status: string) {
-    const { nodeVersionsTable: nvt } = drizzleSchema;
-    const { eq: eqFn, and: andFn } = drizzleRepos;
+    const { nodeVersionsTable: nvt } = getSchema();
+    const { eq: eqFn, and: andFn } = getRepos();
     const rows = this.drizzleDb
       .select()
       .from(nvt)
@@ -426,8 +452,8 @@ Then(
 Then(
   'the version {string} for {string} should have the updated content',
   function (this: World, version: string, nodeId: string) {
-    const { nodeVersionsTable: nvt } = drizzleSchema;
-    const { eq: eqFn, and: andFn } = drizzleRepos;
+    const { nodeVersionsTable: nvt } = getSchema();
+    const { eq: eqFn, and: andFn } = getRepos();
     const rows = this.drizzleDb
       .select()
       .from(nvt)
