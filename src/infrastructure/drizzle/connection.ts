@@ -3,20 +3,15 @@ import { sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 
-import { edgesTable, featuresTable, nodesTable, nodeVersionsTable } from './schema.js';
-
 /**
- * Create a Drizzle ORM connection backed by better-sqlite3.
- * Applies schema (CREATE TABLE IF NOT EXISTS) and enables WAL + foreign keys.
+ * Apply the database schema (CREATE TABLE IF NOT EXISTS) and indexes.
+ *
+ * Drizzle ORM does not provide a runtime CREATE TABLE API, so raw SQL
+ * is necessary here. The definitions mirror schema.sql and schema.ts.
+ * For file-backed databases, the build:db script applies schema.sql
+ * first; this function ensures in-memory databases (tests) also work.
  */
-export function createDrizzleConnection(dbPath: string): BetterSQLite3Database {
-  const sqlite = new Database(dbPath);
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('foreign_keys = ON');
-
-  const db = drizzle(sqlite);
-
-  // Apply schema — idempotent via IF NOT EXISTS
+export function applySchema(db: BetterSQLite3Database): void {
   db.run(sql`CREATE TABLE IF NOT EXISTS nodes (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -64,16 +59,25 @@ export function createDrizzleConnection(dbPath: string): BetterSQLite3Database {
     updated_at TEXT DEFAULT (datetime('now'))
   )`);
 
-  // Indexes
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_source ON edges(source_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_target ON edges(target_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_type ON edges(type)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_versions_node ON node_versions(node_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_features_node ON features(node_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_features_version ON features(node_id, version)`);
+}
+
+/**
+ * Create a Drizzle ORM connection backed by better-sqlite3.
+ * Enables WAL mode + foreign keys and applies schema.
+ */
+export function createDrizzleConnection(dbPath: string): BetterSQLite3Database {
+  const sqlite = new Database(dbPath);
+  sqlite.pragma('journal_mode = WAL');
+  sqlite.pragma('foreign_keys = ON');
+
+  const db = drizzle(sqlite);
+  applySchema(db);
 
   return db;
 }
-
-// Re-export table references for convenient use
-export { edgesTable, featuresTable, nodesTable, nodeVersionsTable };
