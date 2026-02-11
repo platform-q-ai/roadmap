@@ -6,24 +6,31 @@ Create a new component in the architecture database based on the user's request.
 
 **User request**: $ARGUMENTS
 
+**API base URL**: `http://localhost:3000`
+
 Follow these steps:
 
 1. **Parse the request** to determine the component details:
    - `id` (kebab-case identifier, e.g. `my-service`)
    - `name` (human-readable name, e.g. `My Service`)
    - `type` (one of: layer, component, store, external, phase, app)
-   - `layer` (which layer it belongs to — check existing layers in seed.sql)
+   - `layer` (which layer it belongs to — check existing layers via `GET /api/components`)
    - `description` (optional)
-   - `tags` (optional, comma-separated)
+   - `tags` (optional, array of strings)
 
-2. **Run the CLI adapter** to create the component:
+2. **Create the component** via POST /api/components:
    ```
-   npx tsx src/adapters/cli/component-create.ts "<id>" "<name>" "<type>" "<layer>" "<description>" "<tags>"
+   curl -X POST http://localhost:3000/api/components \
+     -H "Content-Type: application/json" \
+     -d '{"id":"<id>","name":"<name>","type":"<type>","layer":"<layer>","description":"<description>","tags":["<tag1>","<tag2>"]}'
    ```
+   - Returns `201` on success with the created component summary
+   - Returns `400` if required fields are missing or type is invalid
+   - Returns `409` if a component with the same id already exists
 
-3. **Publish** the changes to the website:
+3. **Verify** the component was created:
    ```
-   npx tsx src/adapters/cli/export.ts
+   curl http://localhost:3000/api/components/<id>
    ```
 
 4. **Report** the result to the user.

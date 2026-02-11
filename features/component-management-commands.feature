@@ -95,3 +95,38 @@ Feature: Component Management Commands
     And a CLI adapter "component-delete.ts" exists in src/adapters/cli
     And a CLI adapter "component-update.ts" exists in src/adapters/cli
     And a CLI adapter "export.ts" exists in src/adapters/cli
+
+  # ── Commands use API routes instead of CLI adapters ─────────────
+
+  Scenario: Component-create command uses POST /api/components
+    Given the project has an .opencode/commands directory
+    Then the command file "component-create.md" references API route "POST" "/api/components"
+    And the command file "component-create.md" does not reference "npx tsx"
+
+  Scenario: Component-delete command uses DELETE /api/components/:id
+    Given the project has an .opencode/commands directory
+    Then the command file "component-delete.md" references API route "DELETE" "/api/components"
+    And the command file "component-delete.md" does not reference "npx tsx"
+
+  Scenario: Component-update command uses PATCH progress API route
+    Given the project has an .opencode/commands directory
+    Then the command file "component-update.md" references API route "PATCH" "/api/components"
+    And the command file "component-update.md" does not reference "npx tsx"
+
+  Scenario: Component-progress command uses PATCH progress API route
+    Given the project has an .opencode/commands directory
+    Then the command file "component-progress.md" references API route "PATCH" "/api/components"
+    And the command file "component-progress.md" does not reference "npx tsx"
+
+  Scenario: Component-publish command references the API base URL
+    Given the project has an .opencode/commands directory
+    Then the command file "component-publish.md" references the API base URL
+    And the command file "component-publish.md" does not reference "npx tsx"
+
+  Scenario: All component commands reference the API base URL
+    Given the project has an .opencode/commands directory
+    Then every component command file references the API base URL
+
+  Scenario: No component command references CLI adapter scripts
+    Given the project has an .opencode/commands directory
+    Then no component command file contains "npx tsx src/adapters/cli"
