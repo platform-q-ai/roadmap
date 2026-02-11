@@ -7,10 +7,10 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 import {
-  createConnection,
-  SqliteFeatureRepository,
-  SqliteNodeRepository,
-} from '../../infrastructure/sqlite/index.js';
+  createDrizzleConnection,
+  DrizzleFeatureRepository,
+  DrizzleNodeRepository,
+} from '../../infrastructure/index.js';
 import type { FeatureFileInput } from '../../use-cases/index.js';
 import { SeedFeatures } from '../../use-cases/index.js';
 
@@ -46,20 +46,16 @@ function scanFeatureFiles(): FeatureFileInput[] {
   return featureFiles;
 }
 
-const db = createConnection(DB_PATH);
+const db = createDrizzleConnection(DB_PATH);
 
 const seedFeatures = new SeedFeatures({
-  featureRepo: new SqliteFeatureRepository(db),
-  nodeRepo: new SqliteNodeRepository(db),
+  featureRepo: new DrizzleFeatureRepository(db),
+  nodeRepo: new DrizzleNodeRepository(db),
 });
 
-try {
-  const featureFiles = scanFeatureFiles();
-  const { seeded, skipped } = await seedFeatures.execute(featureFiles);
-  console.log(`Seeded ${seeded} feature files into database`);
-  if (skipped > 0) {
-    console.log(`  Skipped ${skipped} (node_id not in nodes table)`);
-  }
-} finally {
-  db.close();
+const featureFiles = scanFeatureFiles();
+const { seeded, skipped } = await seedFeatures.execute(featureFiles);
+console.log(`Seeded ${seeded} feature files into database`);
+if (skipped > 0) {
+  console.log(`  Skipped ${skipped} (node_id not in nodes table)`);
 }
