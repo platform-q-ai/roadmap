@@ -3,6 +3,7 @@
 // Usage: npx tsx src/adapters/api/start.ts
 // Environment: PORT (default 3000), DB_PATH (default db/architecture.db)
 
+import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -24,6 +25,9 @@ const WEB_DIR = join(ROOT, 'web');
 
 const db = createDrizzleConnection(DB_PATH);
 
+const packageJson = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'));
+const packageVersion: string = packageJson.version;
+
 const server = createApp(
   {
     nodeRepo: new DrizzleNodeRepository(db),
@@ -31,7 +35,7 @@ const server = createApp(
     versionRepo: new DrizzleVersionRepository(db),
     featureRepo: new DrizzleFeatureRepository(db),
   },
-  { staticDir: WEB_DIR }
+  { staticDir: WEB_DIR, packageVersion }
 );
 
 server.listen(PORT, () => {

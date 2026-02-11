@@ -3,6 +3,7 @@ import {
   type IFeatureRepository,
   type INodeRepository,
   type IVersionRepository,
+  Node,
   Version,
 } from '../domain/index.js';
 
@@ -66,6 +67,13 @@ export interface ArchitectureData {
     total_versions: number;
     total_features: number;
   };
+}
+
+/** The self-tracking node whose current_version is synced from package.json. */
+const SELF_TRACKING_NODE_ID = 'roadmap';
+
+export interface ExecuteOptions {
+  packageVersion?: string;
 }
 
 interface Deps {
@@ -160,13 +168,22 @@ export class GetArchitecture {
     return index;
   }
 
-  async execute(): Promise<ArchitectureData> {
-    const [nodes, edges, versions, features] = await Promise.all([
+  private applyPackageVersion(node: Node, packageVersion?: string): Node {
+    if (!packageVersion || node.id !== SELF_TRACKING_NODE_ID) {
+      return node;
+    }
+    return new Node({ ...node.toJSON(), tags: node.tags, current_version: packageVersion });
+  }
+
+  async execute(options?: ExecuteOptions): Promise<ArchitectureData> {
+    const [rawNodes, edges, versions, features] = await Promise.all([
       this.nodeRepo.findAll(),
       this.edgeRepo.findAll(),
       this.versionRepo.findAll(),
       this.featureRepo.findAll(),
     ]);
+
+    const nodes = rawNodes.map(n => this.applyPackageVersion(n, options?.packageVersion));
 
     const versionsByNode = this.buildVersionIndex(versions);
     const featuresByNodeVersion = this.buildFeatureIndex(features);

@@ -8,6 +8,7 @@ import { buildRoutes } from './routes.js';
 
 export interface AppOptions {
   staticDir?: string;
+  packageVersion?: string;
 }
 
 const MIME_TYPES: Record<string, string> = {
@@ -104,7 +105,7 @@ async function tryApiRoute(routes: Route[], ctx: RequestContext): Promise<boolea
  * files from that directory. API routes take priority over static files.
  */
 export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
-  const routes = buildRoutes(deps);
+  const routes = buildRoutes(deps, { packageVersion: options?.packageVersion });
   const staticDir = options?.staticDir;
 
   const server = http.createServer(async (req, res) => {

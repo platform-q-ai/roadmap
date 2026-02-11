@@ -2,7 +2,7 @@
 // CLI adapter: Export architecture.db -> web/data.json
 // Usage: npx tsx src/adapters/cli/export.ts
 
-import { writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -35,7 +35,10 @@ const exportArchitecture = new ExportArchitecture({
   writeJson,
 });
 
-const { stats } = await exportArchitecture.execute(OUT_PATH);
+const packageJson = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'));
+const packageVersion: string = packageJson.version;
+
+const { stats } = await exportArchitecture.execute(OUT_PATH, { packageVersion });
 console.log(`Exported to ${OUT_PATH}`);
 console.log(
   `  ${stats.total_nodes} nodes, ${stats.total_edges} edges, ${stats.total_versions} versions, ${stats.total_features} features`
