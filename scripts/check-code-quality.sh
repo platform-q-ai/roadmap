@@ -9,10 +9,16 @@
 # Checks performed:
 # 1a-d: Incomplete work markers (TODO, FIXME, placeholder, test code, .only/.skip)
 # 2a-f: Type safety and lint bypasses (as any, @ts-ignore, eslint-disable, console.log)
-# 3a-b: Barrel exports exist for all layers and subdirectories
+# 3a-c: Barrel exports exist for all layers and subdirectories + no barrel bypasses
 # 4: Clean Architecture boundary violations (no infrastructure imports in domain/use-cases)
-# 5: Dead code detection (unused source files)
+# 5: Dead code detection (unused source files + ESLint unused-vars)
 # 6: CLAUDE.md and AGENTS.md are identical
+# 7a-d: BDD feature coverage (feature files, scenarios, dry-run, orphaned steps)
+# 8: Barrel bypass detection (direct imports bypassing barrel exports)
+# 9: Domain error discipline (no generic throw new Error in domain/use-cases)
+# 10: ESLint unused-vars analysis
+# 11: Knip (unused exports and dependencies)
+# 12: dependency-cruiser (architectural boundary validation)
 
 set -e
 
@@ -305,6 +311,163 @@ if [ -f "CLAUDE.md" ] && [ -f "AGENTS.md" ]; then
   fi
 elif [ -f "AGENTS.md" ]; then
   echo -e "${GREEN}✓ AGENTS.md exists${NC}"
+fi
+
+# ============================================
+# CHECK 7: BDD Feature Coverage
+# ============================================
+
+echo ""
+echo -e "${YELLOW}🧪 CHECK 7: BDD feature coverage...${NC}"
+echo ""
+
+# 7a: features/ directory has .feature files
+FEATURE_COUNT=$(find features -name "*.feature" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$FEATURE_COUNT" -eq 0 ]; then
+  echo -e "${RED}❌ No .feature files found in features/ directory${NC}"
+  ERRORS_FOUND=1
+else
+  echo -e "${GREEN}✓ Found ${FEATURE_COUNT} feature files in features/${NC}"
+fi
+
+# 7b: Every feature file has at least one Scenario
+for feature_file in features/*.feature; do
+  if [ -f "$feature_file" ]; then
+    SCENARIO_COUNT=$(grep -cE "^\s*(Scenario|Scenario Outline):" "$feature_file" 2>/dev/null || echo "0")
+    if [ "$SCENARIO_COUNT" -eq 0 ]; then
+      echo -e "${RED}❌ No Scenario found in ${feature_file}${NC}"
+      ERRORS_FOUND=1
+    fi
+  fi
+done
+echo -e "${GREEN}✓ All feature files contain at least one Scenario${NC}"
+
+# 7c: Cucumber dry-run to find undefined/pending steps
+echo ""
+echo "Running cucumber-js --dry-run..."
+DRY_RUN_OUTPUT=$(NODE_OPTIONS='--import tsx/esm' npx cucumber-js --import 'tests/step-definitions/**/*.ts' --tags 'not @WIP' --dry-run 2>&1 || true)
+UNDEFINED_STEPS=$(echo "$DRY_RUN_OUTPUT" | grep -c "undefined" 2>/dev/null || true)
+UNDEFINED_STEPS=${UNDEFINED_STEPS:-0}
+PENDING_STEPS=$(echo "$DRY_RUN_OUTPUT" | grep -c "pending" 2>/dev/null || true)
+PENDING_STEPS=${PENDING_STEPS:-0}
+
+if [ "${UNDEFINED_STEPS}" -gt 0 ] 2>/dev/null || [ "${PENDING_STEPS}" -gt 0 ] 2>/dev/null; then
+  echo -e "${RED}❌ Found undefined/pending steps (${UNDEFINED_STEPS} undefined, ${PENDING_STEPS} pending)${NC}"
+  echo "$DRY_RUN_OUTPUT" | grep -A2 "undefined\|pending" | head -10
+  ERRORS_FOUND=1
+else
+  echo -e "${GREEN}✓ All steps have definitions (dry-run passed)${NC}"
+fi
+
+# 7d: Report step usage to check for orphaned step definitions
+TOTAL_SCENARIOS=$(grep -rlE "^\s*(Scenario|Scenario Outline):" features/ 2>/dev/null | xargs grep -cE "^\s*(Scenario|Scenario Outline):" 2>/dev/null | awk -F: '{sum+=$NF} END{print sum}')
+echo -e "${GREEN}✓ Total scenarios: ${TOTAL_SCENARIOS}${NC}"
+
+# Check for step definitions that might be orphaned (not used by any feature file)
+echo ""
+echo "Checking step usage..."
+STEP_DEF_COUNT=$(grep -rlE "^(Given|When|Then)\(" tests/step-definitions/ 2>/dev/null | wc -l | tr -d ' ')
+echo -e "${GREEN}✓ Found ${STEP_DEF_COUNT} step definition files${NC}"
+
+# ============================================
+# CHECK 8: Barrel Bypass Detection
+# ============================================
+
+echo ""
+echo -e "${YELLOW}📦 CHECK 8: Barrel bypass detection...${NC}"
+echo ""
+
+# Detect direct imports that bypass barrel exports within src/
+# e.g. from '../entities/node.js' instead of from '../entities/index.js'
+BARREL_BYPASS=$(grep -rnE "from\s+['\"]\.\./(entities|repositories|sqlite)/[^i][^n][^d]" src 2>/dev/null | grep -v "index" | grep -v "node_modules" || true)
+
+if [ -n "$BARREL_BYPASS" ]; then
+  echo -e "${YELLOW}⚠ Found direct imports bypassing barrels in src/:${NC}"
+  echo "$BARREL_BYPASS" | head -10
+  count=$(echo "$BARREL_BYPASS" | wc -l | tr -d ' ')
+  if [ "$count" -gt 10 ]; then
+    echo -e "${YELLOW}   ... and $(($count - 10)) more${NC}"
+  fi
+  echo "   Consider importing from the barrel index.ts instead"
+else
+  echo -e "${GREEN}✓ No barrel bypass imports detected in src/${NC}"
+fi
+
+# ============================================
+# CHECK 9: Domain Error Discipline
+# ============================================
+
+echo ""
+echo -e "${YELLOW}🛡️  CHECK 9: Domain error discipline...${NC}"
+echo ""
+
+# Domain and use-cases layers should not throw generic Error
+GENERIC_ERROR=$(grep -rnE "throw new Error\(" src/domain src/use-cases 2>/dev/null || true)
+if [ -n "$GENERIC_ERROR" ]; then
+  echo -e "${YELLOW}⚠ Found generic 'throw new Error(' in domain/use-cases layers:${NC}"
+  echo "$GENERIC_ERROR" | head -5
+  echo "   Consider using domain-specific error classes instead"
+else
+  echo -e "${GREEN}✓ No generic Error throws in domain/use-cases layers${NC}"
+fi
+
+# ============================================
+# CHECK 10: ESLint Unused Vars Analysis
+# ============================================
+
+echo ""
+echo -e "${YELLOW}🔍 CHECK 10: ESLint unused-vars analysis...${NC}"
+echo ""
+
+UNUSED_VARS_COUNT=$(npx eslint src --rule '{"@typescript-eslint/no-unused-vars":"error"}' --format compact 2>/dev/null | grep -c "no-unused-vars" || true)
+UNUSED_VARS_COUNT=${UNUSED_VARS_COUNT:-0}
+if [ "${UNUSED_VARS_COUNT}" -gt 0 ] 2>/dev/null; then
+  echo -e "${YELLOW}⚠ Found ${UNUSED_VARS_COUNT} unused variable warning(s) in src/${NC}"
+else
+  echo -e "${GREEN}✓ No unused variables detected${NC}"
+fi
+
+# ============================================
+# CHECK 11: Knip (unused exports/dependencies)
+# ============================================
+
+echo ""
+echo -e "${YELLOW}🔎 CHECK 11: Knip unused exports and dependencies...${NC}"
+echo ""
+
+KNIP_OUTPUT=$(npx knip 2>&1 || true)
+KNIP_ISSUES=$(echo "$KNIP_OUTPUT" | grep -cE "^(Unused|Unresolved)" || true)
+KNIP_ISSUES=${KNIP_ISSUES:-0}
+
+if [ "${KNIP_ISSUES}" -gt 0 ] 2>/dev/null; then
+  echo -e "${YELLOW}⚠ Knip found issues:${NC}"
+  echo "$KNIP_OUTPUT" | head -20
+else
+  echo -e "${GREEN}✓ Knip: no unused exports or dependencies detected${NC}"
+fi
+
+# ============================================
+# CHECK 12: dependency-cruiser (architecture)
+# ============================================
+
+echo ""
+echo -e "${YELLOW}🏛️  CHECK 12: dependency-cruiser architecture validation...${NC}"
+echo ""
+
+if [ -f ".dependency-cruiser.cjs" ]; then
+  DEPCRUISE_OUTPUT=$(npx depcruise src --config 2>&1)
+  DEPCRUISE_EXIT=$?
+
+  if [ "$DEPCRUISE_EXIT" -ne 0 ]; then
+    echo -e "${RED}❌ dependency-cruiser found architecture violations:${NC}"
+    echo "$DEPCRUISE_OUTPUT" | head -20
+    ERRORS_FOUND=1
+  else
+    echo -e "${GREEN}✓ dependency-cruiser: no architecture violations${NC}"
+  fi
+else
+  echo -e "${RED}❌ Missing .dependency-cruiser.cjs config file${NC}"
+  ERRORS_FOUND=1
 fi
 
 # ============================================

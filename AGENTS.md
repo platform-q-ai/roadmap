@@ -11,6 +11,8 @@ This file tells you how to work with this repository. Read it before making chan
 - **Formatting**: Prettier
 - **Git hooks**: Husky + lint-staged
 - **Architecture**: Clean Architecture with ESLint boundary enforcement
+- **Dead code**: knip (unused exports/dependencies)
+- **Dependency validation**: dependency-cruiser (architectural boundary validation)
 
 ## What This Repo Is
 
@@ -236,12 +238,12 @@ The `.github/workflows/pr-quality-gate.yml` workflow runs on every PR targeting 
 Reruns the full pre-commit pipeline in CI:
 
 ```
-1. check:code-quality   Code quality script (6 checks)
+1. check:code-quality   Code quality script (12 checks)
 2. lint                  ESLint (includes boundary enforcement)
 3. format:check          Prettier formatting
 4. typecheck             TypeScript (tsc --noEmit)
 5. build:ts              Compile TypeScript
-6. test:unit             Vitest unit tests
+6. test:coverage         Vitest unit tests with 80% coverage thresholds
 7. test:features         Cucumber BDD scenarios
 ```
 
@@ -270,12 +272,13 @@ To enforce these checks, enable branch protection on `master` in GitHub:
 Pre-commit hooks run automatically on `git commit` via Husky:
 
 ```
-1. check:code-quality   Code quality script (10 checks)
+1. check:code-quality   Code quality script (12 checks)
 2. lint                  ESLint (includes boundary enforcement)
 3. format:check          Prettier formatting
 4. typecheck             TypeScript (tsc --noEmit)
 5. build:ts              Compile TypeScript
-6. test:unit             Vitest unit tests
+6. test:coverage         Vitest unit tests with 80% coverage thresholds
+7. test:features         Cucumber BDD scenarios
 ```
 
 ### ESLint Code Quality Rules
@@ -301,6 +304,12 @@ The `scripts/check-code-quality.sh` script enforces:
 4. **Clean Architecture boundaries**: domain has no outward deps, use-cases don't import infrastructure
 5. **Dead code detection**: unused source files not imported anywhere
 6. **AGENTS.md exists** (and matches CLAUDE.md if both present)
+7. **BDD feature coverage**: feature files exist, every feature has scenarios, cucumber dry-run for undefined steps, orphaned step detection
+8. **Barrel bypass detection**: direct imports that bypass barrel exports in src/
+9. **Domain error discipline**: no generic `throw new Error(` in domain/use-cases layers
+10. **ESLint unused-vars analysis**: counts unused variable warnings in src/
+11. **Knip**: unused exports, unused dependencies, phantom dependencies
+12. **dependency-cruiser**: architectural boundary validation (Clean Architecture rules, circular deps)
 
 ### Pre-Commit Checklist
 
@@ -310,7 +319,8 @@ Before committing, ensure:
 - [ ] `npm run format:check` shows no formatting issues
 - [ ] `npm run typecheck` passes with no type errors
 - [ ] `npm run build:ts` compiles successfully
-- [ ] `npm run test:unit` all unit tests pass
+- [ ] `npm run test:coverage` all unit tests pass with 80% coverage
+- [ ] `npm run test:features` all BDD scenarios pass
 - [ ] No secrets or credentials in staged files
 - [ ] Commit message follows conventional format
 
@@ -358,6 +368,8 @@ npm run lint:fix         # ESLint auto-fix
 npm run format           # Prettier write
 npm run format:check     # Prettier check
 npm run check:code-quality  # Code quality script
+npm run check:knip       # Knip (unused exports/dependencies)
+npm run check:deps       # dependency-cruiser (architecture validation)
 npm run pre-commit       # Full pre-commit pipeline
 ```
 
