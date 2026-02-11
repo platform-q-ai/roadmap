@@ -6,6 +6,8 @@ Update the progress and status for a specific component version milestone.
 
 **User request**: $ARGUMENTS
 
+**API base URL**: `http://localhost:3000`
+
 Follow these steps:
 
 1. **Parse the request** to determine:
@@ -14,17 +16,16 @@ Follow these steps:
    - `progress` — percentage from 0 to 100
    - `status` — one of: `planned`, `in-progress`, `complete`
 
-2. **Run the CLI adapter**:
+2. **Update progress** via PATCH /api/components/:id/versions/:version/progress:
    ```
-   npx tsx src/adapters/cli/component-update.ts "<nodeId>" "<version>" <progress> "<status>"
+   curl -X PATCH http://localhost:3000/api/components/<nodeId>/versions/<version>/progress \
+     -H "Content-Type: application/json" \
+     -d '{"progress":<progress>,"status":"<status>"}'
    ```
+   - Returns `200` on success with the updated values
+   - Returns `400` if progress or status values are invalid
 
-3. **Publish** the changes to the website:
-   ```
-   npx tsx src/adapters/cli/export.ts
-   ```
-
-4. **Report** the updated progress to the user.
+3. **Report** the updated progress to the user.
 
 Status guide:
 - `planned` — work has not started (progress should be 0)

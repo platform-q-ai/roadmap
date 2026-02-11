@@ -100,6 +100,6 @@ Feature: Drizzle ORM Migration
     Then it should import from the Drizzle infrastructure module
     And it should not import from better-sqlite3 directly
 
-  Scenario: Component progress command references Drizzle adapter
+  Scenario: Component progress command references API route
     Given the opencode command file for component-progress
-    Then it should reference the component-update CLI adapter
+    Then it should reference the progress API route

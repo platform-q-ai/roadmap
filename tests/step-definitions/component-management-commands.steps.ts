@@ -16,6 +16,14 @@ import { Edge, Feature, Node, Version } from '../../src/domain/index.js';
 import type { ArchitectureData } from '../../src/use-cases/index.js';
 import { CreateComponent, DeleteComponent, ExportArchitecture } from '../../src/use-cases/index.js';
 
+const COMPONENT_COMMANDS = [
+  'component-create.md',
+  'component-delete.md',
+  'component-update.md',
+  'component-progress.md',
+  'component-publish.md',
+];
+
 interface World {
   nodes: Node[];
   edges: Edge[];
@@ -374,14 +382,7 @@ Then('a command file {string} exists', function (this: World, filename: string) 
 Then(
   'each component command file has a {string} in frontmatter',
   function (this: World, field: string) {
-    const commands = [
-      'component-create.md',
-      'component-delete.md',
-      'component-update.md',
-      'component-progress.md',
-      'component-publish.md',
-    ];
-    for (const cmd of commands) {
+    for (const cmd of COMPONENT_COMMANDS) {
       const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
       const content = readFileSync(filePath, 'utf-8');
       assert.ok(
@@ -395,13 +396,8 @@ Then(
 Then(
   'each component command file references {string} for parameters',
   function (this: World, placeholder: string) {
-    const commands = [
-      'component-create.md',
-      'component-delete.md',
-      'component-update.md',
-      'component-progress.md',
-    ];
-    for (const cmd of commands) {
+    const cmdsWithArgs = COMPONENT_COMMANDS.filter(c => c !== 'component-publish.md');
+    for (const cmd of cmdsWithArgs) {
       const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
       const content = readFileSync(filePath, 'utf-8');
       assert.ok(
@@ -434,6 +430,80 @@ Then(
     );
   }
 );
+
+// ─── Then (Commands use API routes) ──────────────────────────────────
+
+const API_BASE_URL_PATTERN = 'http://localhost:3000';
+
+Then(
+  'the command file {string} references API route {string} {string}',
+  function (this: World, filename: string, method: string, path: string) {
+    const filePath = join(process.cwd(), '.opencode', 'commands', filename);
+    const content = readFileSync(filePath, 'utf-8');
+    assert.ok(
+      content.includes(method),
+      `Command ${filename} does not reference HTTP method "${method}"`
+    );
+    assert.ok(content.includes(path), `Command ${filename} does not reference API path "${path}"`);
+  }
+);
+
+Then(
+  'the command file {string} does not reference {string}',
+  function (this: World, filename: string, forbidden: string) {
+    const filePath = join(process.cwd(), '.opencode', 'commands', filename);
+    const content = readFileSync(filePath, 'utf-8');
+    assert.ok(
+      !content.includes(forbidden),
+      `Command ${filename} still references "${forbidden}" — should use API routes instead`
+    );
+  }
+);
+
+Then(
+  'the command file {string} references the API base URL',
+  function (this: World, filename: string) {
+    const filePath = join(process.cwd(), '.opencode', 'commands', filename);
+    const content = readFileSync(filePath, 'utf-8');
+    assert.ok(
+      content.includes(API_BASE_URL_PATTERN),
+      `Command ${filename} does not reference API base URL "${API_BASE_URL_PATTERN}"`
+    );
+  }
+);
+
+Then('every component command file references the API base URL', function (this: World) {
+  const violations: string[] = [];
+  for (const cmd of COMPONENT_COMMANDS) {
+    const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
+    const content = readFileSync(filePath, 'utf-8');
+    if (!content.includes(API_BASE_URL_PATTERN)) {
+      violations.push(cmd);
+    }
+  }
+  assert.equal(
+    violations.length,
+    0,
+    `These command files do not reference the API base URL: ${violations.join(', ')}`
+  );
+});
+
+Then('no component command file contains {string}', function (this: World, forbidden: string) {
+  const violations: string[] = [];
+  for (const cmd of COMPONENT_COMMANDS) {
+    const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
+    const content = readFileSync(filePath, 'utf-8');
+    if (content.includes(forbidden)) {
+      violations.push(cmd);
+    }
+  }
+  assert.equal(
+    violations.length,
+    0,
+    `These command files still contain "${forbidden}": ${violations.join(', ')}. ` +
+      'Commands should use API routes instead of CLI adapter scripts.'
+  );
+});
 
 // ─── Then (CLI adapter scripts) ─────────────────────────────────────
 

@@ -509,9 +509,9 @@ Given('the opencode command file for component-progress', function () {
   // Context-setting
 });
 
-Then('it should reference the component-update CLI adapter', function () {
+Then('it should reference the progress API route', function () {
   const cmdPath = join(process.cwd(), '.opencode', 'commands', 'component-progress.md');
   assert.ok(existsSync(cmdPath), 'component-progress.md not found');
   const content = readFileSync(cmdPath, 'utf-8');
-  assert.ok(content.includes('component-update'), 'Should reference component-update');
+  assert.ok(content.includes('/api/components'), 'Should reference the progress API route');
 });

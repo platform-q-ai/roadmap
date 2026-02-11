@@ -83,6 +83,66 @@ describe('OpenCode command files', () => {
   });
 });
 
+const API_BASE_URL = 'http://localhost:3000';
+
+const API_ROUTE_MAP: Record<string, { method: string; path: string }> = {
+  'component-create.md': { method: 'POST', path: '/api/components' },
+  'component-delete.md': { method: 'DELETE', path: '/api/components' },
+  'component-update.md': { method: 'PATCH', path: '/api/components' },
+  'component-progress.md': { method: 'PATCH', path: '/api/components' },
+};
+
+describe('OpenCode commands use API routes', () => {
+  describe('API base URL', () => {
+    for (const cmd of COMPONENT_COMMANDS) {
+      it(`${cmd} references the API base URL`, () => {
+        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
+        expect(content).toContain(API_BASE_URL);
+      });
+    }
+  });
+
+  describe('API route references', () => {
+    for (const [cmd, route] of Object.entries(API_ROUTE_MAP)) {
+      it(`${cmd} references ${route.method} ${route.path}`, () => {
+        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
+        expect(content).toContain(route.method);
+        expect(content).toContain(route.path);
+      });
+    }
+
+    it('component-publish.md references the API base URL', () => {
+      const content = readFileSync(join(COMMANDS_DIR, 'component-publish.md'), 'utf-8');
+      expect(content).toContain(API_BASE_URL);
+    });
+  });
+
+  describe('no CLI adapter references', () => {
+    for (const cmd of COMPONENT_COMMANDS) {
+      it(`${cmd} does not reference npx tsx`, () => {
+        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
+        expect(content).not.toContain('npx tsx');
+      });
+    }
+
+    for (const cmd of COMPONENT_COMMANDS) {
+      it(`${cmd} does not reference src/adapters/cli`, () => {
+        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
+        expect(content).not.toContain('src/adapters/cli');
+      });
+    }
+  });
+
+  describe('curl examples', () => {
+    for (const cmd of COMPONENT_COMMANDS) {
+      it(`${cmd} contains a curl example`, () => {
+        const content = readFileSync(join(COMMANDS_DIR, cmd), 'utf-8');
+        expect(content).toContain('curl');
+      });
+    }
+  });
+});
+
 describe('CLI adapter scripts', () => {
   describe('existence', () => {
     for (const adapter of CLI_ADAPTERS) {

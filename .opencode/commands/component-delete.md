@@ -6,21 +6,27 @@ Delete a component from the architecture database, removing all related versions
 
 **User request**: $ARGUMENTS
 
+**API base URL**: `http://localhost:3000`
+
 Follow these steps:
 
 1. **Parse the request** to determine the component ID to delete.
 
-2. **Verify** the component exists by checking `web/data.json` or `seed.sql` for the id.
+2. **Verify** the component exists:
+   ```
+   curl http://localhost:3000/api/components/<id>
+   ```
+   - Returns `200` with component details if it exists
+   - Returns `404` if the component does not exist
 
-3. **Run the CLI adapter** to delete the component (it will error if the id does not exist):
-   ```
-   npx tsx src/adapters/cli/component-delete.ts "<id>"
-   ```
+3. **Confirm** with the user before proceeding — this permanently removes the component and all its versions, features, and edges.
 
-4. **Publish** the changes to the website:
+4. **Delete the component** via DELETE /api/components/:id:
    ```
-   npx tsx src/adapters/cli/export.ts
+   curl -X DELETE http://localhost:3000/api/components/<id>
    ```
+   - Returns `204` (no content) on success
+   - Returns `404` if the component does not exist
 
 5. **Report** the result to the user, confirming what was removed.
 
