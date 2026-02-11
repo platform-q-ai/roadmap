@@ -657,10 +657,10 @@ function renderProgressionTree() {
           'background-color': 'data(bgColor)',
           'border-color': 'data(borderColor)',
           'border-width': 2,
-          'width': 140,
-          'height': 60,
-          'shape': 'roundrectangle',
-          'text-margin-y': -4,
+          'width': 130,
+          'height': 130,
+          'shape': 'hexagon',
+          'text-margin-y': 0,
           'padding': '10px',
         }
       },
@@ -702,10 +702,20 @@ function renderProgressionTree() {
       rankSep: 70,
       padding: 30,
     },
-    userZoomingEnabled: true,
-    userPanningEnabled: true,
+    userZoomingEnabled: false,
+    userPanningEnabled: false,
     boxSelectionEnabled: false,
     autoungrabify: true,
+  });
+
+  // Fit tree to container after layout completes
+  cy.on('layoutstop', function() {
+    cy.fit();
+  });
+
+  // Re-fit on window resize so the tree always fills the width
+  window.addEventListener('resize', function() {
+    if (cy) cy.fit();
   });
 
   // Click node to open detail dialog
