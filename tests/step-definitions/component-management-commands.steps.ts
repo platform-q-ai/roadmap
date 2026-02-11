@@ -4,12 +4,11 @@ import { join } from 'node:path';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
-import type { EdgeType } from '../../src/domain/entities/edge.js';
 import { Edge } from '../../src/domain/entities/edge.js';
 import { Feature } from '../../src/domain/entities/feature.js';
 import type { NodeType } from '../../src/domain/entities/node.js';
 import { Node } from '../../src/domain/entities/node.js';
-import type { VersionStatus, VersionTag } from '../../src/domain/entities/version.js';
+import type { VersionTag } from '../../src/domain/entities/version.js';
 import { Version } from '../../src/domain/entities/version.js';
 import type { IEdgeRepository } from '../../src/domain/repositories/edge-repository.js';
 import type { IFeatureRepository } from '../../src/domain/repositories/feature-repository.js';
