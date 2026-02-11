@@ -223,11 +223,6 @@ describe('Render Configuration Files', () => {
     expect(content).toContain('runtime: docker');
   });
 
-  it('render.yaml specifies a start command', () => {
-    const content = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
-    expect(content.includes('startCommand:') || content.includes('start_command:')).toBe(true);
-  });
-
   it('package.json has a start script', () => {
     const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
     expect(pkg.scripts?.start).toBeDefined();

@@ -40,7 +40,6 @@ Feature: Render Deployment
     Then a file "render.yaml" exists in the project
     And the render.yaml specifies a web service
     And the render.yaml specifies the Docker runtime
-    And the render.yaml specifies the start command
 
   # ── Production Start ─────────────────────────────────────────────────
 

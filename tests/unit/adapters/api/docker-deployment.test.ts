@@ -34,9 +34,9 @@ describe('render.yaml Docker runtime', () => {
     expect(content).not.toContain('buildCommand:');
   });
 
-  it('still specifies the start command', () => {
+  it('does not specify a startCommand (Docker uses CMD)', () => {
     const content = readFileSync(renderPath, 'utf-8');
-    expect(content.includes('startCommand:') || content.includes('start_command:')).toBe(true);
+    expect(content).not.toContain('startCommand:');
   });
 
   it('specifies environment variables', () => {
