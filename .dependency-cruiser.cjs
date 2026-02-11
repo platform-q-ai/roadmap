@@ -46,6 +46,13 @@ module.exports = {
       to: { path: '^src/adapters' },
     },
     {
+      name: 'no-infrastructure-to-use-cases',
+      severity: 'error',
+      comment: 'Clean Architecture: infrastructure layer must not import from use-cases.',
+      from: { path: '^src/infrastructure' },
+      to: { path: '^src/use-cases' },
+    },
+    {
       name: 'no-infrastructure-to-adapters',
       severity: 'error',
       comment: 'Clean Architecture: infrastructure layer must not import from adapters.',
