@@ -7,15 +7,16 @@ PRAGMA foreign_keys = ON;
 
 -- ─── Nodes ───────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS nodes (
-    id          TEXT PRIMARY KEY,
-    name        TEXT NOT NULL,
-    type        TEXT NOT NULL CHECK(type IN ('layer', 'component', 'store', 'external', 'phase')),
-    layer       TEXT,
-    color       TEXT,
-    icon        TEXT,
-    description TEXT,
-    tags        TEXT,                     -- JSON array of tag strings
-    sort_order  INTEGER DEFAULT 0
+    id              TEXT PRIMARY KEY,
+    name            TEXT NOT NULL,
+    type            TEXT NOT NULL CHECK(type IN ('layer', 'component', 'store', 'external', 'phase', 'app')),
+    layer           TEXT,
+    color           TEXT,
+    icon            TEXT,
+    description     TEXT,
+    tags            TEXT,                     -- JSON array of tag strings
+    sort_order      INTEGER DEFAULT 0,
+    current_version TEXT                      -- semver string, NULL = Concept
 );
 
 -- ─── Edges ───────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ CREATE TABLE IF NOT EXISTS edges (
 CREATE TABLE IF NOT EXISTS node_versions (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     node_id     TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-    version     TEXT NOT NULL CHECK(version IN ('overview', 'mvp', 'v1', 'v2')),
+    version     TEXT NOT NULL,
     content     TEXT,
     progress    INTEGER DEFAULT 0 CHECK(progress >= 0 AND progress <= 100),
     status      TEXT DEFAULT 'planned' CHECK(status IN ('planned', 'in-progress', 'complete')),
@@ -51,7 +52,7 @@ CREATE TABLE IF NOT EXISTS node_versions (
 CREATE TABLE IF NOT EXISTS features (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     node_id     TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-    version     TEXT NOT NULL CHECK(version IN ('mvp', 'v1', 'v2')),
+    version     TEXT NOT NULL,
     filename    TEXT NOT NULL,
     title       TEXT NOT NULL,
     content     TEXT,

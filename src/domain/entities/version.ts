@@ -1,4 +1,4 @@
-export type VersionTag = 'overview' | 'mvp' | 'v1' | 'v2';
+export type VersionTag = string;
 export type VersionStatus = 'planned' | 'in-progress' | 'complete';
 
 export interface VersionProps {
@@ -14,7 +14,7 @@ export interface VersionProps {
 /**
  * Version entity — versioned documentation for a node.
  *
- * Each node can have overview, mvp, v1, v2 versions.
+ * Each node can have arbitrary version tags (overview, mvp, v1, v2, v3, etc.).
  * Progress is 0-100, status is planned | in-progress | complete.
  */
 export class Version {
@@ -26,7 +26,7 @@ export class Version {
   readonly status: VersionStatus;
   readonly updated_at: string | null;
 
-  static readonly VERSIONS: VersionTag[] = ['overview', 'mvp', 'v1', 'v2'];
+  static readonly VERSIONS: string[] = ['overview', 'mvp', 'v1', 'v2'];
   static readonly STATUSES: VersionStatus[] = ['planned', 'in-progress', 'complete'];
 
   constructor(props: VersionProps) {

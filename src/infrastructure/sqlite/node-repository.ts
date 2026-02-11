@@ -38,8 +38,8 @@ export class SqliteNodeRepository implements INodeRepository {
   async save(node: Node): Promise<void> {
     this.db
       .prepare(
-        `INSERT OR REPLACE INTO nodes (id, name, type, layer, color, icon, description, tags, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT OR REPLACE INTO nodes (id, name, type, layer, color, icon, description, tags, sort_order, current_version)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         node.id,
@@ -50,7 +50,8 @@ export class SqliteNodeRepository implements INodeRepository {
         node.icon,
         node.description,
         node.tagsJson(),
-        node.sort_order
+        node.sort_order,
+        node.current_version
       );
   }
 

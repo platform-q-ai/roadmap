@@ -87,6 +87,7 @@ describe('Node Entity', () => {
       description: 'desc',
       tags: ['t'],
       sort_order: 5,
+      current_version: null,
     });
   });
 });

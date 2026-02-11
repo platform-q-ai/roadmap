@@ -1,9 +1,7 @@
-import type { VersionTag } from './version.js';
-
 export interface FeatureProps {
   id?: number | null;
   node_id: string;
-  version: VersionTag;
+  version: string;
   filename: string;
   title: string;
   content?: string | null;
@@ -16,7 +14,7 @@ export interface FeatureProps {
 export class Feature {
   readonly id: number | null;
   readonly node_id: string;
-  readonly version: VersionTag;
+  readonly version: string;
   readonly filename: string;
   readonly title: string;
   readonly content: string | null;
@@ -32,13 +30,11 @@ export class Feature {
     this.updated_at = props.updated_at ?? null;
   }
 
-  /** Derive version from a feature filename prefix. */
-  static versionFromFilename(filename: string): VersionTag {
-    if (filename.startsWith('v1-')) {
-      return 'v1';
-    }
-    if (filename.startsWith('v2-')) {
-      return 'v2';
+  /** Derive version from a feature filename prefix (e.g. v1-, v2-, v3-, v10-). */
+  static versionFromFilename(filename: string): string {
+    const match = filename.match(/^(v\d+)-/);
+    if (match) {
+      return match[1];
     }
     return 'mvp';
   }
