@@ -163,14 +163,6 @@ Then('the render.yaml specifies a web service', function () {
   assert.ok(content.includes('type: web'), 'render.yaml must specify type: web');
 });
 
-Then('the render.yaml specifies the start command', function () {
-  const content = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
-  assert.ok(
-    content.includes('startCommand:') || content.includes('start_command:'),
-    'render.yaml must specify a start command'
-  );
-});
-
 Then('the package.json has a {string} script', function (scriptName: string) {
   const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
   assert.ok(

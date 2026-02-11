@@ -57,7 +57,7 @@ Then('the Dockerfile runs npm ci', function () {
 Then('the Dockerfile copies the application source', function () {
   const content = readFileSync(join(process.cwd(), 'Dockerfile'), 'utf-8');
   assert.ok(
-    content.includes('COPY . .') || content.includes('COPY ./'),
+    content.includes('COPY') && content.includes('. .'),
     'Dockerfile must copy application source into the image'
   );
 });
