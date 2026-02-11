@@ -504,21 +504,23 @@ If you prefer to do it step by step:
 The `architecture-reviewer` subagent (`.opencode/agents/architecture-reviewer.md`) is a read-only reviewer that:
 
 - Reads the PR diff via `gh pr diff <number>`
+- Gets the HEAD commit SHA via `gh pr view <number> --json headRefOid`
 - Checks Clean Architecture boundary compliance
 - Checks code quality rules (complexity, depth, params, etc.)
 - Checks barrel exports, constructor injection, repository pattern
 - Checks for incomplete work markers and type safety bypasses
 - Checks test coverage for new code
-- Leaves specific, actionable comments on the PR via `gh pr review`
-- Approves if clean: `gh pr review <number> --approve`
+- Posts **inline comments on specific files and lines** via the GitHub REST API (`gh api repos/{owner}/{repo}/pulls/<number>/reviews`)
+- Groups all comments into a single review submission with `REQUEST_CHANGES` or `APPROVE`
+- Returns a structured summary with file paths, line numbers, and issue descriptions
 
-After the reviewer leaves comments, the build agent addresses each one:
+After the reviewer leaves inline comments, the LLM engineer addresses each one:
 
-1. Read the comment
+1. Read the inline comment (visible on the exact file/line in the PR)
 2. Make the code change
 3. Verify with `npm run lint && npm run test:unit`
 4. Commit: `fix(<scope>): address review -- <what>`
-5. Resolve the comment via `gh api`
+5. Resolve the review thread via `gh api`
 
 ## OpenCode Configuration
 
