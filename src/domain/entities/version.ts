@@ -39,6 +39,75 @@ export class Version {
     this.updated_at = props.updated_at ?? null;
   }
 
+  /**
+   * Phase-to-major mapping for version-derived progress.
+   * mvp = major 0, v1 = major 1, v2 = major 2.
+   */
+  private static readonly PHASE_MAJOR: Record<string, number> = {
+    mvp: 0,
+    v1: 1,
+    v2: 2,
+  };
+
+  /**
+   * Check whether a version tag is a recognised phase tag (mvp, v1, v2).
+   */
+  static isPhaseTag(tag: string): boolean {
+    return tag in Version.PHASE_MAJOR;
+  }
+
+  /**
+   * Derive phase progress from a node's current_version semver string.
+   *
+   * Each version tag (mvp, v1, v2) maps to a major version number.
+   * Progress = minor * 10 + patch (e.g. 0.7.5 = 75%).
+   * Completed phases (major > phase major) = 100%.
+   * Future phases (major < phase major) = 0%.
+   * Unrecognised tags (overview, v3, etc.) return 0.
+   */
+  static deriveProgress(currentVersion: string | null, versionTag: string): number {
+    if (!currentVersion) {
+      return 0;
+    }
+
+    const phaseMajor = Version.PHASE_MAJOR[versionTag];
+    if (phaseMajor === undefined) {
+      return 0;
+    }
+
+    const parts = currentVersion.split('.');
+    const major = parseInt(parts[0], 10);
+    const minor = parseInt(parts[1], 10);
+    const patch = parts.length > 2 ? parseInt(parts[2], 10) : 0;
+
+    if (isNaN(major) || isNaN(minor)) {
+      return 0;
+    }
+
+    if (major > phaseMajor) {
+      return 100;
+    }
+    if (major < phaseMajor) {
+      return 0;
+    }
+
+    return Math.min(minor * 10 + (isNaN(patch) ? 0 : patch), 100);
+  }
+
+  /**
+   * Derive status from a progress value.
+   * 0 = planned, 100 = complete, 1-99 = in-progress.
+   */
+  static deriveStatus(progress: number): VersionStatus {
+    if (progress <= 0) {
+      return 'planned';
+    }
+    if (progress >= 100) {
+      return 'complete';
+    }
+    return 'in-progress';
+  }
+
   isComplete(): boolean {
     return this.status === 'complete';
   }

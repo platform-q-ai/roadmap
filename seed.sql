@@ -105,7 +105,7 @@ ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, layer=excl
 
 -- ─── Standalone Apps ────────────────────────────────────────────────
 INSERT INTO nodes (id, name, type, layer, color, icon, description, tags, sort_order, current_version) VALUES
-('roadmap', 'Roadmap', 'app', NULL, 'cyan', '🗺', 'Living documentation for the Open Autonomous Runtime. Self-tracking component with progression tree, versioned specs, and Gherkin feature files. Built with Clean Architecture, TypeScript, SQLite, and Cytoscape.js.', '["self-tracking","clean architecture","bdd","progression tree"]', 1, '0.1.0')
+('roadmap', 'Roadmap', 'app', NULL, 'cyan', '🗺', 'Living documentation for the Open Autonomous Runtime. Self-tracking component with progression tree, versioned specs, and Gherkin feature files. Built with Clean Architecture, TypeScript, SQLite, and Cytoscape.js.', '["self-tracking","clean architecture","bdd","progression tree"]', 1, '0.7.5')
 ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, layer=excluded.layer, color=excluded.color, icon=excluded.icon, description=excluded.description, tags=excluded.tags, sort_order=excluded.sort_order, current_version=excluded.current_version;
 
 -- ─── BDD/TDD Pipeline Phases ─────────────────────────────────────────

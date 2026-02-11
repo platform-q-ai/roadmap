@@ -55,9 +55,9 @@ Feature: Component Version State
   # ─── Use Case: GetArchitecture includes version state ────
 
   Scenario: Exported architecture includes current_version and display state
-    Given a node "roadmap" with current_version "0.1.0" exists in the database
+    Given a node "roadmap" with current_version "0.7.5" exists in the database
     When I assemble the architecture
-    Then the enriched node "roadmap" should have current_version "0.1.0"
+    Then the enriched node "roadmap" should have current_version "0.7.5"
     And the enriched node "roadmap" should have display_state "MVP"
 
   Scenario: Exported architecture includes current_version null for Concept

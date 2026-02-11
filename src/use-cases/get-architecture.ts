@@ -1,8 +1,9 @@
-import type {
-  IEdgeRepository,
-  IFeatureRepository,
-  INodeRepository,
-  IVersionRepository,
+import {
+  type IEdgeRepository,
+  type IFeatureRepository,
+  type INodeRepository,
+  type IVersionRepository,
+  Version,
 } from '../domain/index.js';
 
 interface VersionSummary {
@@ -118,6 +119,27 @@ export class GetArchitecture {
     return index;
   }
 
+  private applyDerivedProgress(
+    versions: Record<string, VersionSummary>,
+    currentVersion: string | null
+  ): Record<string, VersionSummary> {
+    if (!currentVersion) {
+      return versions;
+    }
+
+    const result: Record<string, VersionSummary> = {};
+    for (const [tag, summary] of Object.entries(versions)) {
+      const derived = Version.deriveProgress(currentVersion, tag);
+      const isPhaseTag = derived > 0 || Version.isPhaseTag(tag);
+      if (isPhaseTag) {
+        result[tag] = { ...summary, progress: derived, status: Version.deriveStatus(derived) };
+      } else {
+        result[tag] = summary;
+      }
+    }
+    return result;
+  }
+
   private buildFeatureIndex(
     features: Array<{
       node_id: string;
@@ -167,22 +189,28 @@ export class GetArchitecture {
         }
       }
 
+      const nodeVersions = versionsByNode[n.id] || {};
+      const enrichedVersions = this.applyDerivedProgress(nodeVersions, n.current_version);
+
       return {
         ...n.toJSON(),
         display_state: n.displayState(),
-        versions: versionsByNode[n.id] || {},
+        versions: enrichedVersions,
         features: nodeFeatures,
       };
     });
 
     const layers = nodes.filter(n => n.isLayer());
-    const layerGroups = layers.map(layer => ({
-      ...layer.toJSON(),
-      display_state: layer.displayState(),
-      children: enrichedNodes.filter(n => n.layer === layer.id && n.type !== 'layer'),
-      versions: versionsByNode[layer.id] || {},
-      features: {} as Record<string, FeatureSummary[]>,
-    }));
+    const layerGroups = layers.map(layer => {
+      const layerVersions = versionsByNode[layer.id] || {};
+      return {
+        ...layer.toJSON(),
+        display_state: layer.displayState(),
+        children: enrichedNodes.filter(n => n.layer === layer.id && n.type !== 'layer'),
+        versions: this.applyDerivedProgress(layerVersions, layer.current_version),
+        features: {} as Record<string, FeatureSummary[]>,
+      };
+    });
 
     const relationships = edges.filter(e => !e.isContainment()).map(e => e.toJSON());
 
