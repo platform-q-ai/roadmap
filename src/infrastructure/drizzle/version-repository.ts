@@ -40,6 +40,9 @@ export class DrizzleVersionRepository implements IVersionRepository {
   }
 
   async save(version: Version): Promise<void> {
+    // Upsert updates content, progress, and status on conflict. This is correct
+    // for use-case callers (CreateComponent, explicit saves). Seed data uses
+    // seed.sql's ON CONFLICT which only updates content, preserving progress.
     this.db
       .insert(nodeVersionsTable)
       .values({
