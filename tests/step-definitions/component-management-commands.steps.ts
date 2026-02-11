@@ -16,8 +16,8 @@ import type { INodeRepository } from '../../src/domain/repositories/node-reposit
 import type { IVersionRepository } from '../../src/domain/repositories/version-repository.js';
 import { CreateComponent } from '../../src/use-cases/create-component.js';
 import { DeleteComponent } from '../../src/use-cases/delete-component.js';
-import type { ArchitectureData } from '../../src/use-cases/get-architecture.js';
 import { ExportArchitecture } from '../../src/use-cases/export-architecture.js';
+import type { ArchitectureData } from '../../src/use-cases/get-architecture.js';
 
 interface World {
   nodes: Node[];
@@ -37,17 +37,39 @@ interface World {
 }
 
 function initWorld(world: World) {
-  if (!world.nodes) world.nodes = [];
-  if (!world.edges) world.edges = [];
-  if (!world.versions) world.versions = [];
-  if (!world.features) world.features = [];
-  if (!world.savedNodes) world.savedNodes = [];
-  if (!world.savedEdges) world.savedEdges = [];
-  if (!world.savedVersions) world.savedVersions = [];
-  if (!world.deletedNodeIds) world.deletedNodeIds = [];
-  if (!world.deletedVersionNodeIds) world.deletedVersionNodeIds = [];
-  if (!world.deletedFeatureNodeIds) world.deletedFeatureNodeIds = [];
-  if (!world.deletedEdgeIds) world.deletedEdgeIds = [];
+  if (!world.nodes) {
+    world.nodes = [];
+  }
+  if (!world.edges) {
+    world.edges = [];
+  }
+  if (!world.versions) {
+    world.versions = [];
+  }
+  if (!world.features) {
+    world.features = [];
+  }
+  if (!world.savedNodes) {
+    world.savedNodes = [];
+  }
+  if (!world.savedEdges) {
+    world.savedEdges = [];
+  }
+  if (!world.savedVersions) {
+    world.savedVersions = [];
+  }
+  if (!world.deletedNodeIds) {
+    world.deletedNodeIds = [];
+  }
+  if (!world.deletedVersionNodeIds) {
+    world.deletedVersionNodeIds = [];
+  }
+  if (!world.deletedFeatureNodeIds) {
+    world.deletedFeatureNodeIds = [];
+  }
+  if (!world.deletedEdgeIds) {
+    world.deletedEdgeIds = [];
+  }
   world.error = null;
 }
 
@@ -110,7 +132,9 @@ function buildTrackingRepos(world: World) {
 Given(
   'a version {string} for component {string} with progress {int}',
   function (this: World, version: string, nodeId: string, progress: number) {
-    if (!this.versions) this.versions = [];
+    if (!this.versions) {
+      this.versions = [];
+    }
     this.versions.push(
       new Version({
         node_id: nodeId,
@@ -123,7 +147,9 @@ Given(
 );
 
 Given('a feature for component {string}', function (this: World, nodeId: string) {
-  if (!this.features) this.features = [];
+  if (!this.features) {
+    this.features = [];
+  }
   this.features.push(
     new Feature({
       node_id: nodeId,

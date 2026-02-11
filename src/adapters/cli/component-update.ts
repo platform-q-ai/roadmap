@@ -6,7 +6,6 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-import type { VersionStatus, VersionTag } from '../../domain/index.js';
 import {
   createConnection,
   SqliteNodeRepository,
@@ -40,7 +39,12 @@ const updateProgress = new UpdateProgress({
 });
 
 try {
-  await updateProgress.execute(nodeId, version as VersionTag, progress, status as VersionStatus);
+  await updateProgress.execute(
+    nodeId,
+    version as Parameters<typeof updateProgress.execute>[1],
+    progress,
+    status as Parameters<typeof updateProgress.execute>[3]
+  );
   console.log(`Updated ${nodeId}/${version}: progress=${progress}%, status=${status}`);
 } finally {
   db.close();
