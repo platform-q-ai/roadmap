@@ -227,6 +227,44 @@ Implement in order, respecting dependency rules:
 - Extract common patterns
 - Keep tests green throughout
 
+## PR Merge Gate (GitHub Actions)
+
+The `.github/workflows/pr-quality-gate.yml` workflow runs on every PR targeting `master`. Both jobs must pass before merging.
+
+### Quality Checks Job
+
+Reruns the full pre-commit pipeline in CI:
+
+```
+1. check:code-quality   Code quality script (6 checks)
+2. lint                  ESLint (includes boundary enforcement)
+3. format:check          Prettier formatting
+4. typecheck             TypeScript (tsc --noEmit)
+5. build:ts              Compile TypeScript
+6. test:unit             Vitest unit tests
+7. test:features         Cucumber BDD scenarios
+```
+
+### Unresolved Comments Job
+
+Queries the PR for unresolved review threads via the GitHub GraphQL API. If any thread is still open, the job fails and lists:
+
+- The file path
+- The comment author
+- The first 120 characters of the comment body
+
+This blocks merging until all review feedback is addressed.
+
+### Branch Protection (Manual Setup)
+
+To enforce these checks, enable branch protection on `master` in GitHub:
+
+1. **Settings > Branches > Add rule** for `master`
+2. Enable **Require status checks to pass before merging**
+3. Add required checks: `Quality Checks` and `Unresolved Review Comments`
+4. Enable **Require conversation resolution before merging** (belt and suspenders)
+5. Optionally enable **Require approvals**
+
 ## Pre-Commit Pipeline
 
 Pre-commit hooks run automatically on `git commit` via Husky:

@@ -1,0 +1,129 @@
+name: PR Quality Gate
+
+on:
+  pull_request:
+    branches: [master]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.event.pull_request_review.pull_request_url }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  quality-checks:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Code quality script
+        run: npm run check:code-quality
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build TypeScript
+        run: npm run build:ts
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: BDD feature tests
+        run: npm run test:features
+
+  unresolved-comments:
+    name: Unresolved Review Comments
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for unresolved review comments
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Checking for unresolved review comments on PR #${PR_NUMBER}..."
+
+          # Get all review comments (line-level comments on diffs)
+          REVIEW_COMMENTS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
+            --paginate --jq '[.[] | select(.position != null or .line != null)]')
+
+          UNRESOLVED_THREADS=0
+          UNRESOLVED_DETAILS=""
+
+          # Get review threads via GraphQL to check resolved state
+          QUERY='query($owner:String!, $repo:String!, $pr:Int!) {
+            repository(owner:$owner, name:$repo) {
+              pullRequest(number:$pr) {
+                reviewThreads(first:100) {
+                  nodes {
+                    isResolved
+                    comments(first:1) {
+                      nodes {
+                        body
+                        author { login }
+                        path
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }'
+
+          OWNER=$(echo "$REPO" | cut -d'/' -f1)
+          REPO_NAME=$(echo "$REPO" | cut -d'/' -f2)
+
+          RESULT=$(gh api graphql -f query="$QUERY" \
+            -f owner="$OWNER" -f repo="$REPO_NAME" -F pr="$PR_NUMBER" 2>/dev/null || echo "GRAPHQL_FAILED")
+
+          if [ "$RESULT" = "GRAPHQL_FAILED" ]; then
+            echo "GraphQL query failed, falling back to REST API check..."
+
+            # Fallback: check review states for any CHANGES_REQUESTED
+            REVIEWS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
+              --jq '[.[] | select(.state == "CHANGES_REQUESTED")] | length')
+
+            if [ "$REVIEWS" -gt 0 ]; then
+              echo ""
+              echo "::error::Found ${REVIEWS} review(s) requesting changes. Address all review feedback before merging."
+              exit 1
+            fi
+
+            echo "No reviews requesting changes found."
+            exit 0
+          fi
+
+          UNRESOLVED_THREADS=$(echo "$RESULT" | jq '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)] | length')
+
+          if [ "$UNRESOLVED_THREADS" -gt 0 ]; then
+            echo ""
+            echo "========================================"
+            echo " UNRESOLVED REVIEW THREADS: ${UNRESOLVED_THREADS}"
+            echo "========================================"
+            echo ""
+
+            echo "$RESULT" | jq -r '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | .comments.nodes[0] | "  File: \(.path)\n  Author: \(.author.login)\n  Comment: \(.body[0:120])...\n"'
+
+            echo "::error::${UNRESOLVED_THREADS} unresolved review thread(s) found. Resolve all comments before merging."
+            exit 1
+          fi
+
+          echo "All review threads are resolved."
