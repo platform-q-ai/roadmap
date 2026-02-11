@@ -159,8 +159,8 @@ if [ -n "$THROW_NOT_IMPL" ]; then
   ERRORS_FOUND=1
 fi
 
-# 2f: Console.log in source (allow in CLI adapters which are entry points)
-CONSOLE_LOG=$(grep -rniE $EXCLUDE_ARGS "console\.log\(" src 2>/dev/null | grep -v "src/adapters/cli/" || true)
+# 2f: Console.log in source (allow in adapter entry points: CLI and API)
+CONSOLE_LOG=$(grep -rniE $EXCLUDE_ARGS "console\.log\(" src 2>/dev/null | grep -v "src/adapters/cli/" | grep -v "src/adapters/api/" || true)
 if [ -n "$CONSOLE_LOG" ]; then
   echo -e "${RED}❌ Found console.log (use console.error or a proper logger):${NC}"
   echo "$CONSOLE_LOG"

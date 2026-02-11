@@ -11,6 +11,7 @@
     "build:ts": "tsc && tsc-alias",
     "build": "npm run build:ts && npm run build:data",
     "serve": "python3 -m http.server 8080 --directory web",
+    "serve:api": "tsx src/adapters/api/start.ts",
     "test": "npm run test:unit && npm run test:features",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",

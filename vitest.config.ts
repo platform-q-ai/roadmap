@@ -10,7 +10,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
-      exclude: ['src/adapters/cli/**'],
+      exclude: ['src/adapters/cli/**', 'src/adapters/api/start.ts'],
       thresholds: {
         statements: 80,
         branches: 80,
