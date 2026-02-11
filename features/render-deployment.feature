@@ -39,9 +39,8 @@ Feature: Render Deployment
     Given the project source directory
     Then a file "render.yaml" exists in the project
     And the render.yaml specifies a web service
-    And the render.yaml specifies the build command
+    And the render.yaml specifies the Docker runtime
     And the render.yaml specifies the start command
-    And the render.yaml specifies the Node.js environment
 
   # ── Production Start ─────────────────────────────────────────────────
 

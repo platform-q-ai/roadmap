@@ -163,27 +163,11 @@ Then('the render.yaml specifies a web service', function () {
   assert.ok(content.includes('type: web'), 'render.yaml must specify type: web');
 });
 
-Then('the render.yaml specifies the build command', function () {
-  const content = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
-  assert.ok(
-    content.includes('buildCommand:') || content.includes('build_command:'),
-    'render.yaml must specify a build command'
-  );
-});
-
 Then('the render.yaml specifies the start command', function () {
   const content = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
   assert.ok(
     content.includes('startCommand:') || content.includes('start_command:'),
     'render.yaml must specify a start command'
-  );
-});
-
-Then('the render.yaml specifies the Node.js environment', function () {
-  const content = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
-  assert.ok(
-    content.includes('node') || content.includes('Node'),
-    'render.yaml must specify Node.js'
   );
 });
 
