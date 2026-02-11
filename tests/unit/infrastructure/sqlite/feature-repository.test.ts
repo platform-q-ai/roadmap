@@ -89,6 +89,27 @@ describe('SqliteFeatureRepository', () => {
     expect(all).toHaveLength(0);
   });
 
+  it('deletes a single feature by node and filename', async () => {
+    await featureRepo.save(
+      new Feature({ node_id: 'comp-1', version: 'mvp', filename: 'a.feature', title: 'A' })
+    );
+    await featureRepo.save(
+      new Feature({ node_id: 'comp-1', version: 'v1', filename: 'b.feature', title: 'B' })
+    );
+
+    const deleted = await featureRepo.deleteByNodeAndFilename('comp-1', 'a.feature');
+    expect(deleted).toBe(true);
+
+    const remaining = await featureRepo.findByNode('comp-1');
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].filename).toBe('b.feature');
+  });
+
+  it('returns false when deleting nonexistent feature by node and filename', async () => {
+    const deleted = await featureRepo.deleteByNodeAndFilename('comp-1', 'ghost.feature');
+    expect(deleted).toBe(false);
+  });
+
   it('deletes features by node', async () => {
     await featureRepo.save(
       new Feature({ node_id: 'comp-1', version: 'mvp', filename: 'a.feature', title: 'A' })

@@ -387,6 +387,72 @@ describe('API Routes', () => {
     });
   });
 
+  describe('DELETE /api/components/:id/features/:filename', () => {
+    it('deletes a feature and returns 204', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'DELETE',
+          '/api/components/comp-a/features/mvp-test.feature'
+        );
+        expect(res.status).toBe(204);
+      });
+    });
+
+    it('returns 404 for nonexistent component', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'DELETE',
+          '/api/components/ghost/features/mvp-test.feature'
+        );
+        expect(res.status).toBe(404);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('returns 404 for nonexistent feature file', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'DELETE',
+          '/api/components/comp-a/features/mvp-missing.feature'
+        );
+        expect(res.status).toBe(404);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('does not affect other features for the same component', async () => {
+      const data = seedData();
+      data.features.push(
+        new Feature({
+          node_id: 'comp-a',
+          version: 'v1',
+          filename: 'v1-other.feature',
+          title: 'Other',
+          content: 'Feature: Other',
+        })
+      );
+      const repos = buildTestRepos(data);
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'DELETE',
+          '/api/components/comp-a/features/mvp-test.feature'
+        );
+        expect(res.status).toBe(204);
+        const listRes = await request(server, 'GET', '/api/components/comp-a/features');
+        const features = listRes.body as Array<Record<string, unknown>>;
+        expect(features).toHaveLength(1);
+        expect(features[0].filename).toBe('v1-other.feature');
+      });
+    });
+  });
+
   describe('Unknown routes', () => {
     it('returns 404 for unknown paths', async () => {
       const repos = buildTestRepos(seedData());
