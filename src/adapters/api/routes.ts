@@ -106,9 +106,14 @@ function handleHealth(_req: IncomingMessage, res: ServerResponse) {
   json(res, 200, { status: 'ok' });
 }
 
-async function handleGetArchitecture(deps: ApiDeps, _req: IncomingMessage, res: ServerResponse) {
+async function handleGetArchitecture(
+  deps: ApiDeps,
+  _req: IncomingMessage,
+  res: ServerResponse,
+  packageVersion?: string
+) {
   const uc = new GetArchitecture(deps);
-  const data = await uc.execute();
+  const data = await uc.execute({ packageVersion });
   json(res, 200, data);
 }
 
@@ -251,7 +256,11 @@ async function handleGetDependencies(deps: ApiDeps, res: ServerResponse, id: str
 
 // ─── Route table ────────────────────────────────────────────────────
 
-export function buildRoutes(deps: ApiDeps): Route[] {
+interface RouteOptions {
+  packageVersion?: string;
+}
+
+export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
   return [
     {
       method: 'GET',
@@ -261,7 +270,7 @@ export function buildRoutes(deps: ApiDeps): Route[] {
     {
       method: 'GET',
       pattern: /^\/api\/architecture$/,
-      handler: async (req, res) => handleGetArchitecture(deps, req, res),
+      handler: async (req, res) => handleGetArchitecture(deps, req, res, options?.packageVersion),
     },
     {
       method: 'GET',

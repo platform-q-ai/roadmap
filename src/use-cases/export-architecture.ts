@@ -5,7 +5,7 @@ import type {
   IVersionRepository,
 } from '../domain/index.js';
 
-import type { ArchitectureData } from './get-architecture.js';
+import type { ArchitectureData, ExecuteOptions } from './get-architecture.js';
 import { GetArchitecture } from './get-architecture.js';
 
 type WriteJsonFn = (path: string, data: ArchitectureData) => Promise<void>;
@@ -33,8 +33,11 @@ export class ExportArchitecture {
     this.writeJson = writeJson;
   }
 
-  async execute(outputPath: string): Promise<{ stats: ArchitectureData['stats'] }> {
-    const data = await this.getArchitecture.execute();
+  async execute(
+    outputPath: string,
+    options?: ExecuteOptions
+  ): Promise<{ stats: ArchitectureData['stats'] }> {
+    const data = await this.getArchitecture.execute(options);
     await this.writeJson(outputPath, data);
     return { stats: data.stats };
   }
