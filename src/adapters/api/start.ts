@@ -20,18 +20,24 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..', '..');
 const DB_PATH = process.env.DB_PATH ?? join(ROOT, 'db', 'architecture.db');
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
+const WEB_DIR = join(ROOT, 'web');
 
 const db = createDrizzleConnection(DB_PATH);
 
-const server = createApp({
-  nodeRepo: new DrizzleNodeRepository(db),
-  edgeRepo: new DrizzleEdgeRepository(db),
-  versionRepo: new DrizzleVersionRepository(db),
-  featureRepo: new DrizzleFeatureRepository(db),
-});
+const server = createApp(
+  {
+    nodeRepo: new DrizzleNodeRepository(db),
+    edgeRepo: new DrizzleEdgeRepository(db),
+    versionRepo: new DrizzleVersionRepository(db),
+    featureRepo: new DrizzleFeatureRepository(db),
+  },
+  { staticDir: WEB_DIR }
+);
 
 server.listen(PORT, () => {
   console.log(`API server listening on port ${PORT}`);
   console.log(`  Database: ${DB_PATH}`);
+  console.log(`  Static:   ${WEB_DIR}`);
   console.log(`  Health:   http://localhost:${PORT}/api/health`);
+  console.log(`  Web view: http://localhost:${PORT}/`);
 });
