@@ -1,3 +1,4 @@
+import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -14,8 +15,8 @@ describe('Package version sync: seed.sql', () => {
       /INSERT INTO nodes[^;]*\('roadmap'[^)]*\)[^;]*ON CONFLICT/gs
     );
 
-    expect(roadmapMatch).not.toBeNull();
-    const insertBlock = roadmapMatch![0];
+    assert.ok(roadmapMatch, 'Expected roadmap INSERT in seed.sql');
+    const insertBlock = roadmapMatch[0];
 
     // The roadmap INSERT should NOT contain a semver string as current_version
     expect(insertBlock).not.toMatch(/'\d+\.\d+\.\d+'/);

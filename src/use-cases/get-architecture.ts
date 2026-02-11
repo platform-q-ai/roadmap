@@ -69,6 +69,9 @@ export interface ArchitectureData {
   };
 }
 
+/** The self-tracking node whose current_version is synced from package.json. */
+const SELF_TRACKING_NODE_ID = 'roadmap';
+
 export interface ExecuteOptions {
   packageVersion?: string;
 }
@@ -166,7 +169,7 @@ export class GetArchitecture {
   }
 
   private applyPackageVersion(node: Node, packageVersion?: string): Node {
-    if (!packageVersion || node.id !== 'roadmap') {
+    if (!packageVersion || node.id !== SELF_TRACKING_NODE_ID) {
       return node;
     }
     return new Node({ ...node.toJSON(), tags: node.tags, current_version: packageVersion });
