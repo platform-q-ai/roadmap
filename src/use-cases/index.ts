@@ -1,6 +1,7 @@
 export type { CreateComponentInput } from './create-component.js';
 export { CreateComponent } from './create-component.js';
 export { DeleteComponent } from './delete-component.js';
+export { DeleteFeature } from './delete-feature.js';
 export { ExportArchitecture } from './export-architecture.js';
 export type { ArchitectureData, EnrichedNode, ProgressionTree } from './get-architecture.js';
 export { GetArchitecture } from './get-architecture.js';

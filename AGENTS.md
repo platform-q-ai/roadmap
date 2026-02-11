@@ -242,7 +242,7 @@ Reruns the full pre-commit pipeline in CI:
 3. format:check          Prettier formatting
 4. typecheck             TypeScript (tsc --noEmit)
 5. build:ts              Compile TypeScript
-6. test:coverage         Vitest unit tests with 80% coverage thresholds
+6. test:coverage         Vitest unit tests with 90% coverage thresholds
 7. test:features         Cucumber BDD scenarios
 ```
 
@@ -276,7 +276,7 @@ Pre-commit hooks run automatically on `git commit` via Husky:
 3. format:check          Prettier formatting
 4. typecheck             TypeScript (tsc --noEmit)
 5. build:ts              Compile TypeScript
-6. test:coverage         Vitest unit tests with 80% coverage thresholds
+6. test:coverage         Vitest unit tests with 90% coverage thresholds
 7. test:features         Cucumber BDD scenarios
 ```
 
@@ -318,7 +318,7 @@ Before committing, ensure:
 - [ ] `npm run format:check` shows no formatting issues
 - [ ] `npm run typecheck` passes with no type errors
 - [ ] `npm run build:ts` compiles successfully
-- [ ] `npm run test:coverage` all unit tests pass with 80% coverage
+- [ ] `npm run test:coverage` all unit tests pass with 90% coverage
 - [ ] `npm run test:features` all BDD scenarios pass
 - [ ] No secrets or credentials in staged files
 - [ ] Commit message follows conventional format
@@ -442,6 +442,80 @@ features(id INT PK, node_id FK, version, filename, title, content, updated_at)
 
 Edge types: `CONTAINS`, `CONTROLS`, `DEPENDS_ON`, `READS_FROM`, `WRITES_TO`, `DISPATCHES_TO`, `ESCALATES_TO`, `PROXIES`, `SANITISES`, `GATES`, `SEQUENCE`.
 
+## REST API
+
+The API server runs at `https://roadmap-5vvp.onrender.com` (production) or locally via `npm run serve`.
+
+All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /features/:filename` which accepts raw Gherkin text).
+
+### Endpoints
+
+| Method | Path | Description | Success | Errors |
+|--------|------|-------------|---------|--------|
+| `GET` | `/api/health` | Health check | `200 { status: "ok" }` | — |
+| `GET` | `/api/architecture` | Full architecture graph (layers, nodes, edges, progression_tree, stats) | `200` | — |
+| `GET` | `/api/components` | List all non-layer nodes | `200 [...]` | — |
+| `GET` | `/api/components/:id` | Get component with versions and features | `200` | `404` not found |
+| `POST` | `/api/components` | Create a new component | `201` | `400` invalid, `409` duplicate |
+| `DELETE` | `/api/components/:id` | Delete component + versions, features, edges | `204` | `404` not found |
+| `GET` | `/api/components/:id/features` | List features for a component | `200 [...]` | `404` component not found |
+| `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (body = raw Gherkin text) | `200` | `404` component not found |
+| `DELETE` | `/api/components/:id/features/:filename` | Delete a single feature file | `204` | `404` not found |
+| `GET` | `/api/components/:id/edges` | Get inbound and outbound edges | `200 { inbound, outbound }` | `404` component not found |
+| `GET` | `/api/components/:id/dependencies` | Get DEPENDS_ON edges (dependencies + dependents) | `200 { dependencies, dependents }` | `404` component not found |
+
+### POST /api/components body
+
+```json
+{
+  "id": "my-service",
+  "name": "My Service",
+  "type": "component",
+  "layer": "supervisor-layer",
+  "description": "Optional description",
+  "tags": ["optional", "tags"]
+}
+```
+
+Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
+
+### curl examples
+
+```bash
+# List components
+curl https://roadmap-5vvp.onrender.com/api/components
+
+# Get component details
+curl https://roadmap-5vvp.onrender.com/api/components/worker
+
+# Create a component
+curl -X POST https://roadmap-5vvp.onrender.com/api/components \
+  -H "Content-Type: application/json" \
+  -d '{"id":"my-svc","name":"My Service","type":"component","layer":"supervisor-layer"}'
+
+# Delete a component
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/my-svc
+
+# List features
+curl https://roadmap-5vvp.onrender.com/api/components/worker/features
+
+# Upload a feature file
+curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp-exec.feature \
+  --data-binary @components/worker/features/mvp-exec.feature
+
+# Delete a feature file
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp-exec.feature
+
+# Get edges
+curl https://roadmap-5vvp.onrender.com/api/components/worker/edges
+
+# Get dependencies
+curl https://roadmap-5vvp.onrender.com/api/components/worker/dependencies
+
+# Full architecture export
+curl https://roadmap-5vvp.onrender.com/api/architecture
+```
+
 ## Adding New Features (BDD Workflow)
 
 1. Create `features/new-feature.feature` with Gherkin scenarios
@@ -535,6 +609,8 @@ After the reviewer leaves inline comments, the LLM engineer addresses each one:
 |---------|----------|---------|
 | `/bdd` | `.opencode/commands/bdd.md` | Full BDD red-to-green TDD workflow with enforced phases |
 | `/ship` | `.opencode/commands/ship.md` | Full delivery pipeline: commit, push, PR, review, fix |
+
+Component and feature management is done via the REST API (see [REST API](#rest-api) section above). There are no separate slash commands for CRUD operations — the API endpoints table and curl examples serve as the reference.
 
 ### File Roles (OpenCode)
 

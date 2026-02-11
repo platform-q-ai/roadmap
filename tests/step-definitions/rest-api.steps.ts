@@ -81,6 +81,11 @@ function buildApiRepos(world: ApiWorld) {
     deleteByNode: async (nid: string) => {
       world.features = world.features.filter(f => f.node_id !== nid);
     },
+    deleteByNodeAndFilename: async (nid: string, filename: string) => {
+      const before = world.features.length;
+      world.features = world.features.filter(f => !(f.node_id === nid && f.filename === filename));
+      return world.features.length < before;
+    },
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

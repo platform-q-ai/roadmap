@@ -107,7 +107,7 @@ No commit for this phase — it's a verification step only.
 ### Phase 8: Pre-Commit Verification
 
 - Run the full pre-commit pipeline: `npm run pre-commit`
-- This runs all 7 stages: code quality (12 checks), lint, format, typecheck, build, coverage (80% thresholds), BDD features
+- This runs all 7 stages: code quality (12 checks), lint, format, typecheck, build, coverage (90% thresholds), BDD features
 - Fix any issues that arise and re-run until clean
 - Once clean, create the final commit WITH hooks (no `--no-verify`):
   `git add -A && git commit -m "feat(<scope>): <feature description>"`

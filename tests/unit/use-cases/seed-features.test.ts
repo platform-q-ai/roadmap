@@ -29,6 +29,7 @@ function createMockRepos(existingNodeIds: string[]) {
       deleteAllCalled = true;
     }),
     deleteByNode: vi.fn(),
+    deleteByNodeAndFilename: vi.fn(),
   };
 
   return {

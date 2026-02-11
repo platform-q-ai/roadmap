@@ -4,15 +4,6 @@ import { join } from 'node:path';
 
 import { Given, Then } from '@cucumber/cucumber';
 
-const RENDER_BASE_URL = 'https://roadmap-5vvp.onrender.com';
-
-const COMPONENT_COMMANDS = [
-  'component-create.md',
-  'component-delete.md',
-  'component-update.md',
-  'component-publish.md',
-];
-
 interface RenderApiWorld {
   readmeContent: string | null;
   [key: string]: unknown;
@@ -25,39 +16,6 @@ Given('the project README file', function (this: RenderApiWorld) {
   assert.ok(existsSync(readmePath), 'README.md does not exist');
   this.readmeContent = readFileSync(readmePath, 'utf-8');
 });
-
-// ─── Then (Commands use Render production URL) ──────────────────────
-
-Then(
-  'every component command file references the Render production URL',
-  function (this: RenderApiWorld) {
-    const violations: string[] = [];
-    for (const cmd of COMPONENT_COMMANDS) {
-      const filePath = join(process.cwd(), '.opencode', 'commands', cmd);
-      const content = readFileSync(filePath, 'utf-8');
-      if (!content.includes(RENDER_BASE_URL)) {
-        violations.push(cmd);
-      }
-    }
-    assert.equal(
-      violations.length,
-      0,
-      `These command files do not reference the Render production URL: ${violations.join(', ')}`
-    );
-  }
-);
-
-Then(
-  'the command file {string} contains the Render base URL in curl examples',
-  function (this: RenderApiWorld, filename: string) {
-    const filePath = join(process.cwd(), '.opencode', 'commands', filename);
-    const content = readFileSync(filePath, 'utf-8');
-    assert.ok(
-      content.includes('curl') && content.includes(RENDER_BASE_URL),
-      `Command ${filename} curl examples must use the Render base URL "${RENDER_BASE_URL}"`
-    );
-  }
-);
 
 // ─── Then (README) ──────────────────────────────────────────────────
 

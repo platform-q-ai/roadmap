@@ -45,20 +45,20 @@ describe('Pre-commit pipeline', () => {
 describe('Coverage thresholds', () => {
   const vitestConfig = readFile('vitest.config.ts');
 
-  it('should enforce 80% statements', () => {
-    expect(vitestConfig).toMatch(/statements\s*:\s*80/);
+  it('should enforce 90% statements', () => {
+    expect(vitestConfig).toMatch(/statements\s*:\s*90/);
   });
 
-  it('should enforce 80% branches', () => {
-    expect(vitestConfig).toMatch(/branches\s*:\s*80/);
+  it('should enforce 90% branches', () => {
+    expect(vitestConfig).toMatch(/branches\s*:\s*90/);
   });
 
-  it('should enforce 80% functions', () => {
-    expect(vitestConfig).toMatch(/functions\s*:\s*80/);
+  it('should enforce 90% functions', () => {
+    expect(vitestConfig).toMatch(/functions\s*:\s*90/);
   });
 
-  it('should enforce 80% lines', () => {
-    expect(vitestConfig).toMatch(/lines\s*:\s*80/);
+  it('should enforce 90% lines', () => {
+    expect(vitestConfig).toMatch(/lines\s*:\s*90/);
   });
 
   it('should exclude CLI adapter entry points', () => {

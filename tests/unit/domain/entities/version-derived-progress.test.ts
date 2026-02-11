@@ -108,6 +108,14 @@ describe('Version.deriveProgress', () => {
     it('returns 0 for unrecognised version tags', () => {
       expect(Version.deriveProgress('1.5.0', 'v3')).toBe(0);
     });
+
+    it('returns 0 for non-numeric version strings', () => {
+      expect(Version.deriveProgress('abc.def', 'mvp')).toBe(0);
+    });
+
+    it('treats non-numeric patch as 0', () => {
+      expect(Version.deriveProgress('0.5.abc', 'mvp')).toBe(50);
+    });
   });
 });
 

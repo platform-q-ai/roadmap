@@ -11,6 +11,7 @@ import type {
 import {
   CreateComponent,
   DeleteComponent,
+  DeleteFeature,
   GetArchitecture,
   UploadFeature,
 } from '../../use-cases/index.js';
@@ -205,6 +206,22 @@ async function handleUploadFeature(
   }
 }
 
+async function handleDeleteFeature(
+  deps: ApiDeps,
+  res: ServerResponse,
+  params: { nodeId: string; filename: string }
+) {
+  const uc = new DeleteFeature({ featureRepo: deps.featureRepo, nodeRepo: deps.nodeRepo });
+  try {
+    await uc.execute(params.nodeId, params.filename);
+    res.writeHead(204);
+    res.end();
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg });
+  }
+}
+
 async function handleGetEdges(deps: ApiDeps, res: ServerResponse, id: string) {
   const node = await deps.nodeRepo.findById(id);
   if (!node) {
@@ -276,6 +293,12 @@ export function buildRoutes(deps: ApiDeps): Route[] {
       pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
       handler: async (req, res, m) =>
         handleUploadFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
+    },
+    {
+      method: 'DELETE',
+      pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
+      handler: async (_req, res, m) =>
+        handleDeleteFeature(deps, res, { nodeId: m[1], filename: m[2] }),
     },
     {
       method: 'GET',

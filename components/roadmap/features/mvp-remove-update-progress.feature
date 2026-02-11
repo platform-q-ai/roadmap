@@ -55,10 +55,9 @@ Feature: Remove manual updateProgress in favour of derived progress
     Given the project has an .opencode/commands directory
     Then no file "component-progress.md" exists in .opencode/commands
 
-  Scenario: component-update command does not reference PATCH progress
+  Scenario: component-update command file has been removed
     Given the project has an .opencode/commands directory
-    Then the command file "component-update.md" does not contain "PATCH"
-    And the command file "component-update.md" does not contain "/progress"
+    Then no file "component-update.md" exists in .opencode/commands
 
   # ── Derived progress remains intact ─────────────────────────────────
 

@@ -7,4 +7,5 @@ export interface IFeatureRepository {
   save(feature: Feature): Promise<void>;
   deleteAll(): Promise<void>;
   deleteByNode(nodeId: string): Promise<void>;
+  deleteByNodeAndFilename(nodeId: string, filename: string): Promise<boolean>;
 }

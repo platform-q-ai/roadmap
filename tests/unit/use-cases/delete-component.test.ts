@@ -50,6 +50,7 @@ function createMockRepos(existingNodes: Node[] = [], existingEdges: Edge[] = [])
     save: vi.fn(),
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),
+    deleteByNodeAndFilename: vi.fn(),
   };
 
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };

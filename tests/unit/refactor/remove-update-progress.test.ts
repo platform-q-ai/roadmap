@@ -78,20 +78,8 @@ describe('Remove updateProgress: OpenCode commands', () => {
     expect(existsSync(join(ROOT, '.opencode', 'commands', 'component-progress.md'))).toBe(false);
   });
 
-  it('component-update.md does not reference PATCH', () => {
-    const content = readFileSync(
-      join(ROOT, '.opencode', 'commands', 'component-update.md'),
-      'utf-8'
-    );
-    expect(content).not.toContain('PATCH');
-  });
-
-  it('component-update.md does not reference /progress', () => {
-    const content = readFileSync(
-      join(ROOT, '.opencode', 'commands', 'component-update.md'),
-      'utf-8'
-    );
-    expect(content).not.toContain('/progress');
+  it('component-update.md does not exist (removed in favour of AGENTS.md API docs)', () => {
+    expect(existsSync(join(ROOT, '.opencode', 'commands', 'component-update.md'))).toBe(false);
   });
 });
 

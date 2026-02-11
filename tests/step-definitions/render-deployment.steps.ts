@@ -58,6 +58,7 @@ function buildStubRepos() {
     save: async () => {},
     deleteAll: async () => {},
     deleteByNode: async () => {},
+    deleteByNodeAndFilename: async () => false,
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
