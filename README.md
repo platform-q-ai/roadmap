@@ -88,7 +88,7 @@ roadmap/
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (27 endpoints + static files)
+│       ├── api/                # REST API server (28 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -168,7 +168,8 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `GET` | `/api/components/:id/features` | List features for a component | `200` | `404` |
 | `GET` | `/api/components/:id/versions/:ver/features` | List features for a specific version (with totals) | `200` | `404` |
 | `GET` | `/api/components/:id/versions/:ver/features/:filename` | Get single feature (JSON or `text/plain` via Accept header) | `200` | `404` |
-| `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (raw Gherkin body) | `200` | `404` |
+| `PUT` | `/api/components/:id/versions/:ver/features/:filename` | Upload/replace a feature file with explicit version (raw Gherkin body) | `200` | `400` `404` |
+| `PUT` | `/api/components/:id/features/:filename` | **Deprecated** — returns 400 directing to version-scoped URL | `—` | `400` |
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a feature file | `204` | `404` |
 | `DELETE` | `/api/components/:id/versions/:ver/features/:filename` | Delete a single feature by version and filename | `204` | `404` |
 | `DELETE` | `/api/components/:id/versions/:ver/features` | Delete all features for a specific version | `204` | `404` |
@@ -209,12 +210,14 @@ curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/my-svc \
 
 Updatable fields: `name` (non-empty string), `description` (string), `tags` (string array, max 50), `sort_order` (number), `current_version` (semver string, e.g. `"0.7.5"`). Only supplied fields are changed; unmentioned fields are preserved. When `current_version` changes, all phase version records are automatically recalculated. All string inputs are HTML-sanitized. The `200` response returns the full updated node object.
 
-### Example: Upload a feature file
+### Example: Upload a feature file (version-scoped)
 
 ```bash
-curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp-exec.feature \
+curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/versions/mvp/features/mvp-exec.feature \
   --data-binary @components/worker/features/mvp-task-execution.feature
 ```
+
+The response includes `filename`, `version`, `title`, `node_id`, `step_count`, `scenario_count`, `given_count`, `when_count`, and `then_count`. The version must be `mvp`, `v1`, `v2`, etc. The old URL pattern (`PUT /api/components/:id/features/:filename`) now returns `400` directing callers to the version-scoped URL.
 
 ### Example: List features by version
 
@@ -322,7 +325,7 @@ npm run export
 Or use the API:
 
 ```bash
-curl -X PUT https://roadmap-5vvp.onrender.com/api/components/supervisor/features/mvp-health-api.feature \
+curl -X PUT https://roadmap-5vvp.onrender.com/api/components/supervisor/versions/mvp/features/mvp-health-api.feature \
   --data-binary @components/supervisor/features/mvp-health-api.feature
 ```
 
