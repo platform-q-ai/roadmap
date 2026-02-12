@@ -42,6 +42,14 @@ export function parseSeedEntries(raw: string): GenerateApiKeyInput[] {
   });
 }
 
+function maskKey(plaintext: string): string {
+  const body = plaintext.slice('rmap_'.length);
+  if (body.length <= 12) {
+    return 'rmap_******';
+  }
+  return `rmap_${body.slice(0, 6)}...${body.slice(-6)}`;
+}
+
 export async function seedApiKeys(deps: SeedApiKeysDeps): Promise<void> {
   if (!deps.rawEnv) {
     return;
@@ -50,7 +58,8 @@ export async function seedApiKeys(deps: SeedApiKeysDeps): Promise<void> {
   for (const entry of entries) {
     try {
       const result = await deps.generate.execute(entry);
-      deps.log(`  Seeded key "${entry.name}": ${result.plaintext}`);
+      const displayed = entry.plaintext ? maskKey(result.plaintext) : result.plaintext;
+      deps.log(`  Seeded key "${entry.name}": ${displayed}`);
     } catch (err: unknown) {
       if (err instanceof ValidationError && /already exists/i.test(err.message)) {
         // Key already exists — skip silently (idempotent)

@@ -174,6 +174,53 @@ describe('seedApiKeys', () => {
     });
   });
 
+  it('masks deterministic key in log output', async () => {
+    const generate = {
+      execute: vi.fn().mockResolvedValue({ plaintext: 'rmap_abcdef1234567890abcdef1234567890' }),
+    };
+    const log = vi.fn();
+    const rawEnv = JSON.stringify([
+      { name: 'det', scopes: ['read'], key: 'rmap_abcdef1234567890abcdef1234567890' },
+    ]);
+
+    await seedApiKeys({ rawEnv, generate, log });
+
+    expect(log).toHaveBeenCalledTimes(1);
+    const logMsg = log.mock.calls[0][0] as string;
+    expect(logMsg).toContain('"det"');
+    expect(logMsg).not.toContain('rmap_abcdef1234567890abcdef1234567890');
+    expect(logMsg).toMatch(/rmap_abcdef\.\.\.567890/);
+  });
+
+  it('masks short deterministic key with asterisks', async () => {
+    const generate = {
+      execute: vi.fn().mockResolvedValue({ plaintext: 'rmap_short' }),
+    };
+    const log = vi.fn();
+    const rawEnv = JSON.stringify([{ name: 'short', scopes: ['read'], key: 'rmap_short' }]);
+
+    await seedApiKeys({ rawEnv, generate, log });
+
+    expect(log).toHaveBeenCalledTimes(1);
+    const logMsg = log.mock.calls[0][0] as string;
+    expect(logMsg).toContain('rmap_******');
+    expect(logMsg).not.toContain('rmap_short');
+  });
+
+  it('shows full plaintext in log for random keys', async () => {
+    const generate = {
+      execute: vi.fn().mockResolvedValue({ plaintext: 'rmap_random_key_full_value' }),
+    };
+    const log = vi.fn();
+    const rawEnv = JSON.stringify([{ name: 'rnd', scopes: ['read'] }]);
+
+    await seedApiKeys({ rawEnv, generate, log });
+
+    expect(log).toHaveBeenCalledTimes(1);
+    const logMsg = log.mock.calls[0][0] as string;
+    expect(logMsg).toContain('rmap_random_key_full_value');
+  });
+
   it('rejects seed entries with invalid key format', async () => {
     const generate = {
       execute: vi.fn().mockRejectedValue(new Error('Key must start with rmap_')),

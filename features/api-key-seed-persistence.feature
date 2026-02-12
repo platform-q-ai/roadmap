@@ -63,6 +63,28 @@ Feature: API key seed persistence across deploys
     Then "fixed-one" validates against "rmap_fixed_one_aabbccdd"
     And "random-one" has a generated key starting with "rmap_"
 
+  # ── Log masking ─────────────────────────────────────────────────
+
+  Scenario: Deterministic key is masked in seed logs
+    Given an API_KEY_SEED entry with name "secret" and key "rmap_abcdef1234567890abcdef1234567890"
+    When the seed runs
+    Then the seed log for "secret" shows a masked key
+    And the seed log for "secret" does not contain the full plaintext "rmap_abcdef1234567890abcdef1234567890"
+
+  Scenario: Random key is shown in full in seed logs
+    Given an API_KEY_SEED entry with name "random-key" and no explicit key
+    When the seed runs
+    Then the seed log for "random-key" shows the full plaintext
+
+  Scenario: Mixed seed logs mask deterministic and show random
+    Given an API_KEY_SEED with entries:
+      | name       | key                               | scopes     |
+      | fixed-log  | rmap_aabb11223344ccdd5566eeff7788  | read       |
+      | random-log |                                   | read,write |
+    When the seed runs
+    Then the seed log for "fixed-log" shows a masked key
+    And the seed log for "random-log" shows the full plaintext
+
   # ── Parse format ────────────────────────────────────────────────
 
   Scenario: parseSeedEntries accepts entries with key field

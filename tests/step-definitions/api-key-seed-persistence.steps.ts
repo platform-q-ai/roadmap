@@ -317,6 +317,40 @@ Then(
 );
 
 Then(
+  'the seed log for {string} shows a masked key',
+  function (this: SeedPersistenceWorld, name: string) {
+    const logForName = this.seedLogs.find(l => l.includes(`"${name}"`));
+    assert.ok(logForName, `No log found for "${name}"`);
+    // Masked format: rmap_abcdef...567890 (first 6 + ... + last 6 after prefix)
+    assert.match(logForName, /rmap_[a-f0-9]{6}\.\.\.[a-f0-9]{6}/, `Log should contain masked key`);
+  }
+);
+
+Then(
+  'the seed log for {string} does not contain the full plaintext {string}',
+  function (this: SeedPersistenceWorld, name: string, plaintext: string) {
+    const logForName = this.seedLogs.find(l => l.includes(`"${name}"`));
+    assert.ok(logForName, `No log found for "${name}"`);
+    assert.ok(
+      !logForName.includes(plaintext),
+      `Log should NOT contain full plaintext "${plaintext}"`
+    );
+  }
+);
+
+Then(
+  'the seed log for {string} shows the full plaintext',
+  function (this: SeedPersistenceWorld, name: string) {
+    const logForName = this.seedLogs.find(l => l.includes(`"${name}"`));
+    assert.ok(logForName, `No log found for "${name}"`);
+    // Full key: rmap_ followed by 32 hex chars (no ... masking)
+    const match = logForName.match(/: (rmap_[a-f0-9]+)$/);
+    assert.ok(match, `Log should contain full plaintext key`);
+    assert.ok(!match[1].includes('...'), 'Full plaintext should not contain masking dots');
+  }
+);
+
+Then(
   'the parsed entry has name {string} and key {string}',
   function (this: SeedPersistenceWorld, name: string, key: string) {
     assert.ok(this.parsedEntries, 'No parsed entries');
