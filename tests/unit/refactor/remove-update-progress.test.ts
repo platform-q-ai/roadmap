@@ -39,9 +39,10 @@ describe('Remove updateProgress: API routes', () => {
     expect(content).not.toContain('parseProgressInput');
   });
 
-  it('routes.ts does not register a PATCH route', () => {
+  it('routes.ts does not register the old PATCH progress route', () => {
     const content = readFileSync(join(ROOT, 'src', 'adapters', 'api', 'routes.ts'), 'utf-8');
-    expect(content).not.toContain('PATCH');
+    expect(content).not.toContain('handleUpdateProgress');
+    expect(content).not.toContain('parseProgressInput');
   });
 });
 

@@ -1,11 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import type { Node } from '../../use-cases/index.js';
+import type { Node, UpdateComponentInput } from '../../use-cases/index.js';
 import {
   CreateComponent,
   DeleteComponent,
   DeleteFeature,
   GetArchitecture,
+  UpdateComponent,
   UpdateVersion,
   UploadFeature,
 } from '../../use-cases/index.js';
@@ -24,6 +25,7 @@ import {
   parseCreateInput,
   parseJsonBody,
   readBody,
+  stripHtml,
 } from './routes-shared.js';
 
 export type { ApiDeps, Route } from './routes-shared.js';
@@ -161,6 +163,79 @@ async function handleDeleteComponent(
     const msg = errorMessage(err);
     json(res, errorStatus(msg), { error: msg }, req);
   }
+}
+
+async function handleUpdateComponent(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: string
+) {
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
+  const body = parseJsonBody(raw);
+  if (!body) {
+    json(res, 400, { error: 'Invalid JSON body' }, req);
+    return;
+  }
+  const { input, error } = parsePatchInput(body);
+  if (!input) {
+    json(res, 400, { error: error ?? 'No updatable fields provided' }, req);
+    return;
+  }
+  const uc = new UpdateComponent({
+    nodeRepo: deps.nodeRepo,
+    versionRepo: deps.versionRepo,
+  });
+  try {
+    const node = await uc.execute(id, input);
+    json(res, 200, node.toJSON());
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg }, req);
+  }
+}
+
+interface PatchParseResult {
+  input: UpdateComponentInput | null;
+  error?: string;
+}
+
+const MAX_TAGS = 50;
+
+function parsePatchInput(body: Record<string, unknown>): PatchParseResult {
+  const input: UpdateComponentInput = {};
+  if (body.name !== undefined) {
+    const sanitised = stripHtml(String(body.name));
+    if (!sanitised) {
+      return { input: null, error: 'Invalid name: name must not be empty' };
+    }
+    input.name = sanitised;
+  }
+  if (body.description !== undefined) {
+    input.description = stripHtml(String(body.description));
+  }
+  if (body.tags !== undefined && Array.isArray(body.tags)) {
+    input.tags = body.tags.slice(0, MAX_TAGS).map(t => stripHtml(String(t)));
+  }
+  if (body.sort_order !== undefined && Number.isFinite(Number(body.sort_order))) {
+    input.sort_order = Number(body.sort_order);
+  }
+  if (body.current_version !== undefined) {
+    input.current_version = stripHtml(String(body.current_version));
+  }
+  if (Object.keys(input).length === 0) {
+    return { input: null, error: 'No updatable fields provided' };
+  }
+  return { input };
 }
 
 async function handleGetFeatures(
@@ -355,6 +430,11 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       method: 'POST',
       pattern: /^\/api\/components$/,
       handler: async (req, res) => handleCreateComponent(deps, req, res),
+    },
+    {
+      method: 'PATCH',
+      pattern: /^\/api\/components\/([^/]+)$/,
+      handler: async (req, res, m) => handleUpdateComponent(deps, req, res, m[1]),
     },
     {
       method: 'DELETE',

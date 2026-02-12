@@ -25,6 +25,8 @@ export { ListApiKeys } from './list-api-keys.js';
 export { RevokeApiKey } from './revoke-api-key.js';
 export type { FeatureFileInput } from './seed-features.js';
 export { SeedFeatures } from './seed-features.js';
+export type { UpdateComponentInput } from './update-component.js';
+export { UpdateComponent } from './update-component.js';
 export type { UpdateVersionInput, UpdateVersionResult } from './update-version.js';
 export { UpdateVersion } from './update-version.js';
 export type { UploadFeatureInput, UploadFeatureResult } from './upload-feature.js';
