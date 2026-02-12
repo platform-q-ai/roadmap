@@ -132,7 +132,8 @@ async function tryApiRoute(routes: Route[], ctx: RequestContext): Promise<boolea
     if (route.method !== ctx.method) {
       continue;
     }
-    const match = ctx.url.match(route.pattern);
+    const pathname = ctx.url.split('?')[0];
+    const match = pathname.match(route.pattern);
     if (!match) {
       continue;
     }

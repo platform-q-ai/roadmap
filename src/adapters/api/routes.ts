@@ -196,9 +196,34 @@ async function handleGetArchitecture(
   json(res, 200, data);
 }
 
-async function handleListComponents(deps: ApiDeps, _req: IncomingMessage, res: ServerResponse) {
+function parseQueryParams(req: IncomingMessage): URLSearchParams {
+  const fullUrl = new URL(req.url ?? '/', 'http://localhost');
+  return fullUrl.searchParams;
+}
+
+async function handleListComponents(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
+  const params = parseQueryParams(req);
   const all = await deps.nodeRepo.findAll();
-  const components = all.filter(n => !n.isLayer());
+  let components = all.filter(n => !n.isLayer());
+
+  const typeFilter = params.get('type');
+  if (typeFilter) {
+    components = components.filter(n => n.type === typeFilter);
+  }
+  const layerFilter = params.get('layer');
+  if (layerFilter) {
+    components = components.filter(n => n.layer === layerFilter);
+  }
+  const tagFilter = params.get('tag');
+  if (tagFilter) {
+    components = components.filter(n => n.tags.includes(tagFilter));
+  }
+  const searchFilter = params.get('search');
+  if (searchFilter) {
+    const lower = searchFilter.toLowerCase();
+    components = components.filter(n => n.name.toLowerCase().includes(lower));
+  }
+
   json(
     res,
     200,
