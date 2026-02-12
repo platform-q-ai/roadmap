@@ -15,10 +15,16 @@ import {
   DrizzleNodeRepository,
   DrizzleVersionRepository,
 } from '../../infrastructure/index.js';
-import { ValidateApiKey } from '../../use-cases/index.js';
+import { GenerateApiKey, ValidateApiKey } from '../../use-cases/index.js';
 
 import type { RequestLogEntry } from './index.js';
-import { buildAdminRoutes, createApp, createAuthMiddleware, RateLimiter } from './index.js';
+import {
+  buildAdminRoutes,
+  createApp,
+  createAuthMiddleware,
+  RateLimiter,
+  seedApiKeys,
+} from './index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..', '..');
@@ -38,8 +44,9 @@ const versionRepo = new DrizzleVersionRepository(db);
 const featureRepo = new DrizzleFeatureRepository(db);
 const apiKeyRepo = new DrizzleApiKeyRepository(db);
 
-// Auth middleware
+// Use cases
 const validateApiKey = new ValidateApiKey({ apiKeyRepo });
+const generateApiKey = new GenerateApiKey({ apiKeyRepo });
 const authMiddleware = createAuthMiddleware({
   validateKey: async (plaintext: string) => {
     const result = await validateApiKey.execute(plaintext);
@@ -77,6 +84,12 @@ function onLog(entry: RequestLogEntry): void {
     `[${entry.request_id}] ${entry.method} ${entry.path} ${entry.status} ${entry.duration}ms${keyPart}`
   );
 }
+
+await seedApiKeys({
+  rawEnv: process.env.API_KEY_SEED,
+  generate: generateApiKey,
+  log: (msg: string) => console.warn(msg),
+});
 
 const server = createApp(
   { nodeRepo, edgeRepo, versionRepo, featureRepo },
