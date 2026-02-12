@@ -44,6 +44,9 @@ export function parseSeedEntries(raw: string): GenerateApiKeyInput[] {
 
 function maskKey(plaintext: string): string {
   const body = plaintext.slice('rmap_'.length);
+  if (body.length <= 12) {
+    return 'rmap_******';
+  }
   return `rmap_${body.slice(0, 6)}...${body.slice(-6)}`;
 }
 

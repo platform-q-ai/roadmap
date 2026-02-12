@@ -192,6 +192,21 @@ describe('seedApiKeys', () => {
     expect(logMsg).toMatch(/rmap_abcdef\.\.\.567890/);
   });
 
+  it('masks short deterministic key with asterisks', async () => {
+    const generate = {
+      execute: vi.fn().mockResolvedValue({ plaintext: 'rmap_short' }),
+    };
+    const log = vi.fn();
+    const rawEnv = JSON.stringify([{ name: 'short', scopes: ['read'], key: 'rmap_short' }]);
+
+    await seedApiKeys({ rawEnv, generate, log });
+
+    expect(log).toHaveBeenCalledTimes(1);
+    const logMsg = log.mock.calls[0][0] as string;
+    expect(logMsg).toContain('rmap_******');
+    expect(logMsg).not.toContain('rmap_short');
+  });
+
   it('shows full plaintext in log for random keys', async () => {
     const generate = {
       execute: vi.fn().mockResolvedValue({ plaintext: 'rmap_random_key_full_value' }),
