@@ -4,9 +4,6 @@ import type { ApiKey, IApiKeyRepository } from '../domain/index.js';
 
 import { hashKey } from './generate-api-key.js';
 
-// Re-export hashKey for test convenience
-export { hashKey } from './generate-api-key.js';
-
 export type ValidateResult =
   | { status: 'valid'; key: ApiKey }
   | { status: 'invalid' }
@@ -32,6 +29,9 @@ export class ValidateApiKey {
   }
 
   async execute(plaintext: string): Promise<ValidateResult> {
+    // Per-key salted hashing requires comparing against all keys.
+    // Acceptable for <1000 keys; cache or prefix-indexed lookup
+    // should be added if key count grows significantly.
     const allKeys = await this.apiKeyRepo.findAll();
 
     for (const key of allKeys) {

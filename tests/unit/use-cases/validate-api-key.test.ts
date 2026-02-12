@@ -37,7 +37,8 @@ async function makeStoredKey(overrides: Record<string, unknown> = {}) {
 
 describe('ValidateApiKey', () => {
   it('returns valid result with ApiKey for a valid plaintext key', async () => {
-    const { ValidateApiKey, hashKey } = await import('../../../src/use-cases/validate-api-key.js');
+    const { ValidateApiKey } = await import('../../../src/use-cases/validate-api-key.js');
+    const { hashKey } = await import('../../../src/use-cases/generate-api-key.js');
     const repo = createMockApiKeyRepo();
     const salt = 'test-salt';
     const plaintext = 'rmap_deadbeefdeadbeefdeadbeefdeadbeef';
@@ -66,7 +67,8 @@ describe('ValidateApiKey', () => {
   });
 
   it('returns expired for an expired key', async () => {
-    const { ValidateApiKey, hashKey } = await import('../../../src/use-cases/validate-api-key.js');
+    const { ValidateApiKey } = await import('../../../src/use-cases/validate-api-key.js');
+    const { hashKey } = await import('../../../src/use-cases/generate-api-key.js');
     const repo = createMockApiKeyRepo();
     const salt = 'test-salt';
     const plaintext = 'rmap_deadbeefdeadbeefdeadbeefdeadbeef';
@@ -83,7 +85,8 @@ describe('ValidateApiKey', () => {
   });
 
   it('returns revoked for an inactive key', async () => {
-    const { ValidateApiKey, hashKey } = await import('../../../src/use-cases/validate-api-key.js');
+    const { ValidateApiKey } = await import('../../../src/use-cases/validate-api-key.js');
+    const { hashKey } = await import('../../../src/use-cases/generate-api-key.js');
     const repo = createMockApiKeyRepo();
     const salt = 'test-salt';
     const plaintext = 'rmap_deadbeefdeadbeefdeadbeefdeadbeef';
@@ -100,7 +103,8 @@ describe('ValidateApiKey', () => {
   });
 
   it('updates last_used_at on successful validation', async () => {
-    const { ValidateApiKey, hashKey } = await import('../../../src/use-cases/validate-api-key.js');
+    const { ValidateApiKey } = await import('../../../src/use-cases/validate-api-key.js');
+    const { hashKey } = await import('../../../src/use-cases/generate-api-key.js');
     const repo = createMockApiKeyRepo();
     const salt = 'test-salt';
     const plaintext = 'rmap_deadbeefdeadbeefdeadbeefdeadbeef';

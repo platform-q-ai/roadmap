@@ -17,11 +17,8 @@ import {
 } from '../../infrastructure/index.js';
 import { ValidateApiKey } from '../../use-cases/index.js';
 
-import { buildAdminRoutes } from './admin-routes.js';
-import { createAuthMiddleware } from './auth-middleware.js';
-import { RateLimiter } from './rate-limiter.js';
-import type { RequestLogEntry } from './server.js';
-import { createApp } from './server.js';
+import type { RequestLogEntry } from './index.js';
+import { buildAdminRoutes, createApp, createAuthMiddleware, RateLimiter } from './index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..', '..');

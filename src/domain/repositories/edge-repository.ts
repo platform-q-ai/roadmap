@@ -1,4 +1,4 @@
-import type { Edge } from '../entities/edge.js';
+import type { Edge } from '../entities/index.js';
 
 export interface IEdgeRepository {
   findAll(): Promise<Edge[]>;

@@ -1,4 +1,4 @@
-import type { Version, VersionTag } from '../entities/version.js';
+import type { Version, VersionTag } from '../entities/index.js';
 
 export interface IVersionRepository {
   findAll(): Promise<Version[]>;

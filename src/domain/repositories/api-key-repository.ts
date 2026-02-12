@@ -1,4 +1,4 @@
-import type { ApiKey, ApiKeyProps } from '../entities/api-key.js';
+import type { ApiKey, ApiKeyProps } from '../entities/index.js';
 
 /**
  * Repository interface for API key persistence.
