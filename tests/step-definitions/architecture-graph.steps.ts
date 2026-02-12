@@ -135,17 +135,6 @@ Then(
   }
 );
 
-function assertStatField(world: ApiWorld, field: string): void {
-  assert.ok(world.response, 'No response received');
-  const body = world.response.body as Record<string, unknown>;
-  const stats = body['stats'] as Record<string, number>;
-  assert.ok(stats, 'stats field not found in response');
-  assert.ok(
-    typeof stats[field] === 'number' && stats[field] >= 0,
-    `Expected stats.${field} to be a non-negative number, got ${stats[field]}`
-  );
-}
-
 Then(
   'the stats field has {string} matching the actual node count',
   function (this: ApiWorld, field: string) {
@@ -161,21 +150,73 @@ Then(
 Then(
   'the stats field has {string} matching the actual edge count',
   function (this: ApiWorld, field: string) {
-    assertStatField(this, field);
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const stats = body['stats'] as Record<string, number>;
+    const responseEdges = body['edges'] as unknown[];
+    const layers = body['layers'] as Array<{ children: unknown[] }>;
+    assert.ok(stats && responseEdges && layers, 'stats, edges, or layers not found');
+    // body.edges excludes CONTAINS; reconstruct CONTAINS count from layer children
+    const containsCount = layers.reduce((sum, l) => sum + (l.children?.length ?? 0), 0);
+    assert.strictEqual(
+      stats[field],
+      responseEdges.length + containsCount,
+      `stats.${field} should equal relationship edges (${responseEdges.length}) + containment edges (${containsCount})`
+    );
   }
 );
 
 Then(
   'the stats field has {string} matching the actual version count',
   function (this: ApiWorld, field: string) {
-    assertStatField(this, field);
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const stats = body['stats'] as Record<string, number>;
+    const nodes = body['nodes'] as Array<{ versions: Record<string, { progress: number }> }>;
+    assert.ok(stats && nodes, 'stats or nodes not found');
+    // Count versions that have real data (progress is a number) across all enriched nodes
+    let versionCount = 0;
+    for (const node of nodes) {
+      if (node.versions) {
+        for (const ver of Object.values(node.versions)) {
+          if (typeof ver.progress === 'number') {
+            versionCount++;
+          }
+        }
+      }
+    }
+    assert.strictEqual(
+      stats[field],
+      versionCount,
+      `stats.${field} (${stats[field]}) should match version count from enriched nodes (${versionCount})`
+    );
   }
 );
 
 Then(
   'the stats field has {string} matching the actual feature count',
   function (this: ApiWorld, field: string) {
-    assertStatField(this, field);
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const stats = body['stats'] as Record<string, number>;
+    const nodes = body['nodes'] as Array<{ features: Record<string, unknown[]> }>;
+    assert.ok(stats && nodes, 'stats or nodes not found');
+    // Count all feature items across all enriched nodes
+    let featureCount = 0;
+    for (const node of nodes) {
+      if (node.features) {
+        for (const feats of Object.values(node.features)) {
+          if (Array.isArray(feats)) {
+            featureCount += feats.length;
+          }
+        }
+      }
+    }
+    assert.strictEqual(
+      stats[field],
+      featureCount,
+      `stats.${field} (${stats[field]}) should match feature count from enriched nodes (${featureCount})`
+    );
   }
 );
 
