@@ -41,12 +41,13 @@ export class CreateEdge {
       throw new ValidationError('Self-referencing edges are not allowed');
     }
 
-    const sourceExists = await this.nodeRepo.exists(input.source_id);
+    const [sourceExists, targetExists] = await Promise.all([
+      this.nodeRepo.exists(input.source_id),
+      this.nodeRepo.exists(input.target_id),
+    ]);
     if (!sourceExists) {
       throw new ValidationError(`Invalid source: node "${input.source_id}" does not exist`);
     }
-
-    const targetExists = await this.nodeRepo.exists(input.target_id);
     if (!targetExists) {
       throw new ValidationError(`Invalid target: node "${input.target_id}" does not exist`);
     }
