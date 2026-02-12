@@ -128,11 +128,12 @@ function setRateLimitHeaders(res: http.ServerResponse, result: RateLimitResult):
 }
 
 async function tryApiRoute(routes: Route[], ctx: RequestContext): Promise<boolean> {
+  const pathname = ctx.url.split('?')[0];
   for (const route of routes) {
     if (route.method !== ctx.method) {
       continue;
     }
-    const match = ctx.url.match(route.pattern);
+    const match = pathname.match(route.pattern);
     if (!match) {
       continue;
     }

@@ -10,6 +10,7 @@ import type {
   IFeatureRepository,
   INodeRepository,
   IVersionRepository,
+  Node,
   NodeType,
 } from '../../use-cases/index.js';
 import {
@@ -196,9 +197,44 @@ async function handleGetArchitecture(
   json(res, 200, data);
 }
 
-async function handleListComponents(deps: ApiDeps, _req: IncomingMessage, res: ServerResponse) {
-  const all = await deps.nodeRepo.findAll();
-  const components = all.filter(n => !n.isLayer());
+function parseQueryParams(req: IncomingMessage): URLSearchParams {
+  const fullUrl = new URL(req.url ?? '/', 'http://localhost');
+  return fullUrl.searchParams;
+}
+
+async function handleListComponents(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
+  const params = parseQueryParams(req);
+  const typeFilter = params.get('type');
+  const layerFilter = params.get('layer');
+  const tagFilter = params.get('tag');
+  const searchFilter = params.get('search');
+
+  let nodes: Node[];
+  if (typeFilter) {
+    nodes = await deps.nodeRepo.findByType(typeFilter);
+  } else if (layerFilter) {
+    nodes = await deps.nodeRepo.findByLayer(layerFilter);
+  } else {
+    nodes = await deps.nodeRepo.findAll();
+  }
+
+  const lower = searchFilter ? searchFilter.toLowerCase() : '';
+  const components = nodes.filter(n => {
+    if (n.isLayer()) {
+      return false;
+    }
+    if (typeFilter && layerFilter && n.layer !== layerFilter) {
+      return false;
+    }
+    if (tagFilter && !n.tags.includes(tagFilter)) {
+      return false;
+    }
+    if (searchFilter && !n.name.toLowerCase().includes(lower)) {
+      return false;
+    }
+    return true;
+  });
+
   json(
     res,
     200,
