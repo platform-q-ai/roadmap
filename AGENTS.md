@@ -538,26 +538,32 @@ After all tests pass and work is complete, use the `/ship` command to automate t
 This runs the following steps automatically:
 
 ```
-1. PRE-FLIGHT          npm run pre-commit (all 6 gates must pass)
-           |
-2. COMMIT              Stage changes + conventional commit message
-           |
-3. PUSH                git push -u origin <branch>
-           |
-4. CREATE PR           gh pr create --title "..." --body "..."
-           |
-5. ARCHITECTURE REVIEW @architecture-reviewer reads the diff and
-                        leaves comments on the PR via gh CLI
-           |
-6. ADDRESS FEEDBACK    For each review comment:
-                        - Make the code fix
-                        - Run lint + tests
-                        - Commit the fix
-                        - Resolve the comment on GitHub
-           |
-7. PUSH FIXES          git push (all fix commits)
-           |
-8. REPORT              PR URL + summary of review and fixes
+ 1. PRE-FLIGHT           npm run pre-commit (all 7 gates must pass)
+            |
+ 2. COMMIT               Stage changes + conventional commit message
+            |
+ 3. PUSH                 git push -u origin <branch>
+            |
+ 4. CREATE PR            gh pr create --title "..." --body "..."
+            |
+ 5. ARCHITECTURE REVIEW  @architecture-reviewer leaves inline comments
+            |
+ 6. SECURITY REVIEW      @security-reviewer leaves inline comments
+            |
+ 7. PERFORMANCE REVIEW   @performance-reviewer leaves inline comments
+            |
+ 8. ADDRESS FEEDBACK     For each comment from all three reviewers:
+                          - Make the code fix
+                          - Run lint + tests
+                          - Commit the fix
+                          - Resolve the comment on GitHub
+            |
+ 9. PUSH FIXES           git push (all fix commits)
+            |
+10. DOCUMENTATION UPDATE @documentation-updater updates README.md
+                          and AGENTS.md if needed, commits + pushes
+            |
+11. REPORT               PR URL + summary of all reviews and fixes
 ```
 
 ### Manual Shipping (without /ship)
@@ -569,25 +575,58 @@ If you prefer to do it step by step:
 3. `git push -u origin <branch>`
 4. `gh pr create --title "..." --body "## Summary ..."`
 5. Invoke `@architecture-reviewer` with the PR number
-6. Address each comment, commit fixes, resolve comments
-7. `git push`
+6. Invoke `@security-reviewer` with the PR number
+7. Invoke `@performance-reviewer` with the PR number
+8. Address each comment, commit fixes, resolve comments
+9. `git push`
+10. Invoke `@documentation-updater` with the PR number
+11. Commit and push any documentation changes
 
-### Architecture Reviewer
+### PR Review Agents
 
-The `architecture-reviewer` subagent (`.opencode/agents/architecture-reviewer.md`) is a read-only reviewer that:
+All review agents follow the same pattern: read the PR diff, analyse against their checklist, and post inline comments on specific files and lines via the GitHub REST API.
 
-- Reads the PR diff via `gh pr diff <number>`
-- Gets the HEAD commit SHA via `gh pr view <number> --json headRefOid`
-- Checks Clean Architecture boundary compliance
-- Checks code quality rules (complexity, depth, params, etc.)
-- Checks barrel exports, constructor injection, repository pattern
-- Checks for incomplete work markers and type safety bypasses
-- Checks test coverage for new code
-- Posts **inline comments on specific files and lines** via the GitHub REST API (`gh api repos/{owner}/{repo}/pulls/<number>/reviews`)
-- Groups all comments into a single review submission with `REQUEST_CHANGES` or `APPROVE`
-- Returns a structured summary with file paths, line numbers, and issue descriptions
+#### Architecture Reviewer
 
-After the reviewer leaves inline comments, the LLM engineer addresses each one:
+The `architecture-reviewer` subagent (`.opencode/agents/architecture-reviewer.md`) checks:
+
+- Clean Architecture boundary compliance (imports point inward)
+- Code quality rules (complexity, depth, params, lines)
+- Barrel exports, constructor injection, repository pattern
+- Incomplete work markers and type safety bypasses
+- Test coverage for new code
+- Conventional commit format
+
+#### Security Reviewer
+
+The `security-reviewer` subagent (`.opencode/agents/security-reviewer.md`) checks:
+
+- Injection vectors (SQL, XSS, command injection, path traversal, prototype pollution)
+- Authentication and authorization gaps (missing middleware, scope checks, privilege escalation)
+- Secrets exposure (hardcoded credentials, secrets in logs/errors/URLs/git)
+- Cryptographic issues (weak hashing, hardcoded salts, insufficient randomness)
+- Input validation (missing body validation, type coercion, size limits, ReDoS)
+
+#### Performance Reviewer
+
+The `performance-reviewer` subagent (`.opencode/agents/performance-reviewer.md`) checks:
+
+- Algorithmic inefficiency (O(n^2) loops, N+1 queries, linear scans vs indexed lookup)
+- Memory and resource management (event listener leaks, unbounded caches, connection leaks)
+- I/O and database (synchronous I/O, missing pooling, unbatched writes, over-fetching)
+- Caching opportunities (repeated queries, missing memoization, stale config reads)
+- Concurrency and async (sequential awaits, blocking event loop, missing timeouts)
+
+#### Documentation Updater
+
+The `documentation-updater` subagent (`.opencode/agents/documentation-updater.md`) runs after code reviews are addressed:
+
+- Reads the PR diff and determines if documentation needs updating
+- Updates `README.md` and `AGENTS.md` for new endpoints, agents, commands, config, schema changes
+- Does NOT update for bug fixes, refactors, or test-only changes
+- Changes are committed and pushed to the PR branch
+
+After any reviewer leaves inline comments, the LLM engineer addresses each one:
 
 1. Read the inline comment (visible on the exact file/line in the PR)
 2. Make the code change
@@ -602,6 +641,9 @@ After the reviewer leaves inline comments, the LLM engineer addresses each one:
 | Agent | Mode | Location | Purpose |
 |-------|------|----------|---------|
 | `architecture-reviewer` | subagent | `.opencode/agents/architecture-reviewer.md` | PR review for Clean Architecture and code quality |
+| `security-reviewer` | subagent | `.opencode/agents/security-reviewer.md` | PR review for security vulnerabilities and auth gaps |
+| `performance-reviewer` | subagent | `.opencode/agents/performance-reviewer.md` | PR review for algorithmic efficiency and resource management |
+| `documentation-updater` | subagent | `.opencode/agents/documentation-updater.md` | Updates README.md and AGENTS.md after PR changes |
 
 ### Commands
 
