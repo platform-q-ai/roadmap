@@ -736,16 +736,6 @@ When(
   }
 );
 
-When(
-  'I send a PUT request to {string} with that key',
-  async function (this: AuthApiWorld, path: string) {
-    assert.ok(this.currentApiKey, 'No current API key');
-    this.response = await authHttpRequest(this.baseUrl, 'PUT', path, {
-      headers: { Authorization: `Bearer ${this.currentApiKey}` },
-    });
-  }
-);
-
 After({ tags: '@v1' }, async function (this: AuthApiWorld) {
   await stopServer(this);
 });

@@ -89,14 +89,6 @@ Given(
 );
 
 Given(
-  'component {string} has feature {string} under version {string}',
-  function (this: RetrievalWorld, nodeId: string, filename: string, version: string) {
-    ensureComponent(this, nodeId);
-    this.features.push(makeFeature(nodeId, version, filename));
-  }
-);
-
-Given(
   'component {string} has feature {string} under version {string} only',
   function (this: RetrievalWorld, nodeId: string, filename: string, version: string) {
     ensureComponent(this, nodeId);
