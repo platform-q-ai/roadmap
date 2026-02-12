@@ -3,7 +3,9 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Node, UpdateComponentInput } from '../../use-cases/index.js';
 import {
   CreateComponent,
+  CreateEdge,
   DeleteComponent,
+  DeleteEdge,
   DeleteFeature,
   GetArchitecture,
   UpdateComponent,
@@ -383,10 +385,113 @@ async function handleUpdateVersion(
   }
 }
 
+// ─── Edge management handlers ───────────────────────────────────────
+
+async function handleCreateEdge(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
+  const body = parseJsonBody(raw);
+  if (!body) {
+    json(res, 400, { error: 'Invalid JSON body' }, req);
+    return;
+  }
+  const sourceId = body.source_id ? stripHtml(String(body.source_id)) : '';
+  const targetId = body.target_id ? stripHtml(String(body.target_id)) : '';
+  const edgeType = body.type ? stripHtml(String(body.type)) : '';
+  const label = body.label ? stripHtml(String(body.label)) : undefined;
+  const metadata = body.metadata !== undefined ? JSON.stringify(body.metadata) : undefined;
+
+  const uc = new CreateEdge({ nodeRepo: deps.nodeRepo, edgeRepo: deps.edgeRepo });
+  try {
+    const edge = await uc.execute({
+      source_id: sourceId,
+      target_id: targetId,
+      type: edgeType,
+      label,
+      metadata,
+    });
+    json(res, 201, edge.toJSON());
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg }, req);
+  }
+}
+
+async function handleListEdges(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
+  const params = parseQueryParams(req);
+  const typeFilter = params.get('type');
+  let edges;
+  if (typeFilter) {
+    edges = await deps.edgeRepo.findByType(typeFilter);
+  } else {
+    edges = await deps.edgeRepo.findAll();
+  }
+  json(
+    res,
+    200,
+    edges.map(e => e.toJSON())
+  );
+}
+
+async function handleDeleteEdge(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: number
+) {
+  const uc = new DeleteEdge({ edgeRepo: deps.edgeRepo });
+  try {
+    await uc.execute(id);
+    res.writeHead(204);
+    res.end();
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg }, req);
+  }
+}
+
 // ─── Route table ────────────────────────────────────────────────────
 
 interface RouteOptions {
   packageVersion?: string;
+}
+
+function edgeRoutes(deps: ApiDeps): Route[] {
+  return [
+    {
+      method: 'GET',
+      pattern: /^\/api\/edges$/,
+      handler: async (req, res) => handleListEdges(deps, req, res),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/api\/edges$/,
+      handler: async (req, res) => handleCreateEdge(deps, req, res),
+    },
+    {
+      method: 'DELETE',
+      pattern: /^\/api\/edges\/(\d+)$/,
+      handler: async (req, res, m) => handleDeleteEdge(deps, req, res, Number(m[1])),
+    },
+    {
+      method: 'GET',
+      pattern: /^\/api\/components\/([^/]+)\/edges$/,
+      handler: async (req, res, m) => handleGetEdges(deps, req, res, m[1]),
+    },
+    {
+      method: 'GET',
+      pattern: /^\/api\/components\/([^/]+)\/dependencies$/,
+      handler: async (req, res, m) => handleGetDependencies(deps, req, res, m[1]),
+    },
+  ];
 }
 
 export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
@@ -416,6 +521,7 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       pattern: /^\/api\/bulk\/delete\/components$/,
       handler: async (req, res) => handleBulkDeleteComponents(deps, req, res),
     },
+    ...edgeRoutes(deps),
     {
       method: 'GET',
       pattern: /^\/api\/components$/,
@@ -463,16 +569,6 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
       handler: async (req, res, m) =>
         handleDeleteFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/components\/([^/]+)\/edges$/,
-      handler: async (req, res, m) => handleGetEdges(deps, req, res, m[1]),
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/components\/([^/]+)\/dependencies$/,
-      handler: async (req, res, m) => handleGetDependencies(deps, req, res, m[1]),
     },
   ];
 }

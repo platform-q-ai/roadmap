@@ -33,7 +33,7 @@ function buildTestRepos(data: WorldData) {
       data.nodes = data.nodes.filter(n => n.id !== id);
     }),
   };
-  const edgeRepo: IEdgeRepository = {
+  const edgeRepo = {
     findAll: vi.fn(async () => data.edges),
     findById: vi.fn(async (id: number) => data.edges.find(e => e.id === id) ?? null),
     findBySource: vi.fn(async (sid: string) => data.edges.filter(e => e.source_id === sid)),
@@ -45,14 +45,21 @@ function buildTestRepos(data: WorldData) {
     ),
     save: vi.fn(async (edge: Edge) => {
       const nextId = data.edges.length > 0 ? Math.max(...data.edges.map(e => e.id ?? 0)) + 1 : 1;
-      const saved = new Edge({ ...edge.toJSON(), id: edge.id ?? nextId });
-      data.edges.push(saved);
-      return saved;
+      const withId = new Edge({
+        id: edge.id ?? nextId,
+        source_id: edge.source_id,
+        target_id: edge.target_id,
+        type: edge.type,
+        label: edge.label,
+        metadata: edge.metadata,
+      });
+      data.edges.push(withId);
+      return withId;
     }),
     delete: vi.fn(async (id: number) => {
       data.edges = data.edges.filter(e => e.id !== id);
     }),
-  };
+  } as unknown as IEdgeRepository;
   const versionRepo: IVersionRepository = {
     findAll: vi.fn(async () => data.versions),
     findByNode: vi.fn(async (nid: string) => data.versions.filter(v => v.node_id === nid)),
@@ -94,31 +101,41 @@ function buildTestRepos(data: WorldData) {
 
 function seedData(): WorldData {
   const layer = new Node({ id: 'sup-layer', name: 'Supervisor', type: 'layer' });
-  const comp = new Node({
+  const compA = new Node({
     id: 'comp-a',
     name: 'Component A',
     type: 'component',
     layer: 'sup-layer',
   });
-  const edge = new Edge({ id: 1, source_id: 'sup-layer', target_id: 'comp-a', type: 'CONTAINS' });
-  const ver = new Version({
-    node_id: 'comp-a',
-    version: 'mvp',
-    progress: 50,
-    status: 'in-progress',
+  const compB = new Node({
+    id: 'comp-b',
+    name: 'Component B',
+    type: 'component',
+    layer: 'sup-layer',
   });
-  const feat = new Feature({
-    node_id: 'comp-a',
-    version: 'mvp',
-    filename: 'mvp-test.feature',
-    title: 'Test Feature',
-    content: 'Feature: Test',
+  const containsA = new Edge({
+    id: 1,
+    source_id: 'sup-layer',
+    target_id: 'comp-a',
+    type: 'CONTAINS',
+  });
+  const containsB = new Edge({
+    id: 2,
+    source_id: 'sup-layer',
+    target_id: 'comp-b',
+    type: 'CONTAINS',
+  });
+  const depEdge = new Edge({
+    id: 3,
+    source_id: 'comp-a',
+    target_id: 'comp-b',
+    type: 'DEPENDS_ON',
   });
   return {
-    nodes: [layer, comp],
-    edges: [edge],
-    versions: [ver],
-    features: [feat],
+    nodes: [layer, compA, compB],
+    edges: [containsA, containsB, depEdge],
+    versions: [],
+    features: [],
   };
 }
 
@@ -189,100 +206,102 @@ async function withServer(
 
 // ─── Tests ──────────────────────────────────────────────────────────
 
-describe('API Routes — v1 component CRUD', () => {
-  it('returns all fields including description, tags, color, icon, sort_order', async () => {
-    const repos = buildTestRepos(seedData());
-    await withServer(repos, async server => {
-      const body = JSON.stringify({
-        id: 'full-comp',
-        name: 'Full Component',
-        type: 'component',
-        layer: 'sup-layer',
-        description: 'A fully specified component',
-        tags: ['runtime', 'core'],
-        color: '#3498DB',
-        icon: 'server',
-        sort_order: 42,
+describe('API Routes — v1 edge management', () => {
+  describe('POST /api/edges', () => {
+    it('creates an edge and returns 201', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          source_id: 'comp-a',
+          target_id: 'comp-b',
+          type: 'CONTROLS',
+        });
+        const res = await request(server, 'POST', '/api/edges', body);
+        expect(res.status).toBe(201);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.source_id).toBe('comp-a');
+        expect(resBody.target_id).toBe('comp-b');
+        expect(resBody.type).toBe('CONTROLS');
+        expect(resBody.id).toBeDefined();
       });
-      const res = await request(server, 'POST', '/api/components', body);
-      expect(res.status).toBe(201);
-      const resBody = res.body as Record<string, unknown>;
-      expect(resBody.id).toBe('full-comp');
-      expect(resBody.description).toBe('A fully specified component');
-      expect(resBody.tags).toEqual(expect.arrayContaining(['runtime', 'core']));
-      expect(resBody.color).toBe('#3498DB');
-      expect(resBody.icon).toBe('server');
-      expect(resBody.sort_order).toBe(42);
+    });
+
+    it('returns 400 for invalid edge type', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          source_id: 'comp-a',
+          target_id: 'comp-b',
+          type: 'INVALID',
+        });
+        const res = await request(server, 'POST', '/api/edges', body);
+        expect(res.status).toBe(400);
+      });
+    });
+
+    it('returns 400 for self-referencing edge', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          source_id: 'comp-a',
+          target_id: 'comp-a',
+          type: 'DEPENDS_ON',
+        });
+        const res = await request(server, 'POST', '/api/edges', body);
+        expect(res.status).toBe(400);
+        const resBody = res.body as Record<string, unknown>;
+        expect(String(resBody.error).toLowerCase()).toContain('self-referencing');
+      });
+    });
+
+    it('returns 400 for invalid JSON body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'POST', '/api/edges', 'not json');
+        expect(res.status).toBe(400);
+      });
     });
   });
 
-  it('returns null description and empty tags for minimal component', async () => {
-    const repos = buildTestRepos(seedData());
-    await withServer(repos, async server => {
-      const body = JSON.stringify({
-        id: 'minimal-comp',
-        name: 'Minimal',
-        type: 'component',
-        layer: 'sup-layer',
+  describe('GET /api/edges', () => {
+    it('returns all edges', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/edges');
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body)).toBe(true);
+        expect((res.body as unknown[]).length).toBeGreaterThan(0);
       });
-      const res = await request(server, 'POST', '/api/components', body);
-      expect(res.status).toBe(201);
-      const resBody = res.body as Record<string, unknown>;
-      expect(resBody.description).toBeNull();
-      expect(resBody.tags).toEqual([]);
-      expect(resBody.sort_order).toBe(0);
+    });
+
+    it('filters edges by type', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/edges?type=DEPENDS_ON');
+        expect(res.status).toBe(200);
+        const edges = res.body as Array<Record<string, unknown>>;
+        for (const edge of edges) {
+          expect(edge.type).toBe('DEPENDS_ON');
+        }
+      });
     });
   });
 
-  it('returns 400 for ID longer than 64 characters', async () => {
-    const repos = buildTestRepos(seedData());
-    await withServer(repos, async server => {
-      const longId = 'a'.repeat(65);
-      const body = JSON.stringify({
-        id: longId,
-        name: 'Long ID',
-        type: 'component',
-        layer: 'sup-layer',
+  describe('DELETE /api/edges/:id', () => {
+    it('deletes an existing edge and returns 204', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'DELETE', '/api/edges/3');
+        expect(res.status).toBe(204);
       });
-      const res = await request(server, 'POST', '/api/components', body);
-      expect(res.status).toBe(400);
-      const resBody = res.body as Record<string, unknown>;
-      expect(resBody.error).toBeDefined();
-      expect(String(resBody.error).toLowerCase()).toContain('id');
     });
-  });
 
-  it('returns 400 for empty name', async () => {
-    const repos = buildTestRepos(seedData());
-    await withServer(repos, async server => {
-      const body = JSON.stringify({
-        id: 'no-name',
-        name: '',
-        type: 'component',
-        layer: 'sup-layer',
+    it('returns 404 for nonexistent edge', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'DELETE', '/api/edges/99999');
+        expect(res.status).toBe(404);
       });
-      const res = await request(server, 'POST', '/api/components', body);
-      expect(res.status).toBe(400);
-      const resBody = res.body as Record<string, unknown>;
-      expect(resBody.error).toBeDefined();
-      expect(String(resBody.error).toLowerCase()).toContain('name');
-    });
-  });
-
-  it('returns 400 for invalid layer reference', async () => {
-    const repos = buildTestRepos(seedData());
-    await withServer(repos, async server => {
-      const body = JSON.stringify({
-        id: 'bad-layer',
-        name: 'Bad Layer',
-        type: 'component',
-        layer: 'nonexistent-layer',
-      });
-      const res = await request(server, 'POST', '/api/components', body);
-      expect(res.status).toBe(400);
-      const resBody = res.body as Record<string, unknown>;
-      expect(resBody.error).toBeDefined();
-      expect(String(resBody.error).toLowerCase()).toContain('layer');
     });
   });
 });

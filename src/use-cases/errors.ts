@@ -34,6 +34,20 @@ export class NodeExistsError extends Error {
   }
 }
 
+export class EdgeNotFoundError extends Error {
+  constructor(id: number) {
+    super(`Edge not found: ${id}`);
+    this.name = 'EdgeNotFoundError';
+  }
+}
+
+export class EdgeExistsError extends Error {
+  constructor(sourceId: string, targetId: string, type: string) {
+    super(`Edge already exists: ${sourceId} -> ${targetId} (${type})`);
+    this.name = 'EdgeExistsError';
+  }
+}
+
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);

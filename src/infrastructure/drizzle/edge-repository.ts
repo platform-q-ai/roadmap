@@ -1,4 +1,4 @@
-import { eq, ne, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 
 import type { IEdgeRepository } from '../../domain/index.js';
@@ -12,6 +12,14 @@ export class DrizzleEdgeRepository implements IEdgeRepository {
   async findAll(): Promise<Edge[]> {
     const rows = this.db.select().from(edgesTable).orderBy(edgesTable.id).all();
     return rows.map(r => new Edge(r as ConstructorParameters<typeof Edge>[0]));
+  }
+
+  async findById(id: number): Promise<Edge | null> {
+    const rows = this.db.select().from(edgesTable).where(eq(edgesTable.id, id)).all();
+    if (rows.length === 0) {
+      return null;
+    }
+    return new Edge(rows[0] as ConstructorParameters<typeof Edge>[0]);
   }
 
   async findBySource(sourceId: string): Promise<Edge[]> {
@@ -54,8 +62,23 @@ export class DrizzleEdgeRepository implements IEdgeRepository {
     return rows.map(r => new Edge(r as ConstructorParameters<typeof Edge>[0]));
   }
 
-  async save(edge: Edge): Promise<void> {
-    this.db
+  async existsBySrcTgtType(sourceId: string, targetId: string, type: string): Promise<boolean> {
+    const rows = this.db
+      .select({ id: edgesTable.id })
+      .from(edgesTable)
+      .where(
+        and(
+          eq(edgesTable.source_id, sourceId),
+          eq(edgesTable.target_id, targetId),
+          eq(edgesTable.type, type)
+        )
+      )
+      .all();
+    return rows.length > 0;
+  }
+
+  async save(edge: Edge): Promise<Edge> {
+    const result = this.db
       .insert(edgesTable)
       .values({
         source_id: edge.source_id,
@@ -72,6 +95,14 @@ export class DrizzleEdgeRepository implements IEdgeRepository {
         },
       })
       .run();
+    return new Edge({
+      id: Number(result.lastInsertRowid),
+      source_id: edge.source_id,
+      target_id: edge.target_id,
+      type: edge.type,
+      label: edge.label,
+      metadata: edge.metadata,
+    });
   }
 
   async delete(id: number): Promise<void> {

@@ -23,10 +23,12 @@ function buildMinimalRepos() {
   };
   const edgeRepo: IEdgeRepository = {
     findAll: vi.fn(async () => []),
+    findById: vi.fn(async () => null),
     findBySource: vi.fn(async () => []),
     findByTarget: vi.fn(async () => []),
     findByType: vi.fn(async () => []),
     findRelationships: vi.fn(async () => []),
+    existsBySrcTgtType: vi.fn(async () => false),
     save: vi.fn(),
     delete: vi.fn(),
   };

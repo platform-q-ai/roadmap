@@ -1,8 +1,13 @@
 export type { CreateComponentInput } from './create-component.js';
 export { CreateComponent } from './create-component.js';
+export type { CreateEdgeInput } from './create-edge.js';
+export { CreateEdge } from './create-edge.js';
 export { DeleteComponent } from './delete-component.js';
+export { DeleteEdge } from './delete-edge.js';
 export { DeleteFeature } from './delete-feature.js';
 export {
+  EdgeExistsError,
+  EdgeNotFoundError,
   FeatureNotFoundError,
   NodeExistsError,
   NodeNotFoundError,

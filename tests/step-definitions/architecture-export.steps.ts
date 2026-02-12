@@ -36,11 +36,13 @@ function buildRepos(world: World) {
   };
   const edgeRepo: IEdgeRepository = {
     findAll: async () => world.edges,
+    findById: async (id: number) => world.edges.find(e => e.id === id) ?? null,
     findBySource: async (sid: string) => world.edges.filter(e => e.source_id === sid),
     findByTarget: async (tid: string) => world.edges.filter(e => e.target_id === tid),
     findByType: async (type: string) => world.edges.filter(e => e.type === type),
     findRelationships: async () => world.edges.filter(e => !e.isContainment()),
-    save: async () => {},
+    existsBySrcTgtType: async () => false,
+    save: async (edge: Edge) => edge,
     delete: async () => {},
   };
   const versionRepo: IVersionRepository = {
