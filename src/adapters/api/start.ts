@@ -15,7 +15,8 @@ import {
   DrizzleNodeRepository,
   DrizzleVersionRepository,
 } from '../../infrastructure/index.js';
-import { ValidateApiKey } from '../../use-cases/index.js';
+import type { ApiKeyScope } from '../../use-cases/index.js';
+import { GenerateApiKey, ValidateApiKey } from '../../use-cases/index.js';
 
 import type { RequestLogEntry } from './index.js';
 import { buildAdminRoutes, createApp, createAuthMiddleware, RateLimiter } from './index.js';
@@ -77,6 +78,29 @@ function onLog(entry: RequestLogEntry): void {
     `[${entry.request_id}] ${entry.method} ${entry.path} ${entry.status} ${entry.duration}ms${keyPart}`
   );
 }
+
+// Seed API keys from environment on first boot.
+// API_KEY_SEED is a JSON array: [{"name":"admin","scopes":["read","write","admin"]}, ...]
+// For each entry, a key is generated if one with that name doesn't already exist.
+// The plaintext keys are logged to stderr once — save them immediately.
+async function seedApiKeys(): Promise<void> {
+  const raw = process.env.API_KEY_SEED;
+  if (!raw) {
+    return;
+  }
+  const entries = JSON.parse(raw) as Array<{ name: string; scopes: ApiKeyScope[] }>;
+  const generateApiKey = new GenerateApiKey({ apiKeyRepo });
+  for (const entry of entries) {
+    const existing = await apiKeyRepo.findByName(entry.name);
+    if (existing) {
+      continue;
+    }
+    const result = await generateApiKey.execute(entry);
+    console.warn(`  Seeded key "${entry.name}": ${result.plaintext}`);
+  }
+}
+
+await seedApiKeys();
 
 const server = createApp(
   { nodeRepo, edgeRepo, versionRepo, featureRepo },
