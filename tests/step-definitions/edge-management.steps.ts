@@ -2,8 +2,7 @@ import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
-import { Edge } from '../../src/domain/entities/edge.js';
-import { Node } from '../../src/domain/entities/node.js';
+import { Edge, Node } from '../../src/domain/index.js';
 
 interface ApiWorld {
   nodes: Node[];
