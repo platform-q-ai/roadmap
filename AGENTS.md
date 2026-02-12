@@ -44,6 +44,7 @@ src/
 │   ├── update-component.ts     # Partial update (merge-patch) with version recalc
 │   ├── create-edge.ts          # Create edge with validation (type, self-ref, duplicates)
 │   ├── delete-edge.ts          # Delete edge by ID with existence check
+│   ├── batch-upload-features.ts # Batch upload features (single + cross-component)
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations
@@ -471,6 +472,8 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 | `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` invalid type/self-ref/missing nodes, `409` duplicate |
 | `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200 [...]` | `400` invalid type filter |
 | `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` not found |
+| `POST` | `/api/components/:id/versions/:ver/features/batch` | Batch upload up to 50 features for one component/version | `201` all uploaded, `207` partial | `400` empty/over limit/invalid, `404` component not found |
+| `POST` | `/api/features/batch` | Cross-component batch upload up to 50 features (each entry specifies node_id + version) | `201` all uploaded, `207` partial | `400` empty/over limit/missing fields |
 | `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` all created, `207` partial | `400` invalid body or limit exceeded |
 | `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` all created, `207` partial | `400` invalid body or limit exceeded |
 | `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` invalid body or limit exceeded |
@@ -522,6 +525,48 @@ All fields are optional. Only supplied fields are changed; unmentioned fields ar
 ```
 
 Required: `source_id` (must reference an existing node), `target_id` (must reference an existing node), `type` (must be a valid edge type). Optional: `label` (max 500 chars), `metadata` (JSON object, max 4 KB, max depth 4). Self-referencing edges (`source_id === target_id`) are rejected. Duplicate edges (same source, target, type) return `409`. All string inputs are HTML-sanitized. Returns the full edge object (with generated `id`) in the `201` response.
+
+### POST /api/components/:id/versions/:ver/features/batch body
+
+```json
+{
+  "features": [
+    {
+      "filename": "first.feature",
+      "content": "Feature: First\n  Scenario: S1\n    Given a step"
+    },
+    {
+      "filename": "second.feature",
+      "content": "Feature: Second\n  Scenario: S2\n    Given a step"
+    }
+  ]
+}
+```
+
+Required: `features` (non-empty array, max 50 entries). Each entry requires `filename` (no path separators or `..`) and `content` (valid Gherkin with a `Feature:` line). The component `:id` and version `:ver` are taken from the URL. Returns `{ uploaded, version, total_steps, errors }`. On partial failure, returns `207` with successfully uploaded features and an `errors` array describing each failure.
+
+### POST /api/features/batch body
+
+```json
+{
+  "features": [
+    {
+      "node_id": "comp-a",
+      "version": "v1",
+      "filename": "a.feature",
+      "content": "Feature: A\n  Scenario: S\n    Given a step"
+    },
+    {
+      "node_id": "comp-b",
+      "version": "v2",
+      "filename": "b.feature",
+      "content": "Feature: B\n  Scenario: S\n    Given a step"
+    }
+  ]
+}
+```
+
+Required: `features` (non-empty array, max 50 entries). Each entry requires `node_id` (must reference an existing component), `version`, `filename` (no path separators or `..`), and `content` (valid Gherkin). Returns `{ uploaded, total_steps, errors }`. Non-existent components are reported per-entry in the `errors` array (returns `207`), not as a top-level `404`.
 
 ### curl examples
 
@@ -580,6 +625,16 @@ curl "https://roadmap-5vvp.onrender.com/api/edges?limit=50&offset=0"
 
 # Delete an edge
 curl -X DELETE https://roadmap-5vvp.onrender.com/api/edges/42
+
+# Batch upload features for a single component/version
+curl -X POST https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features/batch \
+  -H "Content-Type: application/json" \
+  -d '{"features":[{"filename":"first.feature","content":"Feature: First\n  Scenario: S1\n    Given a step"},{"filename":"second.feature","content":"Feature: Second\n  Scenario: S2\n    Given a step"}]}'
+
+# Cross-component batch upload features
+curl -X POST https://roadmap-5vvp.onrender.com/api/features/batch \
+  -H "Content-Type: application/json" \
+  -d '{"features":[{"node_id":"worker","version":"v1","filename":"a.feature","content":"Feature: A\n  Scenario: S\n    Given a step"},{"node_id":"supervisor","version":"v2","filename":"b.feature","content":"Feature: B\n  Scenario: S\n    Given a step"}]}'
 
 # Bulk create components
 curl -X POST https://roadmap-5vvp.onrender.com/api/bulk/components \
