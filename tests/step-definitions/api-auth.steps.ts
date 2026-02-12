@@ -246,7 +246,7 @@ function addKeyToRepo(
     revoked?: boolean;
   }
 ): void {
-  if (world.apiKeyRepo) {
+  if (world.apiKeyRepo && typeof world.apiKeyRepo.addKey === 'function') {
     world.apiKeyRepo.addKey(rawKey, info);
   }
 }

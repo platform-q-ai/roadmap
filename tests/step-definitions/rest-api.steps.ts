@@ -435,6 +435,58 @@ When(
   }
 );
 
+When(
+  'I send a POST request to {string} with an ID of {int} characters',
+  async function (this: ApiWorld, path: string, len: number) {
+    const longId = 'a'.repeat(len);
+    const body = JSON.stringify({
+      id: longId,
+      name: 'Long ID Component',
+      type: 'component',
+      layer: 'supervisor-layer',
+    });
+    this.response = await httpRequest(this.baseUrl, 'POST', path, body);
+  }
+);
+
+Then(
+  'the response body has field {string} with value null',
+  function (this: ApiWorld, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    assert.ok(
+      field in body,
+      `Field "${field}" not found in response body: ${JSON.stringify(body)}`
+    );
+    assert.strictEqual(
+      body[field],
+      null,
+      `Expected field "${field}" to be null, got ${JSON.stringify(body[field])}`
+    );
+  }
+);
+
+Then(
+  'the response body has field {string} as an empty array',
+  function (this: ApiWorld, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    assert.ok(
+      field in body,
+      `Field "${field}" not found in response body: ${JSON.stringify(body)}`
+    );
+    assert.ok(
+      Array.isArray(body[field]),
+      `Expected field "${field}" to be an array, got ${typeof body[field]}`
+    );
+    assert.strictEqual(
+      (body[field] as unknown[]).length,
+      0,
+      `Expected field "${field}" to be empty array, got ${JSON.stringify(body[field])}`
+    );
+  }
+);
+
 // ─── After (cleanup) ────────────────────────────────────────────────
 
 import { After } from '@cucumber/cucumber';

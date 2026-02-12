@@ -1,4 +1,4 @@
-@wip @v1
+@v1
 Feature: API Component CRUD
   As an LLM engineer using the roadmap API headlessly
   I want comprehensive endpoints to create, read, and delete components
