@@ -43,6 +43,11 @@ function buildRepos(world: World) {
     save: async (feature: Feature) => {
       world.savedFeatures.push(feature);
     },
+    saveMany: async (features: Feature[]) => {
+      for (const f of features) {
+        world.savedFeatures.push(f);
+      }
+    },
     deleteAll: async () => {
       world.deleteAllCalled = true;
       world.savedFeatures = [];

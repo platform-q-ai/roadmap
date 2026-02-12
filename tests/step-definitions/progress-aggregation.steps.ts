@@ -32,6 +32,11 @@ function buildFeatureRepo(world: World): IFeatureRepository {
     save: async (feature: Feature) => {
       world.features.push(feature);
     },
+    saveMany: async (features: Feature[]) => {
+      for (const f of features) {
+        world.features.push(f);
+      }
+    },
     deleteAll: async () => {
       world.features = [];
     },

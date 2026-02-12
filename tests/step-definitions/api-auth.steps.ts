@@ -197,6 +197,7 @@ function buildRepos(world: AuthApiWorld) {
     findByNode: async () => [],
     findByNodeAndVersion: async () => [],
     save: async () => {},
+    saveMany: async () => {},
     deleteAll: async () => {
       world.features = [];
     },

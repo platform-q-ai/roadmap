@@ -76,6 +76,11 @@ function buildTestRepos(data: WorldData) {
     save: vi.fn(async (feature: Feature) => {
       data.features.push(feature);
     }),
+    saveMany: vi.fn(async (features: Feature[]) => {
+      for (const f of features) {
+        data.features.push(f);
+      }
+    }),
     deleteAll: vi.fn(async () => {
       data.features = [];
     }),
@@ -282,6 +287,21 @@ describe('API Routes — v1 batch feature publishing', () => {
       });
     });
 
+    it('returns 400 for invalid JSON body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(
+          server,
+          'POST',
+          '/api/components/comp-a/versions/v1/features/batch',
+          'not-json'
+        );
+        expect(res.status).toBe(400);
+        const resBody = res.body as Record<string, unknown>;
+        expect(String(resBody.error)).toContain('Invalid JSON');
+      });
+    });
+
     it('returns 400 when features field is missing', async () => {
       const repos = buildTestRepos(seedData());
       await withServer(repos, async server => {
@@ -400,6 +420,35 @@ describe('API Routes — v1 batch feature publishing', () => {
         expect(res.status).toBe(400);
         const resBody = res.body as Record<string, unknown>;
         expect(String(resBody.error)).toContain('node_id is required');
+      });
+    });
+
+    it('returns 400 for empty features array in cross-component', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({ features: [] });
+        const res = await request(server, 'POST', '/api/features/batch', body);
+        expect(res.status).toBe(400);
+        const resBody = res.body as Record<string, unknown>;
+        expect(String(resBody.error)).toContain('features array must not be empty');
+      });
+    });
+
+    it('returns 400 for invalid JSON body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'POST', '/api/features/batch', 'not-json');
+        expect(res.status).toBe(400);
+        const resBody = res.body as Record<string, unknown>;
+        expect(String(resBody.error)).toContain('Invalid JSON');
+      });
+    });
+
+    it('returns 400 when features field is missing in cross-component', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'POST', '/api/features/batch', '{}');
+        expect(res.status).toBe(400);
       });
     });
 

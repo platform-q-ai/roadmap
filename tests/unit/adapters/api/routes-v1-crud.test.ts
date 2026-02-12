@@ -76,6 +76,11 @@ function buildTestRepos(data: WorldData) {
     save: vi.fn(async (feature: Feature) => {
       data.features.push(feature);
     }),
+    saveMany: vi.fn(async (features: Feature[]) => {
+      for (const f of features) {
+        data.features.push(f);
+      }
+    }),
     deleteAll: vi.fn(async () => {
       data.features = [];
     }),

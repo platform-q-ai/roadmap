@@ -55,6 +55,19 @@ export class SqliteFeatureRepository implements IFeatureRepository {
       );
   }
 
+  async saveMany(features: Feature[]): Promise<void> {
+    const insert = this.db.prepare(
+      `INSERT INTO features (node_id, version, filename, title, content, step_count)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    );
+    const runAll = this.db.transaction((items: Feature[]) => {
+      for (const f of items) {
+        insert.run(f.node_id, f.version, f.filename, f.title, f.content, f.step_count);
+      }
+    });
+    runAll(features);
+  }
+
   async deleteAll(): Promise<void> {
     this.db.prepare('DELETE FROM features').run();
   }

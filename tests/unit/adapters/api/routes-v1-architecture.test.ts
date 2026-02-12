@@ -57,6 +57,7 @@ function buildTestRepos(data: WorldData) {
       data.features.filter(f => f.node_id === nid && f.version === ver)
     ),
     save: vi.fn(),
+    saveMany: vi.fn(),
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),
     deleteByNodeAndFilename: vi.fn(async () => false),

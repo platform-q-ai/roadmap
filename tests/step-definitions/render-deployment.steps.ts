@@ -59,6 +59,7 @@ function buildStubRepos() {
     findByNode: async () => [],
     findByNodeAndVersion: async () => [],
     save: async () => {},
+    saveMany: async () => {},
     deleteAll: async () => {},
     deleteByNode: async () => {},
     deleteByNodeAndFilename: async () => false,

@@ -71,6 +71,11 @@ export function buildRepos(world: InMemoryWorld, overrides?: RepoOverrides) {
       };
     },
     save: overrides?.featureSave ?? (async () => {}),
+    saveMany: async features => {
+      for (const f of features) {
+        world.features.push(f);
+      }
+    },
     deleteAll: overrides?.featureDeleteAll ?? (async () => {}),
     deleteByNode: async () => {},
     deleteByNodeAndFilename: async () => false,

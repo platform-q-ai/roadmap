@@ -4,6 +4,16 @@ import { Feature } from '../domain/index.js';
 import { NodeNotFoundError, ValidationError } from './errors.js';
 
 const MAX_BATCH_SIZE = 50;
+const FILENAME_UNSAFE = /[/\\]|\.\./;
+
+function hasControlChars(s: string): boolean {
+  for (let i = 0; i < s.length; i++) {
+    if (s.charCodeAt(i) < 0x20) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export interface BatchFeatureEntry {
   filename: string;
@@ -74,9 +84,9 @@ export class BatchUploadFeatures {
       throw new NodeNotFoundError(input.nodeId);
     }
 
-    let uploaded = 0;
     let totalSteps = 0;
     const errors: BatchFeatureError[] = [];
+    const validFeatures: Feature[] = [];
 
     for (const entry of input.features) {
       const entryError = this.validateEntry(entry);
@@ -88,22 +98,23 @@ export class BatchUploadFeatures {
       const title = Feature.titleFromContent(entry.content, entry.filename);
       const stepCount = Feature.countSteps(entry.content);
 
-      const feature = new Feature({
-        node_id: input.nodeId,
-        version: input.version,
-        filename: entry.filename,
-        title,
-        content: entry.content,
-        step_count: stepCount,
-      });
-
-      await this.featureRepo.save(feature);
-      uploaded++;
+      validFeatures.push(
+        new Feature({
+          node_id: input.nodeId,
+          version: input.version,
+          filename: entry.filename,
+          title,
+          content: entry.content,
+          step_count: stepCount,
+        })
+      );
       totalSteps += stepCount;
     }
 
+    await this.featureRepo.saveMany(validFeatures);
+
     return {
-      uploaded,
+      uploaded: validFeatures.length,
       version: input.version,
       total_steps: totalSteps,
       errors,
@@ -112,22 +123,32 @@ export class BatchUploadFeatures {
 
   /** Cross-component batch: each entry specifies its own node_id + version. */
   async executeCrossComponent(input: CrossComponentBatchInput): Promise<BatchUploadResult> {
+    if (input.features.length === 0) {
+      throw new ValidationError('features array must not be empty');
+    }
+
     this.validateCrossComponentEntries(input.features);
 
     if (input.features.length > MAX_BATCH_SIZE) {
       throw new ValidationError(`Batch size exceeds maximum 50 features`);
     }
 
-    let uploaded = 0;
+    const nodeExistsCache = new Map<string, boolean>();
     let totalSteps = 0;
     const errors: BatchFeatureError[] = [];
+    const validFeatures: Feature[] = [];
 
     for (const entry of input.features) {
-      const nodeExists = await this.nodeRepo.exists(entry.node_id);
-      if (!nodeExists) {
+      let exists = nodeExistsCache.get(entry.node_id);
+      if (exists === undefined) {
+        exists = await this.nodeRepo.exists(entry.node_id);
+        nodeExistsCache.set(entry.node_id, exists);
+      }
+      if (!exists) {
+        const safeId = entry.node_id.slice(0, 64).replace(/[<>&"']/g, '');
         errors.push({
           filename: entry.filename,
-          error: `Component not found: ${entry.node_id}`,
+          error: `Component not found: ${safeId}`,
         });
         continue;
       }
@@ -141,26 +162,30 @@ export class BatchUploadFeatures {
       const title = Feature.titleFromContent(entry.content, entry.filename);
       const stepCount = Feature.countSteps(entry.content);
 
-      const feature = new Feature({
-        node_id: entry.node_id,
-        version: entry.version,
-        filename: entry.filename,
-        title,
-        content: entry.content,
-        step_count: stepCount,
-      });
-
-      await this.featureRepo.save(feature);
-      uploaded++;
+      validFeatures.push(
+        new Feature({
+          node_id: entry.node_id,
+          version: entry.version,
+          filename: entry.filename,
+          title,
+          content: entry.content,
+          step_count: stepCount,
+        })
+      );
       totalSteps += stepCount;
     }
 
-    return { uploaded, total_steps: totalSteps, errors };
+    await this.featureRepo.saveMany(validFeatures);
+
+    return { uploaded: validFeatures.length, total_steps: totalSteps, errors };
   }
 
   private validateEntry(entry: { filename: string; content: string }): string | null {
     if (!entry.filename) {
       return 'filename is required';
+    }
+    if (FILENAME_UNSAFE.test(entry.filename) || hasControlChars(entry.filename)) {
+      return 'filename contains unsafe characters';
     }
     if (!entry.content) {
       return 'content is required';
