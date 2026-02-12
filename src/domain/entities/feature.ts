@@ -101,6 +101,49 @@ export class Feature {
     return /^Feature:\s*\S/m.test(content);
   }
 
+  /** Check whether a filename ends with .feature */
+  static isValidFeatureExtension(filename: string): boolean {
+    return filename.endsWith('.feature') && !filename.endsWith('.feature.bak');
+  }
+
+  /** Check whether the base name (before .feature) is kebab-case. */
+  static isKebabCaseFilename(filename: string): boolean {
+    const base = filename.replace(/\.feature$/, '');
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(base);
+  }
+
+  /**
+   * Find the first line inside a scenario that is not a valid Gherkin keyword.
+   * Returns `{ line, text }` or null if no syntax error is found.
+   *
+   * Valid lines inside a scenario: Given, When, Then, And, But, #, |, """, @,
+   * blank lines, Scenario/Scenario Outline, Feature, Rule, Background, Examples.
+   */
+  static findFirstSyntaxError(content: string): { line: number; text: string } | null {
+    if (!content.trim()) {
+      return null;
+    }
+    const lines = content.split('\n');
+    let insideScenario = false;
+    const validLineRe =
+      /^\s*(Feature:|Scenario(?:\s+Outline)?:|Rule:|Background:|Examples:|Given\s|When\s|Then\s|And\s|But\s|\*\s|@|#|\||\"\"\"|$)/;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (/^\s*Scenario(?:\s+Outline)?:/.test(line)) {
+        insideScenario = true;
+        continue;
+      }
+      if (/^\s*(Feature:|Rule:|Background:|Examples:)/.test(line)) {
+        insideScenario = false;
+        continue;
+      }
+      if (insideScenario && line.trim() !== '' && !validLineRe.test(line)) {
+        return { line: i + 1, text: line.trim() };
+      }
+    }
+    return null;
+  }
+
   toJSON() {
     return {
       id: this.id,
