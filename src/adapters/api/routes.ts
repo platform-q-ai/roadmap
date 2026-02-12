@@ -7,6 +7,7 @@ import {
   DeleteComponent,
   DeleteEdge,
   DeleteFeature,
+  Edge,
   GetArchitecture,
   UpdateComponent,
   UpdateVersion,
@@ -385,6 +386,34 @@ async function handleUpdateVersion(
   }
 }
 
+// ─── Edge management helpers ────────────────────────────────────────
+
+const MAX_LABEL_LENGTH = 500;
+const MAX_METADATA_LENGTH = 4096;
+const MAX_METADATA_DEPTH = 4;
+const DEFAULT_EDGE_LIMIT = 1000;
+
+function checkDepth(value: unknown, depth: number): boolean {
+  if (depth > MAX_METADATA_DEPTH) {
+    return false;
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.values(value as Record<string, unknown>).every(v => checkDepth(v, depth + 1));
+  }
+  return true;
+}
+
+function sanitizeMetadata(raw: unknown): string | undefined {
+  const serialised = JSON.stringify(raw);
+  if (serialised.length > MAX_METADATA_LENGTH) {
+    return undefined;
+  }
+  if (!checkDepth(raw, 0)) {
+    return undefined;
+  }
+  return stripHtml(serialised);
+}
+
 // ─── Edge management handlers ───────────────────────────────────────
 
 async function handleCreateEdge(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
@@ -406,8 +435,8 @@ async function handleCreateEdge(deps: ApiDeps, req: IncomingMessage, res: Server
   const sourceId = body.source_id ? stripHtml(String(body.source_id)) : '';
   const targetId = body.target_id ? stripHtml(String(body.target_id)) : '';
   const edgeType = body.type ? stripHtml(String(body.type)) : '';
-  const label = body.label ? stripHtml(String(body.label)) : undefined;
-  const metadata = body.metadata !== undefined ? JSON.stringify(body.metadata) : undefined;
+  const label = body.label ? stripHtml(String(body.label)).slice(0, MAX_LABEL_LENGTH) : undefined;
+  const metadata = body.metadata !== undefined ? sanitizeMetadata(body.metadata) : undefined;
 
   const uc = new CreateEdge({ nodeRepo: deps.nodeRepo, edgeRepo: deps.edgeRepo });
   try {
@@ -428,16 +457,33 @@ async function handleCreateEdge(deps: ApiDeps, req: IncomingMessage, res: Server
 async function handleListEdges(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
   const params = parseQueryParams(req);
   const typeFilter = params.get('type');
+  const validTypes = Edge.TYPES as readonly string[];
+
+  if (typeFilter && !validTypes.includes(typeFilter)) {
+    json(res, 400, { error: `Invalid edge type: ${stripHtml(typeFilter)}` }, req);
+    return;
+  }
+
+  const limitParam = params.get('limit');
+  const offsetParam = params.get('offset');
+  const limit =
+    limitParam && Number.isFinite(Number(limitParam))
+      ? Math.min(Math.max(Number(limitParam), 1), DEFAULT_EDGE_LIMIT)
+      : DEFAULT_EDGE_LIMIT;
+  const offset =
+    offsetParam && Number.isFinite(Number(offsetParam)) ? Math.max(Number(offsetParam), 0) : 0;
+
   let edges;
   if (typeFilter) {
     edges = await deps.edgeRepo.findByType(typeFilter);
   } else {
     edges = await deps.edgeRepo.findAll();
   }
+  const paged = edges.slice(offset, offset + limit);
   json(
     res,
     200,
-    edges.map(e => e.toJSON())
+    paged.map(e => e.toJSON())
   );
 }
 
