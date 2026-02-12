@@ -50,6 +50,15 @@ src/
 │   ├── search-features.ts      # Search feature content across all components
 │   ├── seed-features-api.ts    # API-triggered feature seeding with step totals
 │   ├── export-features.ts      # Export features from DB to filesystem
+│   ├── get-dependency-tree.ts  # Recursive DEPENDS_ON tree traversal
+│   ├── get-dependents.ts       # Reverse DEPENDS_ON lookup
+│   ├── get-component-context.ts # Rich component context aggregation
+│   ├── get-implementation-order.ts # Topological sort with cycle detection
+│   ├── get-components-by-status.ts # Classify components by step coverage
+│   ├── get-next-implementable.ts # Ready-to-implement components
+│   ├── get-shortest-path.ts    # BFS shortest path between nodes
+│   ├── get-neighbourhood.ts    # N-hop subgraph extraction
+│   ├── get-layer-overview.ts   # Layer summaries with progress
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations
@@ -479,7 +488,15 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /a
 | `DELETE` | `/api/components/:id/versions/:ver/features` | Delete all features for a specific version | `204` | `404` component not found |
 | `DELETE` | `/api/components/:id/features` | Delete all features for a component (all versions) | `204` | `404` component not found |
 | `GET` | `/api/components/:id/edges` | Get inbound and outbound edges | `200 { inbound, outbound }` | `404` component not found |
-| `GET` | `/api/components/:id/dependencies` | Get DEPENDS_ON edges (dependencies + dependents) | `200 { dependencies, dependents }` | `404` component not found |
+| `GET` | `/api/components/:id/dependencies` | Recursive DEPENDS_ON tree (optional `?depth=N`, default 1, max 10) | `200 { dependencies }` | `404` component not found |
+| `GET` | `/api/components/:id/dependents` | Reverse DEPENDS_ON lookup (components that depend on this one) | `200 [...]` | `404` component not found |
+| `GET` | `/api/components/:id/context` | Rich component context (versions, features, deps, dependents, layer, siblings, progress) | `200` | `404` component not found |
+| `GET` | `/api/components/:id/neighbourhood` | N-hop subgraph (optional `?hops=N`, default 1, max 5) | `200 { nodes, edges }` | `404` component not found |
+| `GET` | `/api/graph/implementation-order` | Topological sort of components by DEPENDS_ON edges | `200 [...]` | `409` cycle detected |
+| `GET` | `/api/graph/components-by-status` | Classify components by step coverage (optional `?version=`, default `mvp`) | `200 { complete, in_progress, planned }` | — |
+| `GET` | `/api/graph/next-implementable` | Components ready to implement (all deps complete, optional `?version=`, default `mvp`) | `200 [...]` | — |
+| `GET` | `/api/graph/path` | BFS shortest path between two nodes (`?from=X&to=Y` required) | `200 { path, edges }` | `400` missing params |
+| `GET` | `/api/graph/layer-overview` | Layer summaries with component counts and progress | `200 [...]` | — |
 | `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` invalid type/self-ref/missing nodes, `409` duplicate |
 | `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200 [...]` | `400` invalid type filter |
 | `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` not found |
@@ -636,8 +653,35 @@ curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/worker/features
 # Get edges
 curl https://roadmap-5vvp.onrender.com/api/components/worker/edges
 
-# Get dependencies
+# Get dependency tree (recursive, default depth=1)
 curl https://roadmap-5vvp.onrender.com/api/components/worker/dependencies
+
+# Get dependency tree with depth
+curl "https://roadmap-5vvp.onrender.com/api/components/worker/dependencies?depth=3"
+
+# Get reverse dependencies (who depends on this component)
+curl https://roadmap-5vvp.onrender.com/api/components/worker/dependents
+
+# Get rich component context (versions, features, deps, layer, siblings, progress)
+curl https://roadmap-5vvp.onrender.com/api/components/worker/context
+
+# Get component neighbourhood (N-hop subgraph)
+curl "https://roadmap-5vvp.onrender.com/api/components/worker/neighbourhood?hops=2"
+
+# Get implementation order (topological sort)
+curl https://roadmap-5vvp.onrender.com/api/graph/implementation-order
+
+# Get components by completion status
+curl "https://roadmap-5vvp.onrender.com/api/graph/components-by-status?version=mvp"
+
+# Get next implementable components (all deps complete)
+curl "https://roadmap-5vvp.onrender.com/api/graph/next-implementable?version=mvp"
+
+# Get shortest path between two components
+curl "https://roadmap-5vvp.onrender.com/api/graph/path?from=worker&to=supervisor"
+
+# Get layer overview (summaries with progress)
+curl https://roadmap-5vvp.onrender.com/api/graph/layer-overview
 
 # Full architecture export
 curl https://roadmap-5vvp.onrender.com/api/architecture
