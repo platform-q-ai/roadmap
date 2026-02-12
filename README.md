@@ -152,7 +152,7 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 |--------|------|-------------|---------|--------|
 | `GET` | `/api/health` | Health check | `200` | -- |
 | `GET` | `/api/architecture` | Full architecture graph (layers, nodes, edges, stats) | `200` | -- |
-| `GET` | `/api/components` | List all non-layer nodes | `200` | -- |
+| `GET` | `/api/components` | List non-layer nodes (filterable via query params) | `200` | -- |
 | `GET` | `/api/components/:id` | Component with versions and features | `200` | `404` |
 | `POST` | `/api/components` | Create a new component (with validation) | `201` | `400` `409` |
 | `DELETE` | `/api/components/:id` | Delete component + versions, features, edges | `204` | `404` |
@@ -172,7 +172,29 @@ curl -X POST https://roadmap-5vvp.onrender.com/api/components \
 
 Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
 
-The request body requires `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, and `layer` (must reference an existing layer node). Optional fields: `description`, `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized. The `201` response returns the full node object with all fields.
+### Query Parameters: GET /api/components
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `type` | Filter by node type | `?type=store` |
+| `layer` | Filter by layer id | `?layer=supervisor-layer` |
+| `tag` | Filter by tag (exact match in tags array) | `?tag=runtime` |
+| `search` | Search by name (case-insensitive substring) | `?search=proxy` |
+
+All parameters are optional and combinable. When multiple parameters are provided, results must match all filters (AND logic). Layers are always excluded from results. An empty result returns `200` with an empty array.
+
+```bash
+# Filter by type
+curl "https://roadmap-5vvp.onrender.com/api/components?type=store"
+
+# Search by name (case-insensitive)
+curl "https://roadmap-5vvp.onrender.com/api/components?search=proxy"
+
+# Combine filters
+curl "https://roadmap-5vvp.onrender.com/api/components?type=component&layer=supervisor-layer"
+```
+
+The request body for `POST /api/components` requires `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, and `layer` (must reference an existing layer node). Optional fields: `description`, `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized. The `201` response returns the full node object with all fields.
 
 ### Example: Upload a feature file
 

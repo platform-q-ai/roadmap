@@ -455,7 +455,7 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 |--------|------|-------------|---------|--------|
 | `GET` | `/api/health` | Health check | `200 { status: "ok" }` | — |
 | `GET` | `/api/architecture` | Full architecture graph (layers, nodes, edges, progression_tree, stats) | `200` | — |
-| `GET` | `/api/components` | List all non-layer nodes | `200 [...]` | — |
+| `GET` | `/api/components` | List non-layer nodes (supports `?type=`, `?layer=`, `?tag=`, `?search=` filters, combinable) | `200 [...]` | — |
 | `GET` | `/api/components/:id` | Get component with versions and features | `200` | `404` not found |
 | `POST` | `/api/components` | Create a new component (with validation) | `201` | `400` invalid, `409` duplicate |
 | `DELETE` | `/api/components/:id` | Delete component + versions, features, edges | `204` | `404` not found |
@@ -490,6 +490,21 @@ Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
 ```bash
 # List components
 curl https://roadmap-5vvp.onrender.com/api/components
+
+# Filter by type
+curl "https://roadmap-5vvp.onrender.com/api/components?type=store"
+
+# Filter by layer
+curl "https://roadmap-5vvp.onrender.com/api/components?layer=supervisor-layer"
+
+# Filter by tag
+curl "https://roadmap-5vvp.onrender.com/api/components?tag=runtime"
+
+# Search by name (case-insensitive)
+curl "https://roadmap-5vvp.onrender.com/api/components?search=proxy"
+
+# Combine filters
+curl "https://roadmap-5vvp.onrender.com/api/components?type=component&layer=supervisor-layer"
 
 # Get component details
 curl https://roadmap-5vvp.onrender.com/api/components/worker
