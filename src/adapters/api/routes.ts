@@ -7,12 +7,14 @@ import type {
   INodeRepository,
   IVersionRepository,
   NodeType,
+  VersionStatus,
 } from '../../use-cases/index.js';
 import {
   CreateComponent,
   DeleteComponent,
   DeleteFeature,
   GetArchitecture,
+  UpdateVersion,
   UploadFeature,
 } from '../../use-cases/index.js';
 
@@ -29,21 +31,57 @@ export interface Route {
   handler: (req: IncomingMessage, res: ServerResponse, match: RegExpMatchArray) => Promise<void>;
 }
 
-function json(res: ServerResponse, status: number, data: unknown): void {
+const MAX_BODY_SIZE = 1024 * 1024; // 1MB
+const KEBAB_CASE_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+
+function getRequestId(req: IncomingMessage): string | undefined {
+  return (req as IncomingMessage & { requestId?: string }).requestId;
+}
+
+function json(res: ServerResponse, status: number, data: unknown, req?: IncomingMessage): void {
+  // Inject request_id into error responses (status >= 400)
+  if (req && status >= 400 && typeof data === 'object' && data !== null) {
+    const requestId = getRequestId(req);
+    if (requestId) {
+      (data as Record<string, unknown>).request_id = requestId;
+    }
+  }
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
 }
 
 async function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     let body = '';
+    let size = 0;
+    let tooLarge = false;
     req.on('data', (chunk: Buffer) => {
-      body += chunk.toString();
+      size += chunk.length;
+      if (size > MAX_BODY_SIZE) {
+        tooLarge = true;
+        // Continue reading to drain the stream, but stop accumulating
+        return;
+      }
+      if (!tooLarge) {
+        body += chunk.toString();
+      }
     });
     req.on('end', () => {
-      resolve(body);
+      if (tooLarge) {
+        reject(new BodyTooLargeError());
+      } else {
+        resolve(body);
+      }
     });
+    req.on('error', reject);
   });
+}
+
+class BodyTooLargeError extends Error {
+  constructor() {
+    super('Request body too large');
+    this.name = 'BodyTooLargeError';
+  }
 }
 
 function parseJsonBody(raw: string): Record<string, unknown> | null {
@@ -81,22 +119,33 @@ const VALID_NODE_TYPES: readonly string[] = [
   'app',
 ];
 
-function parseCreateInput(body: Record<string, unknown>): CreateComponentInput | null {
+interface ParseResult {
+  input: CreateComponentInput | null;
+  error?: string;
+}
+
+function parseCreateInput(body: Record<string, unknown>): ParseResult {
   const { id, name, type, layer, description, tags } = body;
   if (!id || !name || !type || !layer) {
-    return null;
+    return { input: null, error: 'Missing or invalid fields: id, name, type, layer' };
+  }
+  const idStr = String(id);
+  if (!KEBAB_CASE_RE.test(idStr)) {
+    return { input: null, error: `Invalid id format: must be kebab-case (got "${idStr}")` };
   }
   const typeStr = String(type);
   if (!VALID_NODE_TYPES.includes(typeStr)) {
-    return null;
+    return { input: null, error: `Invalid node type: ${typeStr}` };
   }
   return {
-    id: String(id),
-    name: String(name),
-    type: typeStr as NodeType,
-    layer: String(layer),
-    description: description ? String(description) : undefined,
-    tags: Array.isArray(tags) ? tags.map(String) : undefined,
+    input: {
+      id: idStr,
+      name: String(name),
+      type: typeStr as NodeType,
+      layer: String(layer),
+      description: description ? String(description) : undefined,
+      tags: Array.isArray(tags) ? tags.map(String) : undefined,
+    },
   };
 }
 
@@ -127,10 +176,15 @@ async function handleListComponents(deps: ApiDeps, _req: IncomingMessage, res: S
   );
 }
 
-async function handleGetComponent(deps: ApiDeps, res: ServerResponse, id: string) {
+async function handleGetComponent(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: string
+) {
   const node = await deps.nodeRepo.findById(id);
   if (!node) {
-    json(res, 404, { error: `Component not found: ${id}` });
+    json(res, 404, { error: `Component not found: ${id}` }, req);
     return;
   }
   const versions = await deps.versionRepo.findByNode(id);
@@ -143,15 +197,24 @@ async function handleGetComponent(deps: ApiDeps, res: ServerResponse, id: string
 }
 
 async function handleCreateComponent(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
-  const raw = await readBody(req);
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
   const body = parseJsonBody(raw);
   if (!body) {
-    json(res, 400, { error: 'Invalid JSON body' });
+    json(res, 400, { error: 'Invalid JSON body' }, req);
     return;
   }
-  const input = parseCreateInput(body);
+  const { input, error } = parseCreateInput(body);
   if (!input) {
-    json(res, 400, { error: 'Missing or invalid fields: id, name, type, layer' });
+    json(res, 400, { error: error ?? 'Missing or invalid fields: id, name, type, layer' }, req);
     return;
   }
   const uc = new CreateComponent({
@@ -164,11 +227,16 @@ async function handleCreateComponent(deps: ApiDeps, req: IncomingMessage, res: S
     json(res, 201, { id: input.id, name: input.name, type: input.type, layer: input.layer });
   } catch (err) {
     const msg = errorMessage(err);
-    json(res, errorStatus(msg), { error: msg });
+    json(res, errorStatus(msg), { error: msg }, req);
   }
 }
 
-async function handleDeleteComponent(deps: ApiDeps, res: ServerResponse, id: string) {
+async function handleDeleteComponent(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: string
+) {
   const uc = new DeleteComponent(deps);
   try {
     await uc.execute(id);
@@ -176,14 +244,19 @@ async function handleDeleteComponent(deps: ApiDeps, res: ServerResponse, id: str
     res.end();
   } catch (err) {
     const msg = errorMessage(err);
-    json(res, errorStatus(msg), { error: msg });
+    json(res, errorStatus(msg), { error: msg }, req);
   }
 }
 
-async function handleGetFeatures(deps: ApiDeps, res: ServerResponse, id: string) {
+async function handleGetFeatures(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: string
+) {
   const node = await deps.nodeRepo.findById(id);
   if (!node) {
-    json(res, 404, { error: `Component not found: ${id}` });
+    json(res, 404, { error: `Component not found: ${id}` }, req);
     return;
   }
   const features = await deps.featureRepo.findByNode(id);
@@ -200,19 +273,29 @@ async function handleUploadFeature(
   res: ServerResponse,
   params: { nodeId: string; filename: string }
 ) {
-  const content = await readBody(req);
+  let content: string;
+  try {
+    content = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
   const uc = new UploadFeature({ featureRepo: deps.featureRepo, nodeRepo: deps.nodeRepo });
   try {
     const result = await uc.execute({ nodeId: params.nodeId, filename: params.filename, content });
     json(res, 200, result);
   } catch (err) {
     const msg = errorMessage(err);
-    json(res, errorStatus(msg), { error: msg });
+    json(res, errorStatus(msg), { error: msg }, req);
   }
 }
 
 async function handleDeleteFeature(
   deps: ApiDeps,
+  req: IncomingMessage,
   res: ServerResponse,
   params: { nodeId: string; filename: string }
 ) {
@@ -223,14 +306,19 @@ async function handleDeleteFeature(
     res.end();
   } catch (err) {
     const msg = errorMessage(err);
-    json(res, errorStatus(msg), { error: msg });
+    json(res, errorStatus(msg), { error: msg }, req);
   }
 }
 
-async function handleGetEdges(deps: ApiDeps, res: ServerResponse, id: string) {
+async function handleGetEdges(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: string
+) {
   const node = await deps.nodeRepo.findById(id);
   if (!node) {
-    json(res, 404, { error: `Component not found: ${id}` });
+    json(res, 404, { error: `Component not found: ${id}` }, req);
     return;
   }
   const inbound = await deps.edgeRepo.findByTarget(id);
@@ -241,10 +329,15 @@ async function handleGetEdges(deps: ApiDeps, res: ServerResponse, id: string) {
   });
 }
 
-async function handleGetDependencies(deps: ApiDeps, res: ServerResponse, id: string) {
+async function handleGetDependencies(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: string
+) {
   const node = await deps.nodeRepo.findById(id);
   if (!node) {
-    json(res, 404, { error: `Component not found: ${id}` });
+    json(res, 404, { error: `Component not found: ${id}` }, req);
     return;
   }
   const outbound = await deps.edgeRepo.findBySource(id);
@@ -252,6 +345,52 @@ async function handleGetDependencies(deps: ApiDeps, res: ServerResponse, id: str
   const dependencies = outbound.filter(e => e.type === 'DEPENDS_ON').map(e => e.toJSON());
   const dependents = inbound.filter(e => e.type === 'DEPENDS_ON').map(e => e.toJSON());
   json(res, 200, { dependencies, dependents });
+}
+
+async function handleUpdateVersion(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  params: { nodeId: string; version: string }
+) {
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
+  const body = parseJsonBody(raw);
+  if (!body) {
+    json(res, 400, { error: 'Invalid JSON body' }, req);
+    return;
+  }
+  const content = body.content !== undefined ? String(body.content) : undefined;
+  const progress = body.progress !== undefined ? Number(body.progress) : undefined;
+  const status = body.status !== undefined ? (String(body.status) as VersionStatus) : undefined;
+
+  if (!content) {
+    json(res, 400, { error: 'content is required' }, req);
+    return;
+  }
+
+  const uc = new UpdateVersion({ nodeRepo: deps.nodeRepo, versionRepo: deps.versionRepo });
+  try {
+    const result = await uc.execute({
+      nodeId: params.nodeId,
+      version: params.version,
+      content,
+      progress,
+      status,
+    });
+    json(res, 200, result);
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg }, req);
+  }
 }
 
 // ─── Route table ────────────────────────────────────────────────────
@@ -280,7 +419,7 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)$/,
-      handler: async (_req, res, m) => handleGetComponent(deps, res, m[1]),
+      handler: async (req, res, m) => handleGetComponent(deps, req, res, m[1]),
     },
     {
       method: 'POST',
@@ -290,12 +429,18 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
     {
       method: 'DELETE',
       pattern: /^\/api\/components\/([^/]+)$/,
-      handler: async (_req, res, m) => handleDeleteComponent(deps, res, m[1]),
+      handler: async (req, res, m) => handleDeleteComponent(deps, req, res, m[1]),
+    },
+    {
+      method: 'PUT',
+      pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)$/,
+      handler: async (req, res, m) =>
+        handleUpdateVersion(deps, req, res, { nodeId: m[1], version: m[2] }),
     },
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)\/features$/,
-      handler: async (_req, res, m) => handleGetFeatures(deps, res, m[1]),
+      handler: async (req, res, m) => handleGetFeatures(deps, req, res, m[1]),
     },
     {
       method: 'PUT',
@@ -306,18 +451,18 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
     {
       method: 'DELETE',
       pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
-      handler: async (_req, res, m) =>
-        handleDeleteFeature(deps, res, { nodeId: m[1], filename: m[2] }),
+      handler: async (req, res, m) =>
+        handleDeleteFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
     },
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)\/edges$/,
-      handler: async (_req, res, m) => handleGetEdges(deps, res, m[1]),
+      handler: async (req, res, m) => handleGetEdges(deps, req, res, m[1]),
     },
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)\/dependencies$/,
-      handler: async (_req, res, m) => handleGetDependencies(deps, res, m[1]),
+      handler: async (req, res, m) => handleGetDependencies(deps, req, res, m[1]),
     },
   ];
 }

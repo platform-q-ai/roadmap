@@ -121,7 +121,7 @@ async function request(
   method: string,
   path: string,
   body?: string
-): Promise<{ status: number; body: unknown }> {
+): Promise<{ status: number; body: unknown; headers: Record<string, string> }> {
   return new Promise((resolve, reject) => {
     const addr = server.address();
     const port = typeof addr === 'object' && addr ? addr.port : 0;
@@ -146,7 +146,13 @@ async function request(
         } catch {
           parsed = data;
         }
-        resolve({ status: res.statusCode ?? 500, body: parsed });
+        const headers: Record<string, string> = {};
+        for (const [key, val] of Object.entries(res.headers)) {
+          if (typeof val === 'string') {
+            headers[key] = val;
+          }
+        }
+        resolve({ status: res.statusCode ?? 500, body: parsed, headers });
       });
     });
     req.on('error', reject);
@@ -166,7 +172,10 @@ async function withServer(
   try {
     await fn(server);
   } finally {
-    server.close();
+    await new Promise<void>(resolve => {
+      server.close(() => resolve());
+      server.closeAllConnections();
+    });
   }
 }
 
@@ -544,6 +553,181 @@ describe('API Routes', () => {
         });
         const res = await request(server, 'POST', '/api/components', body);
         expect(res.status).toBe(201);
+      });
+    });
+  });
+
+  // ─── Update Version ─────────────────────────────────────────────────
+
+  describe('PUT /api/components/:id/versions/:version', () => {
+    it('updates version content and returns 200', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({ content: 'Updated MVP description.' });
+        const res = await request(server, 'PUT', '/api/components/comp-a/versions/mvp', body);
+        expect(res.status).toBe(200);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.version).toBe('mvp');
+        expect(resBody.content).toBe('Updated MVP description.');
+        expect(resBody.node_id).toBe('comp-a');
+      });
+    });
+
+    it('updates progress and status alongside content', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          content: 'In progress.',
+          progress: 75,
+          status: 'in-progress',
+        });
+        const res = await request(server, 'PUT', '/api/components/comp-a/versions/mvp', body);
+        expect(res.status).toBe(200);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.progress).toBe(75);
+        expect(resBody.status).toBe('in-progress');
+      });
+    });
+
+    it('returns 404 for nonexistent component', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({ content: 'Nope' });
+        const res = await request(server, 'PUT', '/api/components/ghost/versions/mvp', body);
+        expect(res.status).toBe(404);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('returns 400 for invalid JSON body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'PUT', '/api/components/comp-a/versions/mvp', 'not json');
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('returns 400 for empty body (no content)', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'PUT', '/api/components/comp-a/versions/mvp', '{}');
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('returns 400 for progress out of range', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({ content: 'Test', progress: 150 });
+        const res = await request(server, 'PUT', '/api/components/comp-a/versions/mvp', body);
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('returns 400 for invalid status', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({ content: 'Test', status: 'invalid' });
+        const res = await request(server, 'PUT', '/api/components/comp-a/versions/mvp', body);
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+  });
+
+  // ─── Security Headers ───────────────────────────────────────────────
+
+  describe('Security headers', () => {
+    it('includes X-Content-Type-Options: nosniff on all responses', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/health');
+        expect(res.headers['x-content-type-options']).toBe('nosniff');
+      });
+    });
+
+    it('includes X-Frame-Options: DENY on all responses', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/health');
+        expect(res.headers['x-frame-options']).toBe('DENY');
+      });
+    });
+
+    it('includes X-Request-Id header on all responses', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/health');
+        expect(res.headers['x-request-id']).toBeDefined();
+        expect(res.headers['x-request-id'].length).toBeGreaterThan(0);
+      });
+    });
+
+    it('includes security headers on error responses', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/components/nonexistent');
+        expect(res.status).toBe(404);
+        expect(res.headers['x-content-type-options']).toBe('nosniff');
+        expect(res.headers['x-frame-options']).toBe('DENY');
+        expect(res.headers['x-request-id']).toBeDefined();
+      });
+    });
+
+    it('includes request_id in error response body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/components/nonexistent');
+        expect(res.status).toBe(404);
+        const body = res.body as Record<string, unknown>;
+        expect(body).toHaveProperty('request_id');
+        expect(typeof body.request_id).toBe('string');
+      });
+    });
+  });
+
+  // ─── Input Validation ───────────────────────────────────────────────
+
+  describe('Input validation', () => {
+    it('rejects component ID that is not kebab-case', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          id: 'Invalid ID!',
+          name: 'Bad',
+          type: 'component',
+          layer: 'sup-layer',
+        });
+        const res = await request(server, 'POST', '/api/components', body);
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+      });
+    });
+
+    it('accepts valid kebab-case component ID', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          id: 'valid-kebab-id',
+          name: 'Valid',
+          type: 'component',
+          layer: 'sup-layer',
+        });
+        const res = await request(server, 'POST', '/api/components', body);
+        expect(res.status).toBe(201);
+      });
+    });
+
+    it('rejects request body exceeding 1MB', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const largeBody = 'x'.repeat(1024 * 1024 + 1);
+        const res = await request(server, 'PUT', '/api/components/comp-a/versions/mvp', largeBody);
+        expect(res.status).toBe(413);
+        expect(res.body).toHaveProperty('error');
       });
     });
   });

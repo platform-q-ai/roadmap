@@ -7,6 +7,7 @@ export {
   NodeExistsError,
   NodeNotFoundError,
   NodeTypeError,
+  ValidationError,
 } from './errors.js';
 export { ExportArchitecture } from './export-architecture.js';
 export type {
@@ -18,6 +19,8 @@ export type {
 export { GetArchitecture } from './get-architecture.js';
 export type { FeatureFileInput } from './seed-features.js';
 export { SeedFeatures } from './seed-features.js';
+export type { UpdateVersionInput, UpdateVersionResult } from './update-version.js';
+export { UpdateVersion } from './update-version.js';
 export type { UploadFeatureInput, UploadFeatureResult } from './upload-feature.js';
 export { UploadFeature } from './upload-feature.js';
 

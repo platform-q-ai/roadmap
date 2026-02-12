@@ -84,7 +84,10 @@ async function withServer(
   try {
     await fn(server);
   } finally {
-    server.close();
+    await new Promise<void>(resolve => {
+      server.close(() => resolve());
+      server.closeAllConnections();
+    });
   }
 }
 

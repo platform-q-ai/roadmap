@@ -24,7 +24,7 @@ interface ApiWorld {
   features: Feature[];
   server: http.Server | null;
   baseUrl: string;
-  response: { status: number; body: unknown } | null;
+  response: { status: number; body: unknown; headers: Record<string, string> } | null;
   [key: string]: unknown;
 }
 
@@ -90,7 +90,7 @@ function buildApiRepos(world: ApiWorld) {
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
 
-function initApiWorld(world: ApiWorld) {
+async function initApiWorld(world: ApiWorld): Promise<void> {
   if (!world.nodes) {
     world.nodes = [];
   }
@@ -103,6 +103,13 @@ function initApiWorld(world: ApiWorld) {
   if (!world.features) {
     world.features = [];
   }
+  if (world.server) {
+    const s = world.server;
+    await new Promise<void>(resolve => {
+      s.close(() => resolve());
+      s.closeAllConnections();
+    });
+  }
   world.server = null;
   world.response = null;
 }
@@ -112,17 +119,19 @@ async function httpRequest(
   method: string,
   path: string,
   body?: string
-): Promise<{ status: number; body: unknown }> {
+): Promise<{ status: number; body: unknown; headers: Record<string, string> }> {
   return new Promise((resolve, reject) => {
     const url = new URL(path, baseUrl);
+    const contentHeaders = body
+      ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+      : {};
     const options: http.RequestOptions = {
       method,
       hostname: url.hostname,
       port: url.port,
       path: url.pathname,
-      headers: body
-        ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
-        : {},
+      headers: { Connection: 'close', ...contentHeaders },
+      agent: false,
     };
 
     const req = http.request(options, res => {
@@ -137,7 +146,13 @@ async function httpRequest(
         } catch {
           parsed = data;
         }
-        resolve({ status: res.statusCode ?? 500, body: parsed });
+        const headers: Record<string, string> = {};
+        for (const [key, val] of Object.entries(res.headers)) {
+          if (typeof val === 'string') {
+            headers[key] = val;
+          }
+        }
+        resolve({ status: res.statusCode ?? 500, body: parsed, headers });
       });
     });
     req.on('error', reject);
@@ -151,7 +166,7 @@ async function httpRequest(
 // ─── Given ──────────────────────────────────────────────────────────
 
 Given('the API server is running', async function (this: ApiWorld) {
-  initApiWorld(this);
+  await initApiWorld(this);
   const repos = buildApiRepos(this);
   const app = createApp(repos);
   await new Promise<void>(resolve => {
@@ -381,13 +396,49 @@ Then('the response body includes feature {string}', function (this: ApiWorld, fi
   assert.ok(found, `Feature "${filename}" should be in the response but was not found`);
 });
 
+Then(
+  'the response has header {string} with value {string}',
+  function (this: ApiWorld, header: string, value: string) {
+    assert.ok(this.response, 'No response received');
+    const headerLower = header.toLowerCase();
+    const actual = this.response.headers[headerLower];
+    assert.ok(
+      actual !== undefined,
+      `Header "${header}" not found in response. Available: ${Object.keys(this.response.headers).join(', ')}`
+    );
+    assert.equal(actual, value, `Expected header "${header}" to be "${value}", got "${actual}"`);
+  }
+);
+
+Then('the response has header {string}', function (this: ApiWorld, header: string) {
+  assert.ok(this.response, 'No response received');
+  const headerLower = header.toLowerCase();
+  const actual = this.response.headers[headerLower];
+  assert.ok(
+    actual !== undefined,
+    `Header "${header}" not found in response. Available: ${Object.keys(this.response.headers).join(', ')}`
+  );
+});
+
+When(
+  'I send a PUT request to {string} with a body larger than 1MB',
+  async function (this: ApiWorld, path: string) {
+    const largeBody = 'x'.repeat(1024 * 1024 + 1);
+    this.response = await httpRequest(this.baseUrl, 'PUT', path, largeBody);
+  }
+);
+
 // ─── After (cleanup) ────────────────────────────────────────────────
 
 import { After } from '@cucumber/cucumber';
 
-After(function (this: ApiWorld) {
+After(async function (this: ApiWorld) {
   if (this.server) {
-    this.server.close();
+    const s = this.server;
     this.server = null;
+    await new Promise<void>(resolve => {
+      s.close(() => resolve());
+      s.closeAllConnections();
+    });
   }
 });

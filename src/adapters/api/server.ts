@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import http from 'node:http';
@@ -67,6 +68,12 @@ function setCorsHeaders(res: http.ServerResponse): void {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
+function setSecurityHeaders(res: http.ServerResponse, requestId: string): void {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Request-Id', requestId);
+}
+
 interface RequestContext {
   method: string;
   url: string;
@@ -87,8 +94,9 @@ async function tryApiRoute(routes: Route[], ctx: RequestContext): Promise<boolea
       await route.handler(ctx.req, ctx.res, match);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Internal server error';
+      const reqId = (ctx.req as http.IncomingMessage & { requestId?: string }).requestId;
       ctx.res.writeHead(500, { 'Content-Type': 'application/json' });
-      ctx.res.end(JSON.stringify({ error: message }));
+      ctx.res.end(JSON.stringify({ error: message, request_id: reqId }));
     }
     return true;
   }
@@ -111,8 +119,13 @@ export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
   const server = http.createServer(async (req, res) => {
     const method = req.method ?? 'GET';
     const url = req.url ?? '/';
+    const requestId = randomUUID();
 
     setCorsHeaders(res);
+    setSecurityHeaders(res, requestId);
+
+    // Store requestId on request for route handlers to include in error responses
+    (req as http.IncomingMessage & { requestId?: string }).requestId = requestId;
 
     if (method === 'OPTIONS') {
       res.writeHead(204);
@@ -132,7 +145,7 @@ export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
     }
 
     res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not found' }));
+    res.end(JSON.stringify({ error: 'Not found', request_id: requestId }));
   });
 
   return server;

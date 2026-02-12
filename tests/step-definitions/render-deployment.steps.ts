@@ -70,7 +70,14 @@ async function renderHttpGet(
   return new Promise((resolve, reject) => {
     const url = new URL(path, baseUrl);
     const req = http.request(
-      { method: 'GET', hostname: url.hostname, port: url.port, path: url.pathname },
+      {
+        method: 'GET',
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        headers: { Connection: 'close' },
+        agent: false,
+      },
       res => {
         let data = '';
         res.on('data', (chunk: Buffer) => {
@@ -190,9 +197,13 @@ Then('the render response includes CORS headers', function (this: RenderWorld) {
 
 // ─── After (cleanup) ────────────────────────────────────────────────
 
-After(function (this: RenderWorld) {
+After(async function (this: RenderWorld) {
   if (this.renderServer) {
-    this.renderServer.close();
+    const s = this.renderServer;
     this.renderServer = null;
+    await new Promise<void>(resolve => {
+      s.close(() => resolve());
+      s.closeAllConnections();
+    });
   }
 });
