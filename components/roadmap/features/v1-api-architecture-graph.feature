@@ -9,6 +9,7 @@ Feature: API Architecture Graph Endpoint
     Scenario: Get full architecture graph
       Given the API server is running
       And a valid API key with scope "read"
+      And the database has a complete architecture graph
       When I send a GET request to "/api/architecture"
       Then the response status is 200
       And the response body has field "generated_at" as an ISO 8601 timestamp
@@ -21,6 +22,7 @@ Feature: API Architecture Graph Endpoint
     Scenario: Architecture stats are accurate
       Given the API server is running
       And a valid API key with scope "read"
+      And the database has a complete architecture graph
       When I send a GET request to "/api/architecture"
       Then the stats field has "total_nodes" matching the actual node count
       And the stats field has "total_edges" matching the actual edge count
@@ -39,6 +41,7 @@ Feature: API Architecture Graph Endpoint
     Scenario: Progression tree contains only app-type nodes
       Given the API server is running
       And a valid API key with scope "read"
+      And the database has a complete architecture graph
       When I send a GET request to "/api/architecture"
       Then every node in the progression_tree has type "app"
       And every edge in the progression_tree has type "DEPENDS_ON"

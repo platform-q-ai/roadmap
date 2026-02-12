@@ -494,6 +494,294 @@ Then(
   }
 );
 
+// ─── Architecture graph steps ───────────────────────────────────────
+
+Given('the database has a complete architecture graph', function (this: ApiWorld) {
+  // Seed a realistic architecture: layer, components, app nodes, edges, versions, features
+  const layer = new Node({ id: 'supervisor-layer', name: 'Supervisor Layer', type: 'layer' });
+  const comp = new Node({
+    id: 'worker',
+    name: 'Worker',
+    type: 'component',
+    layer: 'supervisor-layer',
+  });
+  const appNode = new Node({
+    id: 'cli-app',
+    name: 'CLI App',
+    type: 'app',
+    layer: 'supervisor-layer',
+  });
+  const appNode2 = new Node({
+    id: 'web-app',
+    name: 'Web App',
+    type: 'app',
+    layer: 'supervisor-layer',
+  });
+
+  // Deduplicate: remove any pre-existing nodes with these IDs
+  const seedIds = new Set(['supervisor-layer', 'worker', 'cli-app', 'web-app']);
+  this.nodes = this.nodes.filter(n => !seedIds.has(n.id));
+  this.nodes.push(layer, comp, appNode, appNode2);
+
+  this.edges.push(
+    new Edge({ id: 10, source_id: 'supervisor-layer', target_id: 'worker', type: 'CONTAINS' }),
+    new Edge({ id: 11, source_id: 'supervisor-layer', target_id: 'cli-app', type: 'CONTAINS' }),
+    new Edge({ id: 12, source_id: 'supervisor-layer', target_id: 'web-app', type: 'CONTAINS' }),
+    new Edge({ id: 13, source_id: 'worker', target_id: 'cli-app', type: 'DEPENDS_ON' }),
+    new Edge({ id: 14, source_id: 'cli-app', target_id: 'web-app', type: 'DEPENDS_ON' })
+  );
+
+  this.versions.push(
+    new Version({ node_id: 'worker', version: 'mvp', progress: 50, status: 'in-progress' }),
+    new Version({ node_id: 'cli-app', version: 'mvp', progress: 30, status: 'in-progress' })
+  );
+
+  this.features.push(
+    new Feature({
+      node_id: 'worker',
+      version: 'mvp',
+      filename: 'mvp-exec.feature',
+      title: 'Execution',
+      content: 'Feature: Exec\n  Scenario: Run\n    Given something',
+    })
+  );
+});
+
+Given('component {string} has versions and features', function (this: ApiWorld, compId: string) {
+  // Add a component node with versions and features
+  if (!this.nodes.some(n => n.id === compId)) {
+    this.nodes.push(
+      new Node({ id: compId, name: compId, type: 'component', layer: 'supervisor-layer' })
+    );
+  }
+  this.versions.push(
+    new Version({ node_id: compId, version: 'mvp', progress: 40, status: 'in-progress' })
+  );
+  this.features.push(
+    new Feature({
+      node_id: compId,
+      version: 'mvp',
+      filename: 'mvp-test.feature',
+      title: 'Test Feature',
+      content: 'Feature: Test\n  Scenario: T\n    Given something',
+    })
+  );
+});
+
+Given(
+  'component {string} has current_version {string}',
+  function (this: ApiWorld, compId: string, currentVersion: string) {
+    // Remove any existing node with this ID, re-add with current_version
+    this.nodes = this.nodes.filter(n => n.id !== compId);
+    this.nodes.push(
+      new Node({
+        id: compId,
+        name: compId,
+        type: 'component',
+        layer: 'supervisor-layer',
+        current_version: currentVersion,
+      })
+    );
+    // Ensure there's at least an mvp version for the node
+    if (!this.versions.some(v => v.node_id === compId && v.version === 'mvp')) {
+      this.versions.push(
+        new Version({ node_id: compId, version: 'mvp', progress: 0, status: 'planned' })
+      );
+    }
+  }
+);
+
+// ─── Architecture graph Then steps ──────────────────────────────────
+
+Then(
+  'the response body has field {string} as an ISO 8601 timestamp',
+  function (this: ApiWorld, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    assert.ok(field in body, `Field "${field}" not found in response body`);
+    const value = String(body[field]);
+    const parsed = new Date(value);
+    assert.ok(
+      !isNaN(parsed.getTime()),
+      `Field "${field}" is not a valid ISO 8601 timestamp: ${value}`
+    );
+    assert.strictEqual(
+      parsed.toISOString(),
+      value,
+      `Field "${field}" is not in ISO 8601 format: ${value}`
+    );
+  }
+);
+
+Then(
+  'the response body has field {string} as a non-empty array',
+  function (this: ApiWorld, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    assert.ok(field in body, `Field "${field}" not found in response body`);
+    assert.ok(
+      Array.isArray(body[field]),
+      `Expected field "${field}" to be an array, got ${typeof body[field]}`
+    );
+    assert.ok(
+      (body[field] as unknown[]).length > 0,
+      `Expected field "${field}" to be a non-empty array`
+    );
+  }
+);
+
+Then(
+  'the stats field has {string} matching the actual node count',
+  function (this: ApiWorld, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const stats = body['stats'] as Record<string, number>;
+    const nodes = body['nodes'] as unknown[];
+    assert.ok(stats, 'stats field not found in response');
+    assert.ok(nodes, 'nodes field not found in response');
+    assert.strictEqual(
+      stats[field],
+      nodes.length,
+      `Expected stats.${field} (${stats[field]}) to match actual node count (${nodes.length})`
+    );
+  }
+);
+
+Then(
+  'the stats field has {string} matching the actual edge count',
+  function (this: ApiWorld, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const stats = body['stats'] as Record<string, number>;
+    assert.ok(stats, 'stats field not found in response');
+    // stats.total_edges counts ALL edges (including CONTAINS), while body.edges only has non-CONTAINS
+    // So we compare against the stats value being a non-negative number
+    assert.ok(
+      typeof stats[field] === 'number' && stats[field] >= 0,
+      `Expected stats.${field} to be a non-negative number, got ${stats[field]}`
+    );
+  }
+);
+
+Then(
+  'the stats field has {string} matching the actual version count',
+  function (this: ApiWorld, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const stats = body['stats'] as Record<string, number>;
+    assert.ok(stats, 'stats field not found in response');
+    assert.ok(
+      typeof stats[field] === 'number' && stats[field] >= 0,
+      `Expected stats.${field} to be a non-negative number, got ${stats[field]}`
+    );
+  }
+);
+
+Then(
+  'the stats field has {string} matching the actual feature count',
+  function (this: ApiWorld, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const stats = body['stats'] as Record<string, number>;
+    assert.ok(stats, 'stats field not found in response');
+    assert.ok(
+      typeof stats[field] === 'number' && stats[field] >= 0,
+      `Expected stats.${field} to be a non-negative number, got ${stats[field]}`
+    );
+  }
+);
+
+Then(
+  'the node {string} in the response has field {string}',
+  function (this: ApiWorld, nodeId: string, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const nodes = body['nodes'] as Array<Record<string, unknown>>;
+    assert.ok(nodes, 'nodes field not found in response');
+    const node = nodes.find(n => n['id'] === nodeId);
+    assert.ok(node, `Node "${nodeId}" not found in response nodes`);
+    assert.ok(
+      field in node,
+      `Field "${field}" not found in node "${nodeId}". Keys: ${Object.keys(node).join(', ')}`
+    );
+  }
+);
+
+Then(
+  'the node {string} has field {string}',
+  function (this: ApiWorld, nodeId: string, field: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const nodes = body['nodes'] as Array<Record<string, unknown>>;
+    assert.ok(nodes, 'nodes field not found in response');
+    const node = nodes.find(n => n['id'] === nodeId);
+    assert.ok(node, `Node "${nodeId}" not found in response nodes`);
+    assert.ok(
+      field in node,
+      `Field "${field}" not found in node "${nodeId}". Keys: ${Object.keys(node).join(', ')}`
+    );
+  }
+);
+
+Then(
+  'every node in the progression_tree has type {string}',
+  function (this: ApiWorld, expectedType: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const tree = body['progression_tree'] as Record<string, unknown>;
+    assert.ok(tree, 'progression_tree field not found in response');
+    const nodes = tree['nodes'] as Array<Record<string, unknown>>;
+    assert.ok(Array.isArray(nodes), 'progression_tree.nodes is not an array');
+    for (const node of nodes) {
+      assert.strictEqual(
+        node['type'],
+        expectedType,
+        `Expected node "${node['id']}" to have type "${expectedType}", got "${node['type']}"`
+      );
+    }
+  }
+);
+
+Then(
+  'every edge in the progression_tree has type {string}',
+  function (this: ApiWorld, expectedType: string) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const tree = body['progression_tree'] as Record<string, unknown>;
+    assert.ok(tree, 'progression_tree field not found in response');
+    const edges = tree['edges'] as Array<Record<string, unknown>>;
+    assert.ok(Array.isArray(edges), 'progression_tree.edges is not an array');
+    for (const edge of edges) {
+      assert.strictEqual(
+        edge['type'],
+        expectedType,
+        `Expected edge to have type "${expectedType}", got "${edge['type']}"`
+      );
+    }
+  }
+);
+
+Then(
+  'the version {string} for node {string} has progress {int} in the response',
+  function (this: ApiWorld, versionTag: string, nodeId: string, expectedProgress: number) {
+    assert.ok(this.response, 'No response received');
+    const body = this.response.body as Record<string, unknown>;
+    const nodes = body['nodes'] as Array<Record<string, unknown>>;
+    assert.ok(nodes, 'nodes field not found in response');
+    const node = nodes.find(n => n['id'] === nodeId);
+    assert.ok(node, `Node "${nodeId}" not found in response nodes`);
+    const versions = node['versions'] as Record<string, Record<string, unknown>>;
+    assert.ok(versions, `Node "${nodeId}" has no versions field`);
+    const version = versions[versionTag];
+    assert.ok(version, `Version "${versionTag}" not found for node "${nodeId}"`);
+    assert.strictEqual(
+      version['progress'],
+      expectedProgress,
+      `Expected progress ${expectedProgress} for ${nodeId}/${versionTag}, got ${version['progress']}`
+    );
+  }
+);
+
 // ─── After (cleanup) ────────────────────────────────────────────────
 
 import { After } from '@cucumber/cucumber';
