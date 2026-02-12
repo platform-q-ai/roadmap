@@ -48,6 +48,21 @@ export class Feature {
     return match ? match[1].trim() : fallbackFilename.replace('.feature', '');
   }
 
+  /** Count Given/When/Then/And/But steps in Gherkin content. */
+  static countSteps(content: string): number {
+    const stepPattern = /^\s*(Given|When|Then|And|But)\s+/gm;
+    let count = 0;
+    while (stepPattern.exec(content)) {
+      count++;
+    }
+    return count;
+  }
+
+  /** Check whether content contains a valid Feature: line. */
+  static hasValidGherkin(content: string): boolean {
+    return /^Feature:\s*\S/m.test(content);
+  }
+
   toJSON() {
     return {
       id: this.id,
