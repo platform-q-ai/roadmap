@@ -456,7 +456,7 @@ Edge types: `CONTAINS`, `CONTROLS`, `DEPENDS_ON`, `READS_FROM`, `WRITES_TO`, `DI
 
 The API server runs at `https://roadmap-5vvp.onrender.com` (production) or locally via `npm run serve`.
 
-All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /features/:filename` which accepts raw Gherkin text).
+All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /api/components/:id/versions/:ver/features/:filename` which accepts raw Gherkin text).
 
 ### Endpoints
 
@@ -472,7 +472,8 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 | `GET` | `/api/components/:id/features` | List features for a component | `200 [...]` | `404` component not found |
 | `GET` | `/api/components/:id/versions/:ver/features` | List features for a specific version (with totals) | `200 { features, totals }` | `404` component not found |
 | `GET` | `/api/components/:id/versions/:ver/features/:filename` | Get single feature (JSON or `text/plain` via Accept header) | `200` | `404` not found |
-| `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (body = raw Gherkin text) | `200` | `404` component not found |
+| `PUT` | `/api/components/:id/versions/:ver/features/:filename` | Upload/replace a feature file with explicit version (body = raw Gherkin text) | `200` | `400` invalid version, `404` component not found |
+| `PUT` | `/api/components/:id/features/:filename` | **Deprecated** — returns 400 directing to version-scoped URL | `—` | `400` version is required |
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a single feature file | `204` | `404` not found |
 | `DELETE` | `/api/components/:id/versions/:ver/features/:filename` | Delete a single feature by version and filename | `204` | `404` not found |
 | `DELETE` | `/api/components/:id/versions/:ver/features` | Delete all features for a specific version | `204` | `404` component not found |
@@ -616,8 +617,8 @@ curl https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/feature
 curl -H "Accept: text/plain" \
   https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features/v1-test.feature
 
-# Upload a feature file
-curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp-exec.feature \
+# Upload a feature file (version-scoped)
+curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/versions/mvp/features/mvp-exec.feature \
   --data-binary @components/worker/features/mvp-exec.feature
 
 # Delete a feature file

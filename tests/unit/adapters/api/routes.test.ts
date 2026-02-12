@@ -353,7 +353,7 @@ describe('API Routes', () => {
     });
   });
 
-  describe('PUT /api/components/:id/features/:filename', () => {
+  describe('PUT /api/components/:id/versions/:ver/features/:filename', () => {
     it('uploads a feature file and returns 200', async () => {
       const repos = buildTestRepos(seedData());
       await withServer(repos, async server => {
@@ -361,7 +361,7 @@ describe('API Routes', () => {
         const res = await request(
           server,
           'PUT',
-          '/api/components/comp-a/features/mvp-new.feature',
+          '/api/components/comp-a/versions/mvp/features/mvp-new.feature',
           content
         );
         expect(res.status).toBe(200);
@@ -376,7 +376,7 @@ describe('API Routes', () => {
         const res = await request(
           server,
           'PUT',
-          '/api/components/ghost/features/mvp-test.feature',
+          '/api/components/ghost/versions/mvp/features/mvp-test.feature',
           content
         );
         expect(res.status).toBe(404);
