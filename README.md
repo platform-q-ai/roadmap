@@ -80,12 +80,13 @@ roadmap/
 │   │   ├── delete-edge.ts
 │   │   ├── batch-upload-features.ts
 │   │   ├── delete-feature-version-scoped.ts
+│   │   ├── get-feature-version-scoped.ts
 │   │   └── errors.ts
 │   ├── infrastructure/         # Concrete implementations
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (22 endpoints + static files)
+│       ├── api/                # REST API server (24 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -163,6 +164,8 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `PATCH` | `/api/components/:id` | Partial update (merge-patch semantics) | `200` | `400` `404` `413` |
 | `DELETE` | `/api/components/:id` | Delete component + versions, features, edges | `204` | `404` |
 | `GET` | `/api/components/:id/features` | List features for a component | `200` | `404` |
+| `GET` | `/api/components/:id/versions/:ver/features` | List features for a specific version (with totals) | `200` | `404` |
+| `GET` | `/api/components/:id/versions/:ver/features/:filename` | Get single feature (JSON or `text/plain` via Accept header) | `200` | `404` |
 | `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (raw Gherkin body) | `200` | `404` |
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a feature file | `204` | `404` |
 | `DELETE` | `/api/components/:id/versions/:ver/features/:filename` | Delete a single feature by version and filename | `204` | `404` |
@@ -207,6 +210,22 @@ Updatable fields: `name` (non-empty string), `description` (string), `tags` (str
 curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp-exec.feature \
   --data-binary @components/worker/features/mvp-task-execution.feature
 ```
+
+### Example: List features by version
+
+```bash
+# List features for a specific version (returns features array + totals)
+curl https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features
+
+# Get a single feature as JSON
+curl https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features/v1-test.feature
+
+# Get a single feature as raw Gherkin text
+curl -H "Accept: text/plain" \
+  https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features/v1-test.feature
+```
+
+The list endpoint returns `{ features: [...], totals: { total_features, total_scenarios, total_steps, total_given_steps, total_when_steps, total_then_steps } }`. The single-feature endpoint returns the feature object as JSON by default, or raw Gherkin text when the `Accept: text/plain` header is sent.
 
 ### Example: Create an edge
 

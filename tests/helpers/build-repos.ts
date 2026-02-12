@@ -63,6 +63,9 @@ export function buildRepos(world: InMemoryWorld, overrides?: RepoOverrides) {
     findByNode: async (nid: string) => world.features.filter(f => f.node_id === nid),
     findByNodeAndVersion: async (nid: string, ver: string) =>
       world.features.filter(f => f.node_id === nid && f.version === ver),
+    findByNodeVersionAndFilename: async (nid: string, ver: string, fname: string) =>
+      world.features.find(f => f.node_id === nid && f.version === ver && f.filename === fname) ??
+      null,
     getStepCountSummary: async (nid: string, ver: string) => {
       const matched = world.features.filter(f => f.node_id === nid && f.version === ver);
       return {

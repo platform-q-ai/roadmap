@@ -342,6 +342,16 @@ Then(
   }
 );
 
+When(
+  'I send a PUT request to {string} with that key',
+  async function (this: AuthApiWorld, path: string) {
+    assert.ok(this.currentApiKey, 'No current API key');
+    this.response = await httpRequest(this.baseUrl, 'PUT', path, {
+      headers: { Authorization: `Bearer ${this.currentApiKey}` },
+    });
+  }
+);
+
 Then('the response does not have header {string}', function (this: AuthApiWorld, header: string) {
   assert.ok(this.response, 'No response');
   const val = this.response.headers[header.toLowerCase()];

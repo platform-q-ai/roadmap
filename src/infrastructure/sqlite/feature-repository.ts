@@ -27,6 +27,17 @@ export class SqliteFeatureRepository implements IFeatureRepository {
     return rows.map(r => new Feature(r as ConstructorParameters<typeof Feature>[0]));
   }
 
+  async findByNodeVersionAndFilename(
+    nodeId: string,
+    version: string,
+    filename: string
+  ): Promise<Feature | null> {
+    const row = this.db
+      .prepare('SELECT * FROM features WHERE node_id = ? AND version = ? AND filename = ? LIMIT 1')
+      .get(nodeId, version, filename);
+    return row ? new Feature(row as ConstructorParameters<typeof Feature>[0]) : null;
+  }
+
   async getStepCountSummary(nodeId: string, version: string): Promise<StepCountSummary> {
     const row = this.db
       .prepare(

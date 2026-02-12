@@ -185,17 +185,22 @@ function buildRepos(world: AuthApiWorld) {
     findByNode: async (nid: string) => world.versions.filter(v => v.node_id === nid),
     findByNodeAndVersion: async (nid: string, ver: string) =>
       world.versions.find(v => v.node_id === nid && v.version === ver) ?? null,
-    save: async (version: Version) => {
-      world.versions.push(version);
+    save: async (v: Version) => {
+      world.versions.push(v);
     },
-    deleteByNode: async (nid: string) => {
-      world.versions = world.versions.filter(v => v.node_id !== nid);
+    deleteByNode: async (n: string) => {
+      world.versions = world.versions.filter(v => v.node_id !== n);
     },
   };
-  const featureRepo: IFeatureRepository = {
-    findAll: async () => world.features as never[],
-    findByNode: async () => [],
-    findByNodeAndVersion: async () => [],
+  type Ft = { node_id: string; version: string; filename?: string };
+  const fts = world.features as Ft[];
+  const featureRepo = {
+    findAll: async () => fts,
+    findByNode: async (nid: string) => fts.filter(f => f.node_id === nid),
+    findByNodeAndVersion: async (nid: string, v: string) =>
+      fts.filter(f => f.node_id === nid && f.version === v),
+    findByNodeVersionAndFilename: async (nid: string, v: string, fn: string) =>
+      fts.find(f => f.node_id === nid && f.version === v && f.filename === fn) ?? null,
     save: async () => {},
     saveMany: async () => {},
     deleteAll: async () => {
@@ -206,7 +211,7 @@ function buildRepos(world: AuthApiWorld) {
     deleteByNodeAndVersionAndFilename: async () => false,
     deleteByNodeAndVersion: async () => 0,
     getStepCountSummary: async () => ({ totalSteps: 0, featureCount: 0 }),
-  };
+  } as unknown as IFeatureRepository;
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
 function ensureWorldInit(world: AuthApiWorld): void {
@@ -256,15 +261,12 @@ async function startAuthServer(world: AuthApiWorld): Promise<void> {
   await stopServer(world);
   world.response = null;
   world.requestLogs = [];
-
   const repo = new InMemoryApiKeyRepo();
   world.apiKeyRepo = repo;
-
   // Sync pre-existing keys
   for (const [, info] of world.apiKeys) {
     repo.addKey(info.rawKey, info);
   }
-
   const repos = buildRepos(world);
   const validateApiKey = new ValidateApiKey({ apiKeyRepo: repo });
 
@@ -599,7 +601,6 @@ Given(
 );
 
 // ─── When steps ──────────────────────────────────────────────────────
-
 When(
   'I send a GET request to {string} without an API key',
   async function (this: AuthApiWorld, path: string) {
@@ -730,16 +731,6 @@ When(
   async function (this: AuthApiWorld, path: string) {
     assert.ok(this.currentApiKey, 'No current API key');
     this.response = await authHttpRequest(this.baseUrl, 'POST', path, {
-      headers: { Authorization: `Bearer ${this.currentApiKey}` },
-    });
-  }
-);
-
-When(
-  'I send a PUT request to {string} with that key',
-  async function (this: AuthApiWorld, path: string) {
-    assert.ok(this.currentApiKey, 'No current API key');
-    this.response = await authHttpRequest(this.baseUrl, 'PUT', path, {
       headers: { Authorization: `Bearer ${this.currentApiKey}` },
     });
   }
