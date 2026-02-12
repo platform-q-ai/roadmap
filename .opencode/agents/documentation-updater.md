@@ -24,6 +24,7 @@ Update documentation when the PR introduces:
 - **Architecture changes** (new layers, new directories, new patterns)
 - **New BDD features or workflow changes** (update workflow sections)
 - **Dependency changes** (new tools in the tech stack)
+- **Any functional change** (bump the version number — see Version Bumping below)
 
 ## When NOT to Update
 
@@ -98,6 +99,52 @@ Return a summary of what was updated:
 ### No Changes Needed
 - (if the PR doesn't require documentation updates, state this explicitly)
 ```
+
+## Version Bumping
+
+**You MUST bump the version in `package.json` on every PR that introduces functional changes.** The version number is not just metadata — it directly controls the `roadmap` component's progress tracking in the live application.
+
+### How versioning works
+
+The `package.json` `"version"` field uses semver (`MAJOR.MINOR.PATCH`). At runtime, the API server reads this version and sets it as the `roadmap` component's `current_version`. The system then derives phase progress from it using this formula:
+
+| Phase | Major | Example version | Progress |
+|-------|-------|-----------------|----------|
+| **MVP** | `0` | `0.7.5` | 75% |
+| **V1** | `1` | `1.2.0` | 20% |
+| **V2** | `2` | `2.5.3` | 53% |
+
+The formula is: `progress = minor * 10 + patch` (capped at 100).
+
+- When `major` equals the phase's major → progress is calculated from minor/patch
+- When `major` is greater than the phase's major → that phase is 100% (complete)
+- When `major` is less than the phase's major → that phase is 0% (planned)
+
+For example, version `1.2.0` means:
+- MVP phase = **100%** (complete, because major 1 > 0)
+- V1 phase = **20%** (in-progress, because `2 * 10 + 0 = 20`)
+- V2 phase = **0%** (planned, because major 1 < 2)
+
+### When to bump what
+
+| Change type | Bump | Example |
+|-------------|------|---------|
+| New feature, endpoint, or capability | **MINOR** | `1.2.0` → `1.3.0` |
+| Bug fix or small improvement | **PATCH** | `1.2.0` → `1.2.1` |
+| Phase milestone complete (all features done) | **MAJOR** | `0.9.9` → `1.0.0` |
+
+### What to update
+
+1. **`package.json`** — bump the `"version"` field
+2. **`README.md`** — if a version badge or version reference exists, update it to match
+
+### When NOT to bump
+
+Do not bump the version for:
+- Documentation-only changes (README, AGENTS.md edits with no code changes)
+- Test-only changes (new tests without functional changes)
+- Formatting or linting fixes
+- Changes to CI/CD configuration that don't affect the application
 
 ## Important Notes
 
