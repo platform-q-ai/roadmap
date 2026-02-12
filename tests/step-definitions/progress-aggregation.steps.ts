@@ -2,10 +2,10 @@ import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
-import { Feature } from '../../src/domain/entities/feature.js';
-import type { IFeatureRepository } from '../../src/domain/repositories/feature-repository.js';
-import type { StepTotalsResult } from '../../src/use-cases/get-step-totals.js';
-import { GetStepTotals } from '../../src/use-cases/get-step-totals.js';
+import type { IFeatureRepository } from '../../src/domain/index.js';
+import { Feature } from '../../src/domain/index.js';
+import type { StepTotalsResult } from '../../src/use-cases/index.js';
+import { GetStepTotals } from '../../src/use-cases/index.js';
 
 interface World {
   features: Feature[];

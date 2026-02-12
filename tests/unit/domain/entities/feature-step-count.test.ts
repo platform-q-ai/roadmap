@@ -1,6 +1,5 @@
+import { Feature } from '@domain/entities/feature.js';
 import { describe, expect, it } from 'vitest';
-
-import { Feature } from '../../../../src/domain/entities/feature.js';
 
 describe('Feature — step_count property', () => {
   it('defaults step_count to 0 when not provided', () => {
