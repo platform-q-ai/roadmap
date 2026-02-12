@@ -1,4 +1,4 @@
-@wip @v1
+@v1
 Feature: Aggregated Step Counts Per Component Per Version
   As the roadmap application
   I want step counts aggregated across all features for a component version
