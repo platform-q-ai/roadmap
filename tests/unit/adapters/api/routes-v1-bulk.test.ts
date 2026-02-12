@@ -337,5 +337,166 @@ describe('API Routes — v1 bulk operations', () => {
         expect(res.status).toBe(400);
       });
     });
+
+    it('silently ignores not-found IDs and returns deleted count for existing ones', async () => {
+      const data = seedData();
+      data.nodes.push(
+        new Node({ id: 'del-x', name: 'Del X', type: 'component', layer: 'sup-layer' })
+      );
+      const repos = buildTestRepos(data);
+      await withServer(repos, async server => {
+        const body = JSON.stringify({ ids: ['del-x', 'nonexistent-id'] });
+        const res = await request(server, 'POST', '/api/bulk/delete/components', body);
+        expect(res.status).toBe(200);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.deleted).toBe(1);
+        expect(resBody.errors).toEqual([]);
+      });
+    });
+
+    it('returns 400 for invalid JSON body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'POST', '/api/bulk/delete/components', 'not json');
+        expect(res.status).toBe(400);
+      });
+    });
+  });
+
+  describe('POST /api/bulk/components — input validation', () => {
+    it('returns 400 when all items have invalid input', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          components: [
+            { id: 'INVALID ID', name: 'Bad', type: 'component', layer: 'sup-layer' },
+            { name: 'No ID', type: 'component', layer: 'sup-layer' },
+          ],
+        });
+        const res = await request(server, 'POST', '/api/bulk/components', body);
+        expect(res.status).toBe(400);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.created).toBe(0);
+        const errors = resBody.errors as Array<Record<string, unknown>>;
+        expect(errors).toHaveLength(2);
+      });
+    });
+
+    it('reports parse error with item id when input is invalid', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          components: [
+            { id: 'good-one', name: 'Good', type: 'component', layer: 'sup-layer' },
+            { id: 123, type: 'component', layer: 'sup-layer' },
+          ],
+        });
+        const res = await request(server, 'POST', '/api/bulk/components', body);
+        expect(res.status).toBe(207);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.created).toBe(1);
+        const errors = resBody.errors as Array<Record<string, unknown>>;
+        expect(errors).toHaveLength(1);
+      });
+    });
+  });
+
+  describe('POST /api/bulk/edges — validation and partial failures', () => {
+    it('returns error for edge with missing required fields', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          edges: [{ source_id: 'comp-a' }],
+        });
+        const res = await request(server, 'POST', '/api/bulk/edges', body);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.created).toBe(0);
+        const errors = resBody.errors as Array<Record<string, unknown>>;
+        expect(errors).toHaveLength(1);
+        expect(errors[0].status).toBe(400);
+        expect(String(errors[0].error)).toContain('Missing required fields');
+      });
+    });
+
+    it('returns error for edge with invalid edge type', async () => {
+      const data = seedData();
+      data.nodes.push(
+        new Node({ id: 'n1', name: 'N1', type: 'component', layer: 'sup-layer' }),
+        new Node({ id: 'n2', name: 'N2', type: 'component', layer: 'sup-layer' })
+      );
+      const repos = buildTestRepos(data);
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          edges: [{ source_id: 'n1', target_id: 'n2', type: 'INVALID_TYPE' }],
+        });
+        const res = await request(server, 'POST', '/api/bulk/edges', body);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.created).toBe(0);
+        const errors = resBody.errors as Array<Record<string, unknown>>;
+        expect(errors).toHaveLength(1);
+        expect(String(errors[0].error)).toContain('Invalid edge type');
+      });
+    });
+
+    it('returns 404 error for edge referencing non-existent node', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          edges: [{ source_id: 'comp-a', target_id: 'no-such-node', type: 'DEPENDS_ON' }],
+        });
+        const res = await request(server, 'POST', '/api/bulk/edges', body);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.created).toBe(0);
+        const errors = resBody.errors as Array<Record<string, unknown>>;
+        expect(errors).toHaveLength(1);
+        expect(errors[0].status).toBe(404);
+      });
+    });
+
+    it('returns 207 with mixed success and failure', async () => {
+      const data = seedData();
+      data.nodes.push(
+        new Node({ id: 'e-a', name: 'EA', type: 'component', layer: 'sup-layer' }),
+        new Node({ id: 'e-b', name: 'EB', type: 'component', layer: 'sup-layer' })
+      );
+      const repos = buildTestRepos(data);
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          edges: [
+            { source_id: 'e-a', target_id: 'e-b', type: 'DEPENDS_ON' },
+            { source_id: 'e-a', target_id: 'missing', type: 'DEPENDS_ON' },
+          ],
+        });
+        const res = await request(server, 'POST', '/api/bulk/edges', body);
+        expect(res.status).toBe(207);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.created).toBe(1);
+        const errors = resBody.errors as Array<Record<string, unknown>>;
+        expect(errors).toHaveLength(1);
+      });
+    });
+
+    it('returns 400 for invalid JSON body', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'POST', '/api/bulk/edges', 'not json');
+        expect(res.status).toBe(400);
+      });
+    });
+
+    it('handles non-string source_id and target_id gracefully', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          edges: [{ source_id: 123, target_id: null, type: 'DEPENDS_ON' }],
+        });
+        const res = await request(server, 'POST', '/api/bulk/edges', body);
+        const resBody = res.body as Record<string, unknown>;
+        expect(resBody.created).toBe(0);
+        const errors = resBody.errors as Array<Record<string, unknown>>;
+        expect(errors).toHaveLength(1);
+        expect(String(errors[0].error)).toContain('Missing required fields');
+      });
+    });
   });
 });
