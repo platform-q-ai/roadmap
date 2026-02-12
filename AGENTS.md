@@ -39,6 +39,7 @@ src/
 ├── use-cases/                  # Business logic (depends only on domain)
 │   ├── get-architecture.ts     # Assemble full architecture graph
 │   ├── export-architecture.ts  # Get architecture + write JSON
+│   ├── get-step-totals.ts      # Aggregate step counts per component/version
 │   ├── seed-features.ts        # Parse + insert feature files
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
@@ -437,7 +438,7 @@ app.get('/api/architecture', async (req, res) => {
 nodes(id TEXT PK, name, type, layer, color, icon, description, tags TEXT/JSON, sort_order)
 edges(id INT PK, source_id FK, target_id FK, type, label, metadata TEXT/JSON)
 node_versions(id INT PK, node_id FK, version, content, progress INT 0-100, status, updated_at)
-features(id INT PK, node_id FK, version, filename, title, content, updated_at)
+features(id INT PK, node_id FK, version, filename, title, content, step_count INT DEFAULT 0, updated_at)
 ```
 
 Edge types: `CONTAINS`, `CONTROLS`, `DEPENDS_ON`, `READS_FROM`, `WRITES_TO`, `DISPATCHES_TO`, `ESCALATES_TO`, `PROXIES`, `SANITISES`, `GATES`, `SEQUENCE`.

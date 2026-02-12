@@ -69,6 +69,7 @@ roadmap/
 │   ├── use-cases/              # Business logic (depends only on domain)
 │   │   ├── get-architecture.ts
 │   │   ├── export-architecture.ts
+│   │   ├── get-step-totals.ts
 │   │   ├── seed-features.ts
 │   │   ├── create-component.ts
 │   │   ├── delete-component.ts
@@ -110,7 +111,7 @@ Everything lives in four SQLite tables:
 - **nodes** -- 67 components (layers, components, apps, stores, external tools, pipeline phases). Each has an id, name, type, color, icon, description, and JSON tags array.
 - **edges** -- 119 typed relationships (CONTAINS, CONTROLS, DEPENDS_ON, READS_FROM, WRITES_TO, DISPATCHES_TO, ESCALATES_TO, PROXIES, SANITISES, GATES, SEQUENCE).
 - **node_versions** -- 105 versioned specs. Each component has overview, MVP, v1, and v2 documentation with progress (0-100%) and status (planned / in-progress / complete).
-- **features** -- 83 Gherkin feature files linked to components and versions.
+- **features** -- 83 Gherkin feature files linked to components and versions. Each feature tracks a `step_count` for progress aggregation.
 
 ### Data Flow
 
