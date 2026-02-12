@@ -143,7 +143,7 @@ async function httpRequest(
       method,
       hostname: url.hostname,
       port: url.port,
-      path: url.pathname,
+      path: url.pathname + url.search,
       headers: { Connection: 'close', ...contentHeaders },
       agent: false,
     };
