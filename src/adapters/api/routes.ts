@@ -24,6 +24,7 @@ import {
   handleBulkDeleteComponents,
 } from './routes-bulk.js';
 import { buildFeatureDeletionRoutes } from './routes-feature-deletion.js';
+import { buildFeatureRetrievalRoutes } from './routes-feature-retrieval.js';
 import type { ApiDeps, Route } from './routes-shared.js';
 import {
   BodyTooLargeError,
@@ -633,5 +634,6 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       handler: async (req, res, m) =>
         handleDeleteFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
     },
+    ...buildFeatureRetrievalRoutes(deps),
   ];
 }

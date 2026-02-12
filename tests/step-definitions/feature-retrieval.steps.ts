@@ -131,21 +131,23 @@ Then(
   'the response body is an array of {int} features',
   function (this: RetrievalWorld, count: number) {
     assert.ok(this.response, 'No response');
-    const body = this.response.body;
-    assert.ok(Array.isArray(body), `Expected array, got ${typeof body}`);
+    const body = this.response.body as Record<string, unknown>;
+    const features = body.features ?? body;
+    assert.ok(Array.isArray(features), `Expected features array, got ${typeof features}`);
     assert.strictEqual(
-      (body as unknown[]).length,
+      (features as unknown[]).length,
       count,
-      `Expected ${count} features, got ${(body as unknown[]).length}`
+      `Expected ${count} features, got ${(features as unknown[]).length}`
     );
   }
 );
 
 Then('every feature has version {string}', function (this: RetrievalWorld, version: string) {
   assert.ok(this.response, 'No response');
-  const body = this.response.body as Array<Record<string, unknown>>;
-  assert.ok(Array.isArray(body), 'Expected array');
-  for (const item of body) {
+  const body = this.response.body as Record<string, unknown>;
+  const features = (body.features ?? body) as Array<Record<string, unknown>>;
+  assert.ok(Array.isArray(features), 'Expected array');
+  for (const item of features) {
     assert.strictEqual(
       item.version,
       version,
