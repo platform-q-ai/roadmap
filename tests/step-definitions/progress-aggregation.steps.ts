@@ -4,8 +4,8 @@ import { Given, Then, When } from '@cucumber/cucumber';
 
 import { Feature } from '../../src/domain/entities/feature.js';
 import type { IFeatureRepository } from '../../src/domain/repositories/feature-repository.js';
-import { GetStepTotals } from '../../src/use-cases/get-step-totals.js';
 import type { StepTotalsResult } from '../../src/use-cases/get-step-totals.js';
+import { GetStepTotals } from '../../src/use-cases/get-step-totals.js';
 
 interface World {
   features: Feature[];
