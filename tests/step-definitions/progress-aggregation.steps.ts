@@ -49,6 +49,8 @@ function buildFeatureRepo(world: World): IFeatureRepository {
       }
       return false;
     },
+    deleteByNodeAndVersionAndFilename: async () => false,
+    deleteByNodeAndVersion: async () => 0,
   };
 }
 

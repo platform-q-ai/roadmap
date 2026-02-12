@@ -14,6 +14,7 @@ export { CreateEdge } from './create-edge.js';
 export { DeleteComponent } from './delete-component.js';
 export { DeleteEdge } from './delete-edge.js';
 export { DeleteFeature } from './delete-feature.js';
+export { DeleteFeatureVersionScoped } from './delete-feature-version-scoped.js';
 export {
   EdgeExistsError,
   EdgeNotFoundError,

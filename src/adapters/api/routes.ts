@@ -23,6 +23,7 @@ import {
   handleBulkCreateEdges,
   handleBulkDeleteComponents,
 } from './routes-bulk.js';
+import { buildFeatureDeletionRoutes } from './routes-feature-deletion.js';
 import type { ApiDeps, Route } from './routes-shared.js';
 import {
   BodyTooLargeError,
@@ -614,6 +615,7 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       handler: async (req, res, m) =>
         handleBatchUploadFeatures(deps, req, res, { nodeId: m[1], version: m[2] }),
     },
+    ...buildFeatureDeletionRoutes(deps),
     {
       method: 'GET',
       pattern: /^\/api\/components\/([^/]+)\/features$/,

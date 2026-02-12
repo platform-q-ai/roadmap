@@ -49,6 +49,8 @@ function createMockRepos() {
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),
     deleteByNodeAndFilename: vi.fn(),
+    deleteByNodeAndVersionAndFilename: vi.fn(),
+    deleteByNodeAndVersion: vi.fn(),
   };
 
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };

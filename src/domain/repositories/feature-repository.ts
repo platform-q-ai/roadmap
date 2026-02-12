@@ -15,4 +15,10 @@ export interface IFeatureRepository {
   deleteAll(): Promise<void>;
   deleteByNode(nodeId: string): Promise<void>;
   deleteByNodeAndFilename(nodeId: string, filename: string): Promise<boolean>;
+  deleteByNodeAndVersionAndFilename(
+    nodeId: string,
+    version: string,
+    filename: string
+  ): Promise<boolean>;
+  deleteByNodeAndVersion(nodeId: string, version: string): Promise<number>;
 }
