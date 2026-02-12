@@ -45,7 +45,7 @@ export type {
   NodeType,
   VersionStatus,
 } from '../domain/index.js';
-export { Node } from '../domain/index.js';
+export { Edge, Node } from '../domain/index.js';
 
 import { Node as _Node } from '../domain/index.js';
 /** Canonical list of valid node types, sourced from the domain entity. */

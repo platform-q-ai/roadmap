@@ -17,6 +17,7 @@ import {
   CreateComponent,
   DeleteComponent,
   DeleteFeature,
+  Edge,
   GetArchitecture,
   UpdateVersion,
   UploadFeature,
@@ -459,6 +460,153 @@ async function handleUpdateVersion(
   }
 }
 
+// ─── Bulk route handlers ────────────────────────────────────────────
+
+const BULK_MAX_ITEMS = 100;
+
+interface BulkComponentError {
+  id: string;
+  status: number;
+  error: string;
+}
+
+async function handleBulkCreateComponents(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse
+) {
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
+  const body = parseJsonBody(raw);
+  if (!body || !Array.isArray(body.components)) {
+    json(res, 400, { error: 'Invalid body: expected { components: [...] }' }, req);
+    return;
+  }
+  const items = body.components as Array<Record<string, unknown>>;
+  if (items.length > BULK_MAX_ITEMS) {
+    json(res, 400, { error: `Batch size exceeds maximum 100 items` }, req);
+    return;
+  }
+
+  const uc = new CreateComponent({
+    nodeRepo: deps.nodeRepo,
+    edgeRepo: deps.edgeRepo,
+    versionRepo: deps.versionRepo,
+  });
+
+  let created = 0;
+  const errors: BulkComponentError[] = [];
+
+  for (const item of items) {
+    const { input, error } = parseCreateInput(item);
+    if (!input) {
+      const itemId = typeof item.id === 'string' ? item.id : 'unknown';
+      errors.push({ id: itemId, status: 400, error: error ?? 'Invalid input' });
+      continue;
+    }
+    try {
+      await uc.execute(input);
+      created++;
+    } catch (err) {
+      const msg = errorMessage(err);
+      errors.push({ id: input.id, status: errorStatus(msg), error: msg });
+    }
+  }
+
+  const status = errors.length > 0 && created > 0 ? 207 : errors.length > 0 ? 400 : 201;
+  json(res, status, { created, errors }, req);
+}
+
+async function handleBulkCreateEdges(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
+  const body = parseJsonBody(raw);
+  if (!body || !Array.isArray(body.edges)) {
+    json(res, 400, { error: 'Invalid body: expected { edges: [...] }' }, req);
+    return;
+  }
+  const items = body.edges as Array<Record<string, unknown>>;
+  if (items.length > BULK_MAX_ITEMS) {
+    json(res, 400, { error: `Batch size exceeds maximum 100 items` }, req);
+    return;
+  }
+
+  let created = 0;
+  for (const item of items) {
+    const sourceId = typeof item.source_id === 'string' ? stripHtml(item.source_id) : '';
+    const targetId = typeof item.target_id === 'string' ? stripHtml(item.target_id) : '';
+    const edgeType = typeof item.type === 'string' ? stripHtml(item.type) : '';
+    const label = typeof item.label === 'string' ? stripHtml(item.label) : null;
+
+    const edge = new Edge({
+      source_id: sourceId,
+      target_id: targetId,
+      type: edgeType as Edge['type'],
+      label,
+    });
+    await deps.edgeRepo.save(edge);
+    created++;
+  }
+
+  json(res, 201, { created }, req);
+}
+
+async function handleBulkDeleteComponents(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse
+) {
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
+  const body = parseJsonBody(raw);
+  if (!body || !Array.isArray(body.ids)) {
+    json(res, 400, { error: 'Invalid body: expected { ids: [...] }' }, req);
+    return;
+  }
+  const ids = body.ids as string[];
+  if (ids.length > BULK_MAX_ITEMS) {
+    json(res, 400, { error: `Batch size exceeds maximum 100 items` }, req);
+    return;
+  }
+
+  const uc = new DeleteComponent(deps);
+  let deleted = 0;
+  for (const id of ids) {
+    try {
+      await uc.execute(String(id));
+      deleted++;
+    } catch {
+      // Skip components that don't exist or fail to delete
+    }
+  }
+
+  json(res, 200, { deleted }, req);
+}
+
 // ─── Route table ────────────────────────────────────────────────────
 
 interface RouteOptions {
@@ -476,6 +624,21 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       method: 'GET',
       pattern: /^\/api\/architecture$/,
       handler: async (req, res) => handleGetArchitecture(deps, req, res, options?.packageVersion),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/api\/bulk\/components$/,
+      handler: async (req, res) => handleBulkCreateComponents(deps, req, res),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/api\/bulk\/edges$/,
+      handler: async (req, res) => handleBulkCreateEdges(deps, req, res),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/api\/bulk\/delete\/components$/,
+      handler: async (req, res) => handleBulkDeleteComponents(deps, req, res),
     },
     {
       method: 'GET',
