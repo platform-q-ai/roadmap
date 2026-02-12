@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 
 import { Given, Then } from '@cucumber/cucumber';
 
-import type { NodeType } from '../../src/domain/entities/node.js';
+import type { NodeType } from '../../src/domain/index.js';
 import { Edge, Feature, Node, Version } from '../../src/domain/index.js';
 
 interface GraphWorld {

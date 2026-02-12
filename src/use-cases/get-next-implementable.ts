@@ -31,26 +31,36 @@ export class GetNextImplementable {
   }
 
   async execute(version: string): Promise<ImplementableComponent[]> {
-    const allNodes = await this.deps.nodeRepo.findAll();
-    const allEdges = await this.deps.edgeRepo.findAll();
+    const [allNodes, allEdges, allVersions, allFeatures] = await Promise.all([
+      this.deps.nodeRepo.findAll(),
+      this.deps.edgeRepo.findAll(),
+      this.deps.versionRepo.findAll(),
+      this.deps.featureRepo.findAll(),
+    ]);
 
     const components = allNodes.filter(n => n.type !== 'layer');
     const componentIds = new Set(components.map(n => n.id));
 
-    const progressMap = await this.buildProgressMap(components, version);
+    const progressMap = this.buildProgressMap(allVersions, componentIds, version);
     const depsMap = this.buildDependencyMap(componentIds, allEdges);
+    const stepMap = this.buildStepMap(allFeatures, version);
 
-    return this.findImplementable(components, version, progressMap, depsMap);
+    return this.findImplementable(components, progressMap, depsMap, stepMap);
   }
 
-  private async buildProgressMap(
-    components: Array<{ id: string }>,
+  private buildProgressMap(
+    allVersions: Array<{ node_id: string; version: string; progress: number }>,
+    componentIds: Set<string>,
     version: string
-  ): Promise<Map<string, number>> {
+  ): Map<string, number> {
     const map = new Map<string, number>();
-    for (const comp of components) {
-      const ver = await this.deps.versionRepo.findByNodeAndVersion(comp.id, version);
-      map.set(comp.id, ver?.progress ?? 0);
+    for (const id of componentIds) {
+      map.set(id, 0);
+    }
+    for (const v of allVersions) {
+      if (v.version === version && componentIds.has(v.node_id)) {
+        map.set(v.node_id, v.progress);
+      }
     }
     return map;
   }
@@ -75,12 +85,25 @@ export class GetNextImplementable {
     return map;
   }
 
-  private async findImplementable(
+  private buildStepMap(
+    allFeatures: Array<{ node_id: string; version: string; step_count: number }>,
+    version: string
+  ): Map<string, number> {
+    const map = new Map<string, number>();
+    for (const f of allFeatures) {
+      if (f.version === version) {
+        map.set(f.node_id, (map.get(f.node_id) ?? 0) + f.step_count);
+      }
+    }
+    return map;
+  }
+
+  private findImplementable(
     components: Array<{ id: string; name: string }>,
-    version: string,
     progressMap: Map<string, number>,
-    depsMap: Map<string, string[]>
-  ): Promise<ImplementableComponent[]> {
+    depsMap: Map<string, string[]>,
+    stepMap: Map<string, number>
+  ): ImplementableComponent[] {
     const result: ImplementableComponent[] = [];
     for (const comp of components) {
       const selfProgress = progressMap.get(comp.id) ?? 0;
@@ -90,11 +113,10 @@ export class GetNextImplementable {
       const depIds = depsMap.get(comp.id) ?? [];
       const allDepsComplete = depIds.every(depId => (progressMap.get(depId) ?? 0) >= 100);
       if (allDepsComplete) {
-        const summary = await this.deps.featureRepo.getStepCountSummary(comp.id, version);
         result.push({
           id: comp.id,
           name: comp.name,
-          total_steps: summary.totalSteps,
+          total_steps: stepMap.get(comp.id) ?? 0,
           progress: selfProgress,
         });
       }

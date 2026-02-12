@@ -1,4 +1,4 @@
-import type { Edge } from '../domain/index.js';
+import type { Edge, Node } from '../domain/index.js';
 import type { IEdgeRepository, INodeRepository } from '../domain/index.js';
 
 interface Deps {
@@ -37,11 +37,16 @@ export class GetShortestPath {
   }
 
   async execute(fromId: string, toId: string): Promise<PathResult> {
+    const [allEdges, allNodes] = await Promise.all([
+      this.deps.edgeRepo.findAll(),
+      this.deps.nodeRepo.findAll(),
+    ]);
+    const nodeMap = new Map(allNodes.map(n => [n.id, n]));
+
     if (fromId === toId) {
-      return this.sameNodePath(fromId);
+      return this.sameNodePath(fromId, nodeMap);
     }
 
-    const allEdges = await this.deps.edgeRepo.findAll();
     const adjacency = this.buildAdjacency(allEdges);
     const parentMap = this.bfs(fromId, toId, adjacency);
 
@@ -49,11 +54,11 @@ export class GetShortestPath {
       return { path: [], edges: [] };
     }
 
-    return this.reconstructPath(fromId, toId, parentMap);
+    return this.reconstructPath(fromId, toId, parentMap, nodeMap);
   }
 
-  private async sameNodePath(id: string): Promise<PathResult> {
-    const node = await this.deps.nodeRepo.findById(id);
+  private sameNodePath(id: string, nodeMap: Map<string, Node>): PathResult {
+    const node = nodeMap.get(id);
     if (!node) {
       return { path: [], edges: [] };
     }
@@ -85,10 +90,11 @@ export class GetShortestPath {
     const visited = new Set<string>([fromId]);
     const parent = new Map<string, { from: string; edge: PathEdge }>();
     const queue: string[] = [fromId];
+    let head = 0;
 
-    while (queue.length > 0) {
-      const current = queue.shift();
-      if (!current || current === toId) {
+    while (head < queue.length) {
+      const current = queue[head++];
+      if (current === toId) {
         break;
       }
       for (const { neighbor, edge } of adjacency.get(current) ?? []) {
@@ -102,11 +108,12 @@ export class GetShortestPath {
     return parent;
   }
 
-  private async reconstructPath(
+  private reconstructPath(
     fromId: string,
     toId: string,
-    parentMap: Map<string, { from: string; edge: PathEdge }>
-  ): Promise<PathResult> {
+    parentMap: Map<string, { from: string; edge: PathEdge }>,
+    nodeMap: Map<string, Node>
+  ): PathResult {
     const pathIds: string[] = [];
     const pathEdges: PathEdge[] = [];
     let current = toId;
@@ -121,13 +128,13 @@ export class GetShortestPath {
     }
     pathIds.unshift(fromId);
 
-    const path: PathNode[] = [];
-    for (const id of pathIds) {
-      const node = await this.deps.nodeRepo.findById(id);
-      path.push(
-        node ? { id: node.id, name: node.name, type: node.type } : { id, name: id, type: 'unknown' }
-      );
-    }
-    return { path, edges: pathEdges };
+    const toPathNode = (id: string): PathNode => {
+      const node = nodeMap.get(id);
+      return node
+        ? { id: node.id, name: node.name, type: node.type }
+        : { id, name: id, type: 'unknown' };
+    };
+
+    return { path: pathIds.map(toPathNode), edges: pathEdges };
   }
 }

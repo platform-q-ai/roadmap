@@ -1,4 +1,4 @@
-import type { Edge } from '../domain/index.js';
+import type { Edge, Node } from '../domain/index.js';
 import type { IEdgeRepository, INodeRepository } from '../domain/index.js';
 
 interface Deps {
@@ -35,11 +35,15 @@ export class GetNeighbourhood {
   }
 
   async execute(nodeId: string, hops: number = 1): Promise<NeighbourhoodResult> {
-    const allEdges = await this.deps.edgeRepo.findAll();
+    const [allEdges, allNodes] = await Promise.all([
+      this.deps.edgeRepo.findAll(),
+      this.deps.nodeRepo.findAll(),
+    ]);
+    const nodeMap = new Map(allNodes.map(n => [n.id, n]));
     const adjacency = this.buildAdjacency(allEdges);
     const visited = this.bfsHops(nodeId, hops, adjacency);
     const edges = this.collectEdges(allEdges, visited);
-    const nodes = await this.resolveNodes(visited);
+    const nodes = this.resolveNodes(visited, nodeMap);
     return { nodes, edges };
   }
 
@@ -83,10 +87,10 @@ export class GetNeighbourhood {
       .map(e => ({ source_id: e.source_id, target_id: e.target_id, type: e.type }));
   }
 
-  private async resolveNodes(visited: Set<string>): Promise<NeighbourNode[]> {
+  private resolveNodes(visited: Set<string>, nodeMap: Map<string, Node>): NeighbourNode[] {
     const nodes: NeighbourNode[] = [];
     for (const id of visited) {
-      const node = await this.deps.nodeRepo.findById(id);
+      const node = nodeMap.get(id);
       if (node) {
         nodes.push({ id: node.id, name: node.name, type: node.type });
       }

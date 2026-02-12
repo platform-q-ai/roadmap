@@ -45,72 +45,84 @@ export class GetComponentContext {
   }
 
   async execute(nodeId: string): Promise<ComponentContext> {
-    const node = await this.deps.nodeRepo.findById(nodeId);
-    if (!node) {
-      throw new NodeNotFoundError(nodeId);
-    }
-
-    const [versions, features, outEdges, inEdges] = await Promise.all([
+    const [allNodes, versions, features, outEdges, inEdges] = await Promise.all([
+      this.deps.nodeRepo.findAll(),
       this.deps.versionRepo.findByNode(nodeId),
       this.deps.featureRepo.findByNode(nodeId),
       this.deps.edgeRepo.findBySource(nodeId),
       this.deps.edgeRepo.findByTarget(nodeId),
     ]);
 
-    const [dependencies, dependents] = await Promise.all([
-      this.resolveEdgeTargets(outEdges),
-      this.resolveEdgeSources(inEdges),
-    ]);
+    const nodeMap = new Map(allNodes.map(n => [n.id, n]));
+    const node = nodeMap.get(nodeId);
+    if (!node) {
+      throw new NodeNotFoundError(nodeId);
+    }
 
-    const [layerInfo, siblings] = await this.resolveLayerAndSiblings(node);
+    const stepSummaries = this.buildStepSummaries(features, versions);
 
     return {
       component: this.toComponentInfo(node),
-      versions: await this.enrichVersions(nodeId, versions),
+      versions: this.enrichVersions(versions, stepSummaries),
       features: this.groupFeatures(features),
-      dependencies,
-      dependents,
-      layer: layerInfo,
-      siblings,
-      progress: await this.buildProgress(nodeId, versions),
+      dependencies: this.resolveEdgeTargets(outEdges, nodeMap),
+      dependents: this.resolveEdgeSources(inEdges, nodeMap),
+      layer: this.resolveLayer(node, nodeMap),
+      siblings: this.resolveSiblings(node, allNodes),
+      progress: this.buildProgress(versions, stepSummaries),
     };
   }
 
-  private async resolveEdgeTargets(edges: Edge[]): Promise<NodeRef[]> {
-    const depEdges = edges.filter(e => e.type === 'DEPENDS_ON');
-    return Promise.all(
-      depEdges.map(async e => {
-        const n = await this.deps.nodeRepo.findById(e.target_id);
-        return n ? { id: n.id, name: n.name, type: n.type } : { id: e.target_id };
-      })
-    );
-  }
-
-  private async resolveEdgeSources(edges: Edge[]): Promise<NodeRef[]> {
-    const depEdges = edges.filter(e => e.type === 'DEPENDS_ON');
-    return Promise.all(
-      depEdges.map(async e => {
-        const n = await this.deps.nodeRepo.findById(e.source_id);
-        return n ? { id: n.id, name: n.name, type: n.type } : { id: e.source_id };
-      })
-    );
-  }
-
-  private async resolveLayerAndSiblings(
-    node: Node
-  ): Promise<[Record<string, unknown> | null, NodeRef[]]> {
-    if (!node.layer) {
-      return [null, []];
+  private buildStepSummaries(
+    features: Feature[],
+    versions: Version[]
+  ): Map<string, { totalSteps: number; featureCount: number }> {
+    const map = new Map<string, { totalSteps: number; featureCount: number }>();
+    for (const v of versions) {
+      map.set(v.version, { totalSteps: 0, featureCount: 0 });
     }
-    const layerNode = await this.deps.nodeRepo.findById(node.layer);
-    const layerInfo = layerNode
-      ? { id: layerNode.id, name: layerNode.name, type: layerNode.type }
-      : null;
-    const children = await this.deps.nodeRepo.findByLayer(node.layer);
-    const siblings = children
-      .filter(n => n.id !== node.id)
+    for (const f of features) {
+      const entry = map.get(f.version) ?? { totalSteps: 0, featureCount: 0 };
+      entry.totalSteps += f.step_count;
+      entry.featureCount += 1;
+      map.set(f.version, entry);
+    }
+    return map;
+  }
+
+  private resolveEdgeTargets(edges: Edge[], nodeMap: Map<string, Node>): NodeRef[] {
+    return edges
+      .filter(e => e.type === 'DEPENDS_ON')
+      .map(e => {
+        const n = nodeMap.get(e.target_id);
+        return n ? { id: n.id, name: n.name, type: n.type } : { id: e.target_id };
+      });
+  }
+
+  private resolveEdgeSources(edges: Edge[], nodeMap: Map<string, Node>): NodeRef[] {
+    return edges
+      .filter(e => e.type === 'DEPENDS_ON')
+      .map(e => {
+        const n = nodeMap.get(e.source_id);
+        return n ? { id: n.id, name: n.name, type: n.type } : { id: e.source_id };
+      });
+  }
+
+  private resolveLayer(node: Node, nodeMap: Map<string, Node>): Record<string, unknown> | null {
+    if (!node.layer) {
+      return null;
+    }
+    const layerNode = nodeMap.get(node.layer);
+    return layerNode ? { id: layerNode.id, name: layerNode.name, type: layerNode.type } : null;
+  }
+
+  private resolveSiblings(node: Node, allNodes: Node[]): NodeRef[] {
+    if (!node.layer) {
+      return [];
+    }
+    return allNodes
+      .filter(n => n.layer === node.layer && n.id !== node.id)
       .map(n => ({ id: n.id, name: n.name, type: n.type }));
-    return [layerInfo, siblings];
   }
 
   private toComponentInfo(node: Node): Record<string, unknown> {
@@ -135,31 +147,29 @@ export class GetComponentContext {
     return grouped;
   }
 
-  private async enrichVersions(
-    nodeId: string,
-    versions: Version[]
-  ): Promise<Array<Record<string, unknown>>> {
-    return Promise.all(
-      versions.map(async v => {
-        const summary = await this.deps.featureRepo.getStepCountSummary(nodeId, v.version);
-        return {
-          version: v.version,
-          progress: v.progress,
-          status: v.status,
-          total_steps: summary.totalSteps,
-          feature_count: summary.featureCount,
-        };
-      })
-    );
+  private enrichVersions(
+    versions: Version[],
+    summaries: Map<string, { totalSteps: number; featureCount: number }>
+  ): Array<Record<string, unknown>> {
+    return versions.map(v => {
+      const summary = summaries.get(v.version) ?? { totalSteps: 0, featureCount: 0 };
+      return {
+        version: v.version,
+        progress: v.progress,
+        status: v.status,
+        total_steps: summary.totalSteps,
+        feature_count: summary.featureCount,
+      };
+    });
   }
 
-  private async buildProgress(
-    nodeId: string,
-    versions: Version[]
-  ): Promise<Record<string, unknown>> {
+  private buildProgress(
+    versions: Version[],
+    summaries: Map<string, { totalSteps: number; featureCount: number }>
+  ): Record<string, unknown> {
     const progress: Record<string, unknown> = {};
     for (const v of versions) {
-      const summary = await this.deps.featureRepo.getStepCountSummary(nodeId, v.version);
+      const summary = summaries.get(v.version) ?? { totalSteps: 0, featureCount: 0 };
       progress[v.version] = {
         total_steps: summary.totalSteps,
         feature_count: summary.featureCount,

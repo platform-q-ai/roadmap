@@ -33,17 +33,46 @@ export class GetComponentsByStatus {
   }
 
   async execute(version: string): Promise<StatusResult> {
-    const allNodes = await this.deps.nodeRepo.findAll();
+    const [allNodes, allVersions, allFeatures] = await Promise.all([
+      this.deps.nodeRepo.findAll(),
+      this.deps.versionRepo.findAll(),
+      this.deps.featureRepo.findAll(),
+    ]);
     const components = allNodes.filter(n => n.type !== 'layer');
 
+    const versionMap = new Map<string, number>();
+    for (const v of allVersions) {
+      if (v.version === version) {
+        versionMap.set(v.node_id, v.progress);
+      }
+    }
+
+    const stepMap = new Map<string, { totalSteps: number; featureCount: number }>();
+    for (const f of allFeatures) {
+      if (f.version !== version) {
+        continue;
+      }
+      const entry = stepMap.get(f.node_id) ?? { totalSteps: 0, featureCount: 0 };
+      entry.totalSteps += f.step_count;
+      entry.featureCount += 1;
+      stepMap.set(f.node_id, entry);
+    }
+
+    return this.classify(components, versionMap, stepMap);
+  }
+
+  private classify(
+    components: Array<{ id: string; name: string }>,
+    versionMap: Map<string, number>,
+    stepMap: Map<string, { totalSteps: number; featureCount: number }>
+  ): StatusResult {
     const complete: ComponentStatus[] = [];
     const inProgress: ComponentStatus[] = [];
     const planned: ComponentStatus[] = [];
 
     for (const comp of components) {
-      const summary = await this.deps.featureRepo.getStepCountSummary(comp.id, version);
-      const ver = await this.deps.versionRepo.findByNodeAndVersion(comp.id, version);
-      const progress = ver?.progress ?? 0;
+      const progress = versionMap.get(comp.id) ?? 0;
+      const summary = stepMap.get(comp.id) ?? { totalSteps: 0, featureCount: 0 };
 
       const info: ComponentStatus = {
         id: comp.id,

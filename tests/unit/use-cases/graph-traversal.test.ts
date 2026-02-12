@@ -1,11 +1,10 @@
-import { Edge } from '@domain/entities/edge.js';
-import { Feature } from '@domain/entities/feature.js';
-import { Node } from '@domain/entities/node.js';
-import { Version } from '@domain/entities/version.js';
-import type { IEdgeRepository } from '@domain/repositories/edge-repository.js';
-import type { IFeatureRepository } from '@domain/repositories/feature-repository.js';
-import type { INodeRepository } from '@domain/repositories/node-repository.js';
-import type { IVersionRepository } from '@domain/repositories/version-repository.js';
+import type {
+  IEdgeRepository,
+  IFeatureRepository,
+  INodeRepository,
+  IVersionRepository,
+} from '@domain/index.js';
+import { Edge, Feature, Node, Version } from '@domain/index.js';
 import {
   GetComponentContext,
   GetComponentsByStatus,

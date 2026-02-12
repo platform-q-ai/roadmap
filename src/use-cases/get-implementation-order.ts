@@ -68,11 +68,9 @@ export class GetImplementationOrder {
     }
 
     const order: string[] = [];
-    while (queue.length > 0) {
-      const current = queue.shift();
-      if (!current) {
-        break;
-      }
+    let head = 0;
+    while (head < queue.length) {
+      const current = queue[head++];
       order.push(current);
       for (const dependent of dependedOnBy.get(current) ?? []) {
         const newDeg = (inDegree.get(dependent) ?? 1) - 1;
