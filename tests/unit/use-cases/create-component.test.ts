@@ -175,4 +175,39 @@ describe('CreateComponent', () => {
       })
     ).rejects.toThrow('Invalid node type');
   });
+
+  it('saves color, icon, and sort_order when provided', async () => {
+    const { nodeRepo, edgeRepo, versionRepo, savedNodes } = createMockRepos();
+    const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
+
+    await uc.execute({
+      id: 'styled',
+      name: 'Styled Component',
+      type: 'component',
+      layer: 'supervisor-layer',
+      color: '#FF0000',
+      icon: 'database',
+      sort_order: 10,
+    });
+
+    expect(savedNodes[0].color).toBe('#FF0000');
+    expect(savedNodes[0].icon).toBe('database');
+    expect(savedNodes[0].sort_order).toBe(10);
+  });
+
+  it('throws when layer does not exist', async () => {
+    const { nodeRepo, edgeRepo, versionRepo } = createMockRepos();
+    // Override findById to return null for nonexistent layer
+    nodeRepo.findById = vi.fn().mockResolvedValue(null);
+    const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
+
+    await expect(
+      uc.execute({
+        id: 'orphan',
+        name: 'Orphan',
+        type: 'component',
+        layer: 'nonexistent-layer',
+      })
+    ).rejects.toThrow(/layer/i);
+  });
 });
