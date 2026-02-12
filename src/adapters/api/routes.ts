@@ -19,6 +19,7 @@ import {
   GetArchitecture,
   UpdateVersion,
   UploadFeature,
+  VALID_NODE_TYPES,
 } from '../../use-cases/index.js';
 
 export interface ApiDeps {
@@ -114,15 +115,6 @@ function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-const VALID_NODE_TYPES: readonly string[] = [
-  'layer',
-  'component',
-  'store',
-  'external',
-  'phase',
-  'app',
-];
-
 /**
  * Strip HTML tags from a string to prevent XSS / injection.
  */
@@ -153,13 +145,14 @@ function validateRequiredFields(
     return `Invalid id: must be ${MAX_ID_LENGTH} characters or fewer (got ${idStr.length})`;
   }
   if (!KEBAB_CASE_RE.test(idStr)) {
-    return `Invalid id format: must be kebab-case (got "${idStr}")`;
+    const safeId = stripHtml(idStr).slice(0, MAX_ID_LENGTH);
+    return `Invalid id format: must be kebab-case (got "${safeId}")`;
   }
-  const typeStr = String(type);
+  const typeStr = stripHtml(String(type));
   if (!VALID_NODE_TYPES.includes(typeStr)) {
     return `Invalid node type: ${typeStr}`;
   }
-  return { idStr, nameStr, typeStr, layer: String(layer) };
+  return { idStr, nameStr, typeStr, layer: stripHtml(String(layer)) };
 }
 
 function parseCreateInput(body: Record<string, unknown>): ParseResult {
@@ -178,7 +171,10 @@ function parseCreateInput(body: Record<string, unknown>): ParseResult {
       tags: Array.isArray(tags) ? tags.map(t => stripHtml(String(t))) : undefined,
       color: color ? stripHtml(String(color)) : undefined,
       icon: icon ? stripHtml(String(icon)) : undefined,
-      sort_order: sort_order !== undefined ? Number(sort_order) : undefined,
+      sort_order:
+        sort_order !== undefined && Number.isFinite(Number(sort_order))
+          ? Number(sort_order)
+          : undefined,
     },
   };
 }
