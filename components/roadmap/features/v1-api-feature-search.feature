@@ -1,4 +1,4 @@
-@wip @v1
+@v1
 Feature: API Feature Content Search
   As an LLM engineer working autonomously
   I want to search feature content across all components
