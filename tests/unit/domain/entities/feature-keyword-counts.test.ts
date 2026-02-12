@@ -1,4 +1,4 @@
-import { Feature } from '@domain/entities/feature.js';
+import { Feature } from '@domain/index.js';
 import { describe, expect, it } from 'vitest';
 
 /* ──────────────────────────────────────────────────────────────────
