@@ -136,11 +136,21 @@ interface ParseResult {
 }
 
 function parseCreateInput(body: Record<string, unknown>): ParseResult {
-  const { id, name, type, layer, description, tags } = body;
-  if (!id || !name || !type || !layer) {
+  const { id, name, type, layer, description, tags, color, icon, sort_order } = body;
+  if (!id || !type || !layer) {
     return { input: null, error: 'Missing or invalid fields: id, name, type, layer' };
   }
   const idStr = String(id);
+  const nameStr = name !== undefined && name !== null ? String(name) : '';
+  if (!nameStr) {
+    return { input: null, error: 'Invalid name: name must not be empty' };
+  }
+  if (idStr.length > 64) {
+    return {
+      input: null,
+      error: `Invalid id: must be 64 characters or fewer (got ${idStr.length})`,
+    };
+  }
   if (!KEBAB_CASE_RE.test(idStr)) {
     return { input: null, error: `Invalid id format: must be kebab-case (got "${idStr}")` };
   }
@@ -151,11 +161,14 @@ function parseCreateInput(body: Record<string, unknown>): ParseResult {
   return {
     input: {
       id: idStr,
-      name: stripHtml(String(name)),
+      name: stripHtml(nameStr),
       type: typeStr as NodeType,
       layer: String(layer),
       description: description ? stripHtml(String(description)) : undefined,
       tags: Array.isArray(tags) ? tags.map(t => stripHtml(String(t))) : undefined,
+      color: color ? stripHtml(String(color)) : undefined,
+      icon: icon ? stripHtml(String(icon)) : undefined,
+      sort_order: sort_order !== undefined ? Number(sort_order) : undefined,
     },
   };
 }
@@ -234,8 +247,8 @@ async function handleCreateComponent(deps: ApiDeps, req: IncomingMessage, res: S
     versionRepo: deps.versionRepo,
   });
   try {
-    await uc.execute(input);
-    json(res, 201, { id: input.id, name: input.name, type: input.type, layer: input.layer });
+    const node = await uc.execute(input);
+    json(res, 201, node.toJSON());
   } catch (err) {
     const msg = errorMessage(err);
     json(res, errorStatus(msg), { error: msg }, req);

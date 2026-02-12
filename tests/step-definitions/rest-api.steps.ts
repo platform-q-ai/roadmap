@@ -110,6 +110,13 @@ async function initApiWorld(world: ApiWorld): Promise<void> {
   if (!world.features) {
     world.features = [];
   }
+  // Ensure default layers exist for component creation
+  const defaultLayers = ['supervisor-layer', 'shared-state'];
+  for (const layerId of defaultLayers) {
+    if (!world.nodes.some(n => n.id === layerId)) {
+      world.nodes.push(new Node({ id: layerId, name: layerId, type: 'layer' }));
+    }
+  }
   if (world.server) {
     const s = world.server;
     await new Promise<void>(resolve => {

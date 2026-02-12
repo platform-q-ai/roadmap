@@ -223,6 +223,13 @@ function ensureWorldInit(world: AuthApiWorld): void {
   if (!world.envOverrides) {
     world.envOverrides = {};
   }
+  // Ensure default layers exist for component creation
+  const defaultLayers = ['supervisor-layer', 'shared-state'];
+  for (const layerId of defaultLayers) {
+    if (!world.nodes.some(n => n.id === layerId)) {
+      world.nodes.push(new Node({ id: layerId, name: layerId, type: 'layer' }));
+    }
+  }
 }
 
 async function stopServer(world: AuthApiWorld): Promise<void> {

@@ -3,13 +3,20 @@ import { Node, Version } from '@domain/index.js';
 import { CreateComponent } from '@use-cases/index.js';
 import { describe, expect, it, vi } from 'vitest';
 
-function createMockRepos(existingNodeIds: string[] = []) {
+function createMockRepos(existingNodeIds: string[] = [], layerIds: string[] = []) {
   const savedNodes: Node[] = [];
   const savedVersions: Version[] = [];
+  const defaultLayers = ['supervisor-layer', 'sup-layer', 'observability-dashboard'];
+  const knownLayers = [...defaultLayers, ...layerIds];
 
   const nodeRepo: INodeRepository = {
     findAll: vi.fn(),
-    findById: vi.fn(),
+    findById: vi.fn().mockImplementation(async (id: string) => {
+      if (knownLayers.includes(id)) {
+        return new Node({ id, name: id, type: 'layer' });
+      }
+      return null;
+    }),
     findByType: vi.fn(),
     findByLayer: vi.fn(),
     exists: vi.fn().mockImplementation(async (id: string) => existingNodeIds.includes(id)),
@@ -197,8 +204,6 @@ describe('CreateComponent', () => {
 
   it('throws when layer does not exist', async () => {
     const { nodeRepo, edgeRepo, versionRepo } = createMockRepos();
-    // Override findById to return null for nonexistent layer
-    nodeRepo.findById = vi.fn().mockResolvedValue(null);
     const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
 
     await expect(
