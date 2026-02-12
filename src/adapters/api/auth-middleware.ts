@@ -35,16 +35,20 @@ function requiredScope(method: string, url: string): string {
   return 'write';
 }
 
+interface ErrorPayload {
+  status: number;
+  error: string;
+  code: string;
+}
+
 function jsonError(
   res: http.ServerResponse,
-  status: number,
-  error: string,
-  code: string,
+  payload: ErrorPayload,
   req?: http.IncomingMessage
 ): void {
   const requestId = req ? (req as RequestWithId).requestId : undefined;
-  res.writeHead(status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error, code, request_id: requestId }));
+  res.writeHead(payload.status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: payload.error, code: payload.code, request_id: requestId }));
 }
 
 /**
@@ -81,20 +85,32 @@ export function createAuthMiddleware(deps: AuthMiddlewareDeps) {
     }
 
     if (!plaintext) {
-      jsonError(res, 401, 'Authentication required', 'AUTHENTICATION_REQUIRED', req);
+      jsonError(
+        res,
+        { status: 401, error: 'Authentication required', code: 'AUTHENTICATION_REQUIRED' },
+        req
+      );
       return false;
     }
 
     const key = await deps.validateKey(plaintext);
     if (!key) {
-      jsonError(res, 401, 'Invalid or expired API key', 'INVALID_API_KEY', req);
+      jsonError(
+        res,
+        { status: 401, error: 'Invalid or expired API key', code: 'INVALID_API_KEY' },
+        req
+      );
       return false;
     }
 
     // Check scope
     const scope = requiredScope(method, url);
     if (!key.scopes.includes(scope)) {
-      jsonError(res, 403, `Insufficient scope: requires ${scope}`, 'INSUFFICIENT_SCOPE', req);
+      jsonError(
+        res,
+        { status: 403, error: `Insufficient scope: requires ${scope}`, code: 'INSUFFICIENT_SCOPE' },
+        req
+      );
       return false;
     }
 

@@ -123,7 +123,7 @@ When(
 
 Then(
   'a new API key is returned in the format {string}',
-  function (this: KeyGenWorld, format: string) {
+  function (this: KeyGenWorld, _format: string) {
     assert.ok(this.generatedKey, 'No key was generated');
     // Format is "rmap_<32 hex characters>" so total length = 5 + 32 = 37
     assert.ok(
