@@ -116,6 +116,38 @@ describe('SearchFeatures use case', () => {
     await expect(uc.execute('')).rejects.toThrow(/query/i);
   });
 
+  it('handles null content gracefully', async () => {
+    const feat = makeMockFeature({
+      node_id: 'comp-a',
+      version: 'v1',
+      filename: 'null.feature',
+      content: '',
+    });
+    // Override content to null
+    Object.defineProperty(feat, 'content', { value: null });
+    const repos = buildMockRepo([feat]);
+    // Force repo to return the feature even though content is null
+    repos.featureRepo.search = vi.fn(async () => [feat]);
+    const uc = new SearchFeatures(repos);
+    const results = await uc.execute('anything');
+    expect(results).toHaveLength(1);
+    expect(results[0].snippet).toBe('');
+  });
+
+  it('snippet has no ellipsis when content is short', async () => {
+    const feat = makeMockFeature({
+      node_id: 'comp-a',
+      version: 'v1',
+      filename: 'short.feature',
+      content: 'Feature: Short test',
+    });
+    const repos = buildMockRepo([feat]);
+    const uc = new SearchFeatures(repos);
+    const results = await uc.execute('Short');
+    expect(results).toHaveLength(1);
+    expect(results[0].snippet).not.toContain('...');
+  });
+
   it('includes required fields in each result', async () => {
     const feat = makeMockFeature({
       node_id: 'comp-a',

@@ -250,4 +250,17 @@ describe('API Routes — feature search', () => {
       expect(result).toHaveProperty('snippet');
     });
   });
+
+  it('returns 400 when search throws an error', async () => {
+    const repos = buildTestRepos(seedData());
+    repos.featureRepo.search = vi.fn(async () => {
+      throw new Error('DB failure');
+    });
+    await withServer(repos, async server => {
+      const res = await request(server, 'GET', '/api/features/search?q=anything');
+      expect(res.status).toBe(400);
+      const body = res.body as Record<string, unknown>;
+      expect(body.error).toBe('DB failure');
+    });
+  });
 });

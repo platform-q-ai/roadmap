@@ -230,6 +230,55 @@ describe('Drizzle Repositories', () => {
       expect(deleted).toBe(false);
     });
 
+    it('searches features by content', async () => {
+      await featureRepo.save(
+        new Feature({
+          node_id: 'comp-1',
+          version: 'v1',
+          filename: 'auth.feature',
+          title: 'Auth',
+          content: 'Feature: Auth\n  Scenario: S\n    Given authentication works',
+        })
+      );
+      await nodeRepo.save(new Node({ id: 'comp-2', name: 'C2', type: 'component' }));
+      await featureRepo.save(
+        new Feature({
+          node_id: 'comp-2',
+          version: 'mvp',
+          filename: 'other.feature',
+          title: 'Other',
+          content: 'Feature: Other\n  Scenario: S\n    Given something else',
+        })
+      );
+      const results = await featureRepo.search('authentication');
+      expect(results).toHaveLength(1);
+      expect(results[0].node_id).toBe('comp-1');
+    });
+
+    it('searches features filtered by version', async () => {
+      await featureRepo.save(
+        new Feature({
+          node_id: 'comp-1',
+          version: 'v1',
+          filename: 'a.feature',
+          title: 'A',
+          content: 'Feature: A\n  Scenario: S\n    Given searchable setup',
+        })
+      );
+      await featureRepo.save(
+        new Feature({
+          node_id: 'comp-1',
+          version: 'mvp',
+          filename: 'b.feature',
+          title: 'B',
+          content: 'Feature: B\n  Scenario: S\n    Given searchable setup',
+        })
+      );
+      const results = await featureRepo.search('searchable', 'v1');
+      expect(results).toHaveLength(1);
+      expect(results[0].version).toBe('v1');
+    });
+
     it('retrieves all features across nodes', async () => {
       await nodeRepo.save(new Node({ id: 'comp-2', name: 'C2', type: 'component' }));
       await featureRepo.save(

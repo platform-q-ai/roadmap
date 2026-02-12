@@ -211,17 +211,7 @@ function buildRepos(world: AuthApiWorld) {
     deleteByNodeAndVersionAndFilename: async () => false,
     deleteByNodeAndVersion: async () => 0,
     getStepCountSummary: async () => ({ totalSteps: 0, featureCount: 0 }),
-    search: async (query: string, version?: string) => {
-      const lower = query.toLowerCase();
-      return fts.filter(f => {
-        const content = 'content' in f ? String((f as Record<string, unknown>).content ?? '') : '';
-        const match = content.toLowerCase().includes(lower);
-        if (version) {
-          return match && f.version === version;
-        }
-        return match;
-      });
-    },
+    search: async () => [],
   } as unknown as IFeatureRepository;
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
