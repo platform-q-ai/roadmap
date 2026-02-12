@@ -52,7 +52,7 @@ export class UploadFeature {
 
   async execute(input: UploadFeatureInput): Promise<UploadFeatureResult> {
     this.validateFilename(input.filename);
-    this.validateContent(input.content);
+    const validated = this.validateContent(input.content);
 
     const node = await this.nodeRepo.findById(input.nodeId);
     if (!node) {
@@ -66,8 +66,7 @@ export class UploadFeature {
     }
 
     const title = Feature.titleFromContent(input.content, input.filename);
-    const scenarioCount = Feature.countScenarios(input.content);
-    const keywordCounts = Feature.countByKeyword(input.content);
+    const { scenarioCount, keywordCounts } = validated;
     const stepCount = keywordCounts.given + keywordCounts.when + keywordCounts.then;
 
     // Upsert: remove any existing feature with same node+version+filename
@@ -108,17 +107,23 @@ export class UploadFeature {
     }
   }
 
-  private validateContent(content: string): void {
+  private validateContent(content: string): {
+    scenarioCount: number;
+    keywordCounts: { given: number; when: number; then: number };
+  } {
     if (!content.trim()) {
       throw new ValidationError('Content must not be empty');
     }
     if (!Feature.hasValidGherkin(content)) {
       throw new ValidationError('Invalid Gherkin: missing Feature: line');
     }
-    if (Feature.countScenarios(content) === 0) {
+    const scenarioCount = Feature.countScenarios(content);
+    if (scenarioCount === 0) {
       throw new ValidationError('Invalid Gherkin: no scenario found');
     }
-    if (Feature.countSteps(content) === 0) {
+    const keywordCounts = Feature.countByKeyword(content);
+    const stepCount = keywordCounts.given + keywordCounts.when + keywordCounts.then;
+    if (stepCount === 0) {
       throw new ValidationError('Invalid Gherkin: no steps found in any scenario');
     }
     const syntaxError = Feature.findFirstSyntaxError(content);
@@ -127,5 +132,6 @@ export class UploadFeature {
         `Invalid Gherkin at line ${syntaxError.line}: ${syntaxError.text.slice(0, 120)}`
       );
     }
+    return { scenarioCount, keywordCounts };
   }
 }

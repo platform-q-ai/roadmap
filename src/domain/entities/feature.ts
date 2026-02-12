@@ -1,4 +1,8 @@
 const SCENARIO_RE = /^\s*Scenario(?:\s+Outline)?:/gm;
+const SCENARIO_LINE_RE = /^\s*Scenario(?:\s+Outline)?:/;
+const SECTION_HEADER_RE = /^\s*(Feature:|Rule:|Background:|Examples:)/;
+const VALID_LINE_RE =
+  /^\s*(Feature:|Scenario(?:\s+Outline)?:|Rule:|Background:|Examples:|Given\s|When\s|Then\s|And\s|But\s|\*\s|@|#|\||"""|$)/;
 
 export interface FeatureProps {
   id?: number | null;
@@ -125,19 +129,17 @@ export class Feature {
     }
     const lines = content.split('\n');
     let insideScenario = false;
-    const validLineRe =
-      /^\s*(Feature:|Scenario(?:\s+Outline)?:|Rule:|Background:|Examples:|Given\s|When\s|Then\s|And\s|But\s|\*\s|@|#|\||"""|$)/;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (/^\s*Scenario(?:\s+Outline)?:/.test(line)) {
+      if (SCENARIO_LINE_RE.test(line)) {
         insideScenario = true;
         continue;
       }
-      if (/^\s*(Feature:|Rule:|Background:|Examples:)/.test(line)) {
+      if (SECTION_HEADER_RE.test(line)) {
         insideScenario = false;
         continue;
       }
-      if (insideScenario && line.trim() !== '' && !validLineRe.test(line)) {
+      if (insideScenario && line.trim() !== '' && !VALID_LINE_RE.test(line)) {
         return { line: i + 1, text: line.trim() };
       }
     }
