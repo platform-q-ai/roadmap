@@ -261,6 +261,56 @@ describe('API Routes — v1 edge management', () => {
         expect(res.status).toBe(400);
       });
     });
+
+    it('truncates label to 500 characters', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const longLabel = 'x'.repeat(600);
+        const body = JSON.stringify({
+          source_id: 'comp-a',
+          target_id: 'comp-b',
+          type: 'CONTROLS',
+          label: longLabel,
+        });
+        const res = await request(server, 'POST', '/api/edges', body);
+        expect(res.status).toBe(201);
+        const created = res.body as Record<string, unknown>;
+        expect(String(created.label).length).toBe(500);
+      });
+    });
+
+    it('sanitizes metadata and strips HTML', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const body = JSON.stringify({
+          source_id: 'comp-a',
+          target_id: 'comp-b',
+          type: 'CONTROLS',
+          metadata: { key: 'value' },
+        });
+        const res = await request(server, 'POST', '/api/edges', body);
+        expect(res.status).toBe(201);
+        const created = res.body as Record<string, unknown>;
+        expect(created.metadata).toBeDefined();
+      });
+    });
+
+    it('drops metadata exceeding depth limit', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const deep = { a: { b: { c: { d: { e: 'too deep' } } } } };
+        const body = JSON.stringify({
+          source_id: 'comp-a',
+          target_id: 'comp-b',
+          type: 'CONTROLS',
+          metadata: deep,
+        });
+        const res = await request(server, 'POST', '/api/edges', body);
+        expect(res.status).toBe(201);
+        const created = res.body as Record<string, unknown>;
+        expect(created.metadata).toBeNull();
+      });
+    });
   });
 
   describe('GET /api/edges', () => {
@@ -283,6 +333,36 @@ describe('API Routes — v1 edge management', () => {
         for (const edge of edges) {
           expect(edge.type).toBe('DEPENDS_ON');
         }
+      });
+    });
+
+    it('returns 400 for invalid type filter', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/edges?type=INVALID');
+        expect(res.status).toBe(400);
+        const body = res.body as Record<string, unknown>;
+        expect(String(body.error)).toContain('type');
+      });
+    });
+
+    it('supports limit and offset pagination', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/edges?limit=1&offset=0');
+        expect(res.status).toBe(200);
+        expect((res.body as unknown[]).length).toBe(1);
+      });
+    });
+
+    it('supports offset to skip edges', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const all = await request(server, 'GET', '/api/edges');
+        const total = (all.body as unknown[]).length;
+        const res = await request(server, 'GET', `/api/edges?offset=${total}`);
+        expect(res.status).toBe(200);
+        expect((res.body as unknown[]).length).toBe(0);
       });
     });
   });
