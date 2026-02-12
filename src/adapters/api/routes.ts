@@ -6,6 +6,7 @@ import {
   DeleteComponent,
   DeleteFeature,
   GetArchitecture,
+  UpdateComponent,
   UpdateVersion,
   UploadFeature,
 } from '../../use-cases/index.js';
@@ -24,6 +25,7 @@ import {
   parseCreateInput,
   parseJsonBody,
   readBody,
+  stripHtml,
 } from './routes-shared.js';
 
 export type { ApiDeps, Route } from './routes-shared.js';
@@ -161,6 +163,61 @@ async function handleDeleteComponent(
     const msg = errorMessage(err);
     json(res, errorStatus(msg), { error: msg }, req);
   }
+}
+
+async function handleUpdateComponent(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: string
+) {
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
+  const body = parseJsonBody(raw);
+  if (!body) {
+    json(res, 400, { error: 'Invalid JSON body' }, req);
+    return;
+  }
+  const input = parsePatchInput(body);
+  const uc = new UpdateComponent({
+    nodeRepo: deps.nodeRepo,
+    versionRepo: deps.versionRepo,
+  });
+  try {
+    const node = await uc.execute(id, input);
+    json(res, 200, node.toJSON());
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg }, req);
+  }
+}
+
+function parsePatchInput(body: Record<string, unknown>) {
+  const input: Record<string, unknown> = {};
+  if (body.name !== undefined) {
+    input.name = stripHtml(String(body.name));
+  }
+  if (body.description !== undefined) {
+    input.description = stripHtml(String(body.description));
+  }
+  if (body.tags !== undefined && Array.isArray(body.tags)) {
+    input.tags = body.tags.map(t => stripHtml(String(t)));
+  }
+  if (body.sort_order !== undefined && Number.isFinite(Number(body.sort_order))) {
+    input.sort_order = Number(body.sort_order);
+  }
+  if (body.current_version !== undefined) {
+    input.current_version = String(body.current_version);
+  }
+  return input;
 }
 
 async function handleGetFeatures(
@@ -355,6 +412,11 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       method: 'POST',
       pattern: /^\/api\/components$/,
       handler: async (req, res) => handleCreateComponent(deps, req, res),
+    },
+    {
+      method: 'PATCH',
+      pattern: /^\/api\/components\/([^/]+)$/,
+      handler: async (req, res, m) => handleUpdateComponent(deps, req, res, m[1]),
     },
     {
       method: 'DELETE',

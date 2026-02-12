@@ -31,7 +31,8 @@ Feature: Remove manual updateProgress in favour of derived progress
 
   Scenario: No PATCH progress route is registered
     Given the project source directory
-    Then the file "src/adapters/api/routes.ts" does not contain "PATCH"
+    Then the file "src/adapters/api/routes.ts" does not contain "handleUpdateProgress"
+    And the file "src/adapters/api/routes.ts" does not contain "parseProgressInput"
 
   # ── Repository interface cleaned ────────────────────────────────────
 
