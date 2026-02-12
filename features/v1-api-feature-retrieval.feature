@@ -10,7 +10,7 @@ Feature: API Version-Scoped Feature Retrieval
       Given the API server is running
       And a valid API key with scope "read"
       And component "feat-list" has 2 features under "mvp", 2 under "v1", 1 under "v2"
-      When I send a GET request to "/api/components/feat-list/features"
+      When I send an authenticated GET request to "/api/components/feat-list/features"
       Then the response status is 200
       And the response body is an array of 5 feature objects
       And each object has fields: filename, version, title, content, step_count, updated_at
@@ -19,7 +19,7 @@ Feature: API Version-Scoped Feature Retrieval
       Given the API server is running
       And a valid API key with scope "read"
       And component "feat-ver" has 3 "mvp" features and 4 "v1" features
-      When I send a GET request to "/api/components/feat-ver/versions/v1/features"
+      When I send an authenticated GET request to "/api/components/feat-ver/versions/v1/features"
       Then the response status is 200
       And the response body is an array of 4 features
       And every feature has version "v1"
@@ -28,7 +28,7 @@ Feature: API Version-Scoped Feature Retrieval
       Given the API server is running
       And a valid API key with scope "read"
       And component "feat-single" has feature "auth.feature" under version "v1"
-      When I send a GET request to "/api/components/feat-single/versions/v1/features/auth.feature"
+      When I send an authenticated GET request to "/api/components/feat-single/versions/v1/features/auth.feature"
       Then the response status is 200
       And the response body has field "filename" with value "auth.feature"
       And the response body has field "version" with value "v1"
@@ -39,7 +39,7 @@ Feature: API Version-Scoped Feature Retrieval
       Given the API server is running
       And a valid API key with scope "read"
       And component "ver-miss" has feature "auth.feature" under version "mvp" only
-      When I send a GET request to "/api/components/ver-miss/versions/v1/features/auth.feature"
+      When I send an authenticated GET request to "/api/components/ver-miss/versions/v1/features/auth.feature"
       Then the response status is 404
       And the response body has field "error" containing "not found"
 
@@ -47,13 +47,13 @@ Feature: API Version-Scoped Feature Retrieval
       Given the API server is running
       And a valid API key with scope "read"
       And component "feat-missing" exists
-      When I send a GET request to "/api/components/feat-missing/versions/v1/features/ghost.feature"
+      When I send an authenticated GET request to "/api/components/feat-missing/versions/v1/features/ghost.feature"
       Then the response status is 404
 
     Scenario: Get features for nonexistent component returns 404
       Given the API server is running
       And a valid API key with scope "read"
-      When I send a GET request to "/api/components/nonexistent/versions/v1/features"
+      When I send an authenticated GET request to "/api/components/nonexistent/versions/v1/features"
       Then the response status is 404
 
     Scenario: Get raw feature content as plain text
@@ -69,7 +69,7 @@ Feature: API Version-Scoped Feature Retrieval
       Given the API server is running
       And a valid API key with scope "read"
       And component "step-list" has 3 features under version "v1"
-      When I send a GET request to "/api/components/step-list/versions/v1/features"
+      When I send an authenticated GET request to "/api/components/step-list/versions/v1/features"
       Then each feature object has field "step_count" as a positive integer
       And each feature object has field "scenario_count" as a positive integer
       And the response includes a "totals" field with:
