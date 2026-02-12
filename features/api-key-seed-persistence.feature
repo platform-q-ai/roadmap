@@ -78,9 +78,9 @@ Feature: API key seed persistence across deploys
 
   Scenario: Mixed seed logs mask deterministic and show random
     Given an API_KEY_SEED with entries:
-      | name       | key                              | scopes     |
-      | fixed-log  | rmap_fixed_log_aabbccdd1234abcd  | read       |
-      | random-log |                                  | read,write |
+      | name       | key                               | scopes     |
+      | fixed-log  | rmap_aabb11223344ccdd5566eeff7788  | read       |
+      | random-log |                                   | read,write |
     When the seed runs
     Then the seed log for "fixed-log" shows a masked key
     And the seed log for "random-log" shows the full plaintext
