@@ -46,6 +46,7 @@ src/
 │   ├── delete-edge.ts          # Delete edge by ID with existence check
 │   ├── batch-upload-features.ts # Batch upload features (single + cross-component)
 │   ├── delete-feature-version-scoped.ts # Version-scoped feature deletion (single, version, all)
+│   ├── get-feature-version-scoped.ts # Version-scoped feature retrieval with totals
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations
@@ -466,6 +467,8 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 | `PATCH` | `/api/components/:id` | Partial update (merge-patch semantics) | `200` | `400` invalid, `404` not found, `413` body too large |
 | `DELETE` | `/api/components/:id` | Delete component + versions, features, edges | `204` | `404` not found |
 | `GET` | `/api/components/:id/features` | List features for a component | `200 [...]` | `404` component not found |
+| `GET` | `/api/components/:id/versions/:ver/features` | List features for a specific version (with totals) | `200 { features, totals }` | `404` component not found |
+| `GET` | `/api/components/:id/versions/:ver/features/:filename` | Get single feature (JSON or `text/plain` via Accept header) | `200` | `404` not found |
 | `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (body = raw Gherkin text) | `200` | `404` component not found |
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a single feature file | `204` | `404` not found |
 | `DELETE` | `/api/components/:id/versions/:ver/features/:filename` | Delete a single feature by version and filename | `204` | `404` not found |
@@ -596,6 +599,16 @@ curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/my-svc
 
 # List features
 curl https://roadmap-5vvp.onrender.com/api/components/worker/features
+
+# List features for a specific version (with totals)
+curl https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features
+
+# Get a single feature by version and filename (JSON)
+curl https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features/v1-test.feature
+
+# Get a single feature as raw Gherkin text
+curl -H "Accept: text/plain" \
+  https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features/v1-test.feature
 
 # Upload a feature file
 curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp-exec.feature \
