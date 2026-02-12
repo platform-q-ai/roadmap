@@ -5,7 +5,6 @@ import { describe, expect, it, vi } from 'vitest';
 /**
  * Unit tests for the auth middleware.
  *
- * Module doesn't exist yet (Phase 5) — dynamic import ensures RED.
  * Tests the middleware function in isolation by calling it with
  * mock request/response objects.
  */
@@ -41,6 +40,19 @@ function createMockRes(): http.ServerResponse & { statusCode: number; body: stri
   return res;
 }
 
+const VALID_KEY = {
+  status: 'valid' as const,
+  key: { id: 1, name: 'bot', scopes: ['read'], is_active: true },
+};
+const VALID_KEY_RW = {
+  status: 'valid' as const,
+  key: { id: 1, name: 'writer', scopes: ['read', 'write'], is_active: true },
+};
+const VALID_KEY_ADMIN = {
+  status: 'valid' as const,
+  key: { id: 1, name: 'admin', scopes: ['read', 'write', 'admin'], is_active: true },
+};
+
 describe('Auth Middleware', () => {
   describe('health endpoint exemption', () => {
     it('allows /api/health without authentication', async () => {
@@ -63,8 +75,7 @@ describe('Auth Middleware', () => {
     it('extracts and validates Bearer token from Authorization header', async () => {
       const { createAuthMiddleware } =
         await import('../../../../src/adapters/api/auth-middleware.js');
-      const mockKey = { id: 1, name: 'bot', scopes: ['read'], is_active: true };
-      const validateKey = vi.fn().mockResolvedValue(mockKey);
+      const validateKey = vi.fn().mockResolvedValue(VALID_KEY);
       const middleware = createAuthMiddleware({ validateKey });
 
       const req = createMockReq({
@@ -96,7 +107,7 @@ describe('Auth Middleware', () => {
     it('returns 401 when key is invalid', async () => {
       const { createAuthMiddleware } =
         await import('../../../../src/adapters/api/auth-middleware.js');
-      const validateKey = vi.fn().mockResolvedValue(null);
+      const validateKey = vi.fn().mockResolvedValue({ status: 'invalid' });
       const middleware = createAuthMiddleware({ validateKey });
 
       const req = createMockReq({
@@ -115,8 +126,7 @@ describe('Auth Middleware', () => {
     it('accepts key via X-API-Key header', async () => {
       const { createAuthMiddleware } =
         await import('../../../../src/adapters/api/auth-middleware.js');
-      const mockKey = { id: 1, name: 'bot', scopes: ['read'], is_active: true };
-      const validateKey = vi.fn().mockResolvedValue(mockKey);
+      const validateKey = vi.fn().mockResolvedValue(VALID_KEY);
       const middleware = createAuthMiddleware({ validateKey });
 
       const req = createMockReq({
@@ -135,8 +145,7 @@ describe('Auth Middleware', () => {
     it('allows GET requests with read scope', async () => {
       const { createAuthMiddleware } =
         await import('../../../../src/adapters/api/auth-middleware.js');
-      const mockKey = { id: 1, name: 'reader', scopes: ['read'], is_active: true };
-      const validateKey = vi.fn().mockResolvedValue(mockKey);
+      const validateKey = vi.fn().mockResolvedValue(VALID_KEY);
       const middleware = createAuthMiddleware({ validateKey });
 
       const req = createMockReq({
@@ -153,8 +162,7 @@ describe('Auth Middleware', () => {
     it('rejects POST with read-only scope (requires write)', async () => {
       const { createAuthMiddleware } =
         await import('../../../../src/adapters/api/auth-middleware.js');
-      const mockKey = { id: 1, name: 'reader', scopes: ['read'], is_active: true };
-      const validateKey = vi.fn().mockResolvedValue(mockKey);
+      const validateKey = vi.fn().mockResolvedValue(VALID_KEY);
       const middleware = createAuthMiddleware({ validateKey });
 
       const req = createMockReq({
@@ -172,8 +180,7 @@ describe('Auth Middleware', () => {
     it('requires admin scope for /api/admin/* routes', async () => {
       const { createAuthMiddleware } =
         await import('../../../../src/adapters/api/auth-middleware.js');
-      const mockKey = { id: 1, name: 'writer', scopes: ['read', 'write'], is_active: true };
-      const validateKey = vi.fn().mockResolvedValue(mockKey);
+      const validateKey = vi.fn().mockResolvedValue(VALID_KEY_RW);
       const middleware = createAuthMiddleware({ validateKey });
 
       const req = createMockReq({
@@ -191,8 +198,7 @@ describe('Auth Middleware', () => {
     it('allows admin scope for /api/admin/* routes', async () => {
       const { createAuthMiddleware } =
         await import('../../../../src/adapters/api/auth-middleware.js');
-      const mockKey = { id: 1, name: 'admin', scopes: ['read', 'write', 'admin'], is_active: true };
-      const validateKey = vi.fn().mockResolvedValue(mockKey);
+      const validateKey = vi.fn().mockResolvedValue(VALID_KEY_ADMIN);
       const middleware = createAuthMiddleware({ validateKey });
 
       const req = createMockReq({

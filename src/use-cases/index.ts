@@ -27,6 +27,7 @@ export type { UpdateVersionInput, UpdateVersionResult } from './update-version.j
 export { UpdateVersion } from './update-version.js';
 export type { UploadFeatureInput, UploadFeatureResult } from './upload-feature.js';
 export { UploadFeature } from './upload-feature.js';
+export type { ValidateResult } from './validate-api-key.js';
 export { ValidateApiKey } from './validate-api-key.js';
 
 // Re-export domain repository interfaces for adapter-layer consumption.

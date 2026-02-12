@@ -7,7 +7,7 @@ Feature: API Key Management Endpoints
   Rule: Admin users can manage API keys via the API
 
     Scenario: List all API keys (admin)
-      Given the API server is running
+      Given the API server is running with authentication enabled
       And a valid API key with scope "admin"
       And 3 API keys exist in the database
       When I send a GET request to "/api/admin/keys" with the admin key
@@ -16,7 +16,7 @@ Feature: API Key Management Endpoints
       And no record contains the raw key or key_hash
 
     Scenario: Revoke an API key (admin)
-      Given the API server is running
+      Given the API server is running with authentication enabled
       And a valid API key with scope "admin"
       And a key with name "revoke-me" exists and is active
       When I send a DELETE request to "/api/admin/keys/revoke-me" with the admin key
@@ -25,7 +25,7 @@ Feature: API Key Management Endpoints
       And subsequent requests with that key return 401
 
     Scenario: Generate a new key via API (admin)
-      Given the API server is running
+      Given the API server is running with authentication enabled
       And a valid API key with scope "admin"
       When I send a POST request to "/api/admin/keys" with the admin key and body:
         """
@@ -36,7 +36,7 @@ Feature: API Key Management Endpoints
       And the response body has field "name" with value "api-created"
 
     Scenario: Revoke nonexistent key returns 404
-      Given the API server is running
+      Given the API server is running with authentication enabled
       And a valid API key with scope "admin"
       When I send a DELETE request to "/api/admin/keys/ghost-key" with the admin key
       Then the response status is 404

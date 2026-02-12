@@ -9,13 +9,19 @@ import { fileURLToPath } from 'url';
 
 import {
   createDrizzleConnection,
+  DrizzleApiKeyRepository,
   DrizzleEdgeRepository,
   DrizzleFeatureRepository,
   DrizzleNodeRepository,
   DrizzleVersionRepository,
 } from '../../infrastructure/index.js';
+import { ValidateApiKey } from '../../use-cases/index.js';
 
-import { createApp } from './index.js';
+import { buildAdminRoutes } from './admin-routes.js';
+import { createAuthMiddleware } from './auth-middleware.js';
+import { RateLimiter } from './rate-limiter.js';
+import type { RequestLogEntry } from './server.js';
+import { createApp } from './server.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..', '..');
@@ -28,20 +34,71 @@ const db = createDrizzleConnection(DB_PATH);
 const packageJson = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'));
 const packageVersion: string = packageJson.version;
 
-const server = createApp(
-  {
-    nodeRepo: new DrizzleNodeRepository(db),
-    edgeRepo: new DrizzleEdgeRepository(db),
-    versionRepo: new DrizzleVersionRepository(db),
-    featureRepo: new DrizzleFeatureRepository(db),
+// Repositories
+const nodeRepo = new DrizzleNodeRepository(db);
+const edgeRepo = new DrizzleEdgeRepository(db);
+const versionRepo = new DrizzleVersionRepository(db);
+const featureRepo = new DrizzleFeatureRepository(db);
+const apiKeyRepo = new DrizzleApiKeyRepository(db);
+
+// Auth middleware
+const validateApiKey = new ValidateApiKey({ apiKeyRepo });
+const authMiddleware = createAuthMiddleware({
+  validateKey: async (plaintext: string) => {
+    const result = await validateApiKey.execute(plaintext);
+    if (result.status !== 'valid') {
+      return result;
+    }
+    return {
+      status: 'valid' as const,
+      key: {
+        id: result.key.id,
+        name: result.key.name,
+        scopes: [...result.key.scopes],
+        is_active: result.key.is_active,
+      },
+    };
   },
-  { staticDir: WEB_DIR, packageVersion }
+});
+
+// Rate limiter
+const rateLimiter = new RateLimiter();
+
+// Admin routes
+const adminRoutes = buildAdminRoutes({ apiKeyRepo });
+
+// CORS origins
+const allowedOriginsEnv = process.env.ALLOWED_ORIGINS;
+const allowedOrigins = allowedOriginsEnv
+  ? allowedOriginsEnv.split(',').map(s => s.trim())
+  : undefined;
+
+// Request logging
+function onLog(entry: RequestLogEntry): void {
+  const keyPart = entry.key_name ? ` key=${entry.key_name}` : '';
+  console.warn(
+    `[${entry.request_id}] ${entry.method} ${entry.path} ${entry.status} ${entry.duration}ms${keyPart}`
+  );
+}
+
+const server = createApp(
+  { nodeRepo, edgeRepo, versionRepo, featureRepo },
+  {
+    staticDir: WEB_DIR,
+    packageVersion,
+    authMiddleware,
+    rateLimiter,
+    adminRoutes,
+    allowedOrigins,
+    onLog,
+  }
 );
 
 server.listen(PORT, () => {
-  console.log(`API server listening on port ${PORT}`);
-  console.log(`  Database: ${DB_PATH}`);
-  console.log(`  Static:   ${WEB_DIR}`);
-  console.log(`  Health:   http://localhost:${PORT}/api/health`);
-  console.log(`  Web view: http://localhost:${PORT}/`);
+  console.warn(`API server listening on port ${PORT}`);
+  console.warn(`  Database: ${DB_PATH}`);
+  console.warn(`  Static:   ${WEB_DIR}`);
+  console.warn(`  Health:   http://localhost:${PORT}/api/health`);
+  console.warn(`  Web view: http://localhost:${PORT}/`);
+  console.warn(`  Auth:     enabled`);
 });

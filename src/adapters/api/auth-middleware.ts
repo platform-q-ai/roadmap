@@ -9,8 +9,14 @@ interface AuthKey {
   is_active: boolean;
 }
 
+export type ValidationResult =
+  | { status: 'valid'; key: AuthKey }
+  | { status: 'invalid' }
+  | { status: 'expired' }
+  | { status: 'revoked' };
+
 export interface AuthMiddlewareDeps {
-  validateKey: (plaintext: string) => Promise<AuthKey | null>;
+  validateKey: (plaintext: string) => Promise<ValidationResult>;
 }
 
 export interface AuthenticatedRequest extends http.IncomingMessage {
@@ -41,14 +47,42 @@ interface ErrorPayload {
   code: string;
 }
 
-function jsonError(
+const VALIDATION_ERRORS: Record<string, ErrorPayload> = {
+  expired: { status: 401, error: 'API key expired', code: 'API_KEY_EXPIRED' },
+  revoked: { status: 401, error: 'API key revoked', code: 'API_KEY_REVOKED' },
+  invalid: { status: 401, error: 'Invalid API key', code: 'INVALID_API_KEY' },
+};
+
+function sendAuthError(
   res: http.ServerResponse,
   payload: ErrorPayload,
-  req?: http.IncomingMessage
-): void {
-  const requestId = req ? (req as RequestWithId).requestId : undefined;
-  res.writeHead(payload.status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: payload.error, code: payload.code, request_id: requestId }));
+  req: http.IncomingMessage
+): false {
+  const requestId = (req as RequestWithId).requestId;
+  res.writeHead(payload.status, {
+    'Content-Type': 'application/json',
+    'WWW-Authenticate': 'Bearer',
+  });
+  res.end(
+    JSON.stringify({
+      error: payload.error,
+      code: payload.code,
+      request_id: requestId,
+    })
+  );
+  return false;
+}
+
+function extractApiKey(req: http.IncomingMessage): string | undefined {
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.slice(7);
+  }
+  const apiKeyHeader = req.headers['x-api-key'];
+  if (typeof apiKeyHeader === 'string') {
+    return apiKeyHeader;
+  }
+  return undefined;
 }
 
 /**
@@ -67,55 +101,40 @@ export function createAuthMiddleware(deps: AuthMiddlewareDeps) {
     const url = req.url ?? '/';
     const method = req.method ?? 'GET';
 
-    // Health endpoint is exempt
     if (url === '/api/health') {
       return true;
     }
 
-    // Extract key from Authorization header or X-API-Key
-    const authHeader = req.headers['authorization'];
-    const apiKeyHeader = req.headers['x-api-key'];
-
-    let plaintext: string | undefined;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      plaintext = authHeader.slice(7);
-    } else if (typeof apiKeyHeader === 'string') {
-      plaintext = apiKeyHeader;
-    }
-
+    const plaintext = extractApiKey(req);
     if (!plaintext) {
-      jsonError(
+      return sendAuthError(
         res,
         { status: 401, error: 'Authentication required', code: 'AUTHENTICATION_REQUIRED' },
         req
       );
-      return false;
     }
 
-    const key = await deps.validateKey(plaintext);
-    if (!key) {
-      jsonError(
-        res,
-        { status: 401, error: 'Invalid or expired API key', code: 'INVALID_API_KEY' },
-        req
-      );
-      return false;
+    const result = await deps.validateKey(plaintext);
+
+    const errorPayload = VALIDATION_ERRORS[result.status];
+    if (errorPayload) {
+      return sendAuthError(res, errorPayload, req);
     }
 
-    // Check scope
+    if (result.status !== 'valid') {
+      return sendAuthError(res, VALIDATION_ERRORS['invalid'], req);
+    }
+
     const scope = requiredScope(method, url);
-    if (!key.scopes.includes(scope)) {
-      jsonError(
+    if (!result.key.scopes.includes(scope)) {
+      return sendAuthError(
         res,
-        { status: 403, error: `Insufficient scope: requires ${scope}`, code: 'INSUFFICIENT_SCOPE' },
+        { status: 403, error: `Insufficient scope: ${scope} required`, code: 'INSUFFICIENT_SCOPE' },
         req
       );
-      return false;
     }
 
-    // Attach key to request for downstream handlers
-    (req as AuthenticatedRequest).apiKey = key;
+    (req as AuthenticatedRequest).apiKey = result.key;
     return true;
   };
 }

@@ -7,7 +7,7 @@ Feature: API Error Response Format
   Rule: Error responses follow a consistent format
 
     Scenario: All error responses have a consistent structure
-      Given the API server is running
+      Given the API server is running with authentication enabled
       When any API request results in an error
       Then the response body has this structure:
         """
@@ -34,7 +34,8 @@ Feature: API Error Response Format
         | INTERNAL_ERROR        | 500    | Unexpected server error   |
 
     Scenario: Internal errors do not leak implementation details
-      Given the API server is running
+      Given the API server is running with authentication enabled
+      And a valid API key with scope "read"
       When an unexpected error occurs during request handling
       Then the response status is 500
       And the response body error message is "Internal server error"

@@ -36,7 +36,7 @@ async function makeStoredKey(overrides: Record<string, unknown> = {}) {
 }
 
 describe('ValidateApiKey', () => {
-  it('returns the ApiKey record for a valid plaintext key', async () => {
+  it('returns valid result with ApiKey for a valid plaintext key', async () => {
     const { ValidateApiKey, hashKey } = await import('../../../src/use-cases/validate-api-key.js');
     const repo = createMockApiKeyRepo();
     const salt = 'test-salt';
@@ -48,11 +48,13 @@ describe('ValidateApiKey', () => {
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     const result = await uc.execute(plaintext);
 
-    expect(result).not.toBeNull();
-    expect(result.name).toBe('test-bot');
+    expect(result.status).toBe('valid');
+    if (result.status === 'valid') {
+      expect(result.key.name).toBe('test-bot');
+    }
   });
 
-  it('returns null for an invalid plaintext key', async () => {
+  it('returns invalid for an unknown plaintext key', async () => {
     const { ValidateApiKey } = await import('../../../src/use-cases/validate-api-key.js');
     const repo = createMockApiKeyRepo();
     repo.findAll.mockResolvedValue([await makeStoredKey()]);
@@ -60,10 +62,10 @@ describe('ValidateApiKey', () => {
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     const result = await uc.execute('rmap_invalidinvalidinvalidinvalid');
 
-    expect(result).toBeNull();
+    expect(result.status).toBe('invalid');
   });
 
-  it('returns null for an expired key', async () => {
+  it('returns expired for an expired key', async () => {
     const { ValidateApiKey, hashKey } = await import('../../../src/use-cases/validate-api-key.js');
     const repo = createMockApiKeyRepo();
     const salt = 'test-salt';
@@ -77,10 +79,10 @@ describe('ValidateApiKey', () => {
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     const result = await uc.execute(plaintext);
 
-    expect(result).toBeNull();
+    expect(result.status).toBe('expired');
   });
 
-  it('returns null for a revoked (inactive) key', async () => {
+  it('returns revoked for an inactive key', async () => {
     const { ValidateApiKey, hashKey } = await import('../../../src/use-cases/validate-api-key.js');
     const repo = createMockApiKeyRepo();
     const salt = 'test-salt';
@@ -94,7 +96,7 @@ describe('ValidateApiKey', () => {
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     const result = await uc.execute(plaintext);
 
-    expect(result).toBeNull();
+    expect(result.status).toBe('revoked');
   });
 
   it('updates last_used_at on successful validation', async () => {
@@ -112,16 +114,14 @@ describe('ValidateApiKey', () => {
     expect(repo.updateLastUsed).toHaveBeenCalledWith(42);
   });
 
-  it('uses timing-safe comparison', async () => {
+  it('returns invalid when no keys exist', async () => {
     const { ValidateApiKey } = await import('../../../src/use-cases/validate-api-key.js');
-    // This test validates the use case exists and accepts input.
-    // The actual timing-safe implementation is tested at integration level.
     const repo = createMockApiKeyRepo();
     repo.findAll.mockResolvedValue([]);
 
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     const result = await uc.execute('rmap_00000000000000000000000000000000');
 
-    expect(result).toBeNull();
+    expect(result.status).toBe('invalid');
   });
 });

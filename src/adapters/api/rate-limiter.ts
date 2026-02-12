@@ -68,6 +68,13 @@ export class RateLimiter {
     return this.checkBucket(`write:${key}`, limit);
   }
 
+  /**
+   * Set a custom rate limit for a specific key.
+   */
+  setKeyLimit(key: string, limit: number): void {
+    this.keyLimits[key] = limit;
+  }
+
   private checkBucket(bucketKey: string, limit: number): RateLimitResult {
     const now = Date.now();
     let entry = this.buckets.get(bucketKey);

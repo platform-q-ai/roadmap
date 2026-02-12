@@ -38,7 +38,7 @@ Feature: API Request Logging
       And the request log does not contain any API key values
 
     Scenario: Logs include correlation ID for tracing
-      Given the API server is running
+      Given the API server is running with authentication enabled
       When I send a request with header "X-Request-Id: custom-trace-123"
       Then the response has header "X-Request-Id" with value "custom-trace-123"
       And the request log entry has request_id "custom-trace-123"

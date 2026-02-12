@@ -103,14 +103,23 @@ export function buildAdminRoutes(deps: AdminDeps): Route[] {
     },
     {
       method: 'DELETE',
-      pattern: /^\/api\/admin\/keys\/(\d+)$/,
+      pattern: /^\/api\/admin\/keys\/([^/]+)$/,
       handler: async (req, res, match) => {
-        const keyId = parseInt(match[1], 10);
+        const identifier = match[1];
         const uc = new RevokeApiKey({ apiKeyRepo: deps.apiKeyRepo });
         try {
-          await uc.execute(keyId);
-          res.writeHead(204);
-          res.end();
+          // Try numeric ID first, then name lookup
+          if (/^\d+$/.test(identifier)) {
+            await uc.execute(parseInt(identifier, 10));
+          } else {
+            const key = await deps.apiKeyRepo.findByName(identifier);
+            if (!key) {
+              json(res, 404, { error: `API key not found: ${identifier}` }, req);
+              return;
+            }
+            await uc.execute(key.id);
+          }
+          json(res, 200, { status: 'revoked' }, req);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           const status = msg.includes('not found') ? 404 : 400;

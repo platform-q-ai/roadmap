@@ -1,18 +1,28 @@
 import { strict as assert } from 'node:assert';
 import http from 'node:http';
 
-import { After, Given, Then, When } from '@cucumber/cucumber';
+import { After, Before, Given, When } from '@cucumber/cucumber';
 
-import { createApp } from '../../src/adapters/api/index.js';
+import type { RequestLogEntry } from '../../src/adapters/api/index.js';
+import {
+  buildAdminRoutes,
+  createApp,
+  createAuthMiddleware,
+  RateLimiter,
+} from '../../src/adapters/api/index.js';
+import type { ApiKeyProps, ApiKeyScope } from '../../src/domain/entities/api-key.js';
+import { ApiKey } from '../../src/domain/entities/api-key.js';
 import { Edge } from '../../src/domain/entities/edge.js';
 import { Node } from '../../src/domain/entities/node.js';
 import { Version } from '../../src/domain/entities/version.js';
 import type {
+  IApiKeyRepository,
   IEdgeRepository,
   IFeatureRepository,
   INodeRepository,
   IVersionRepository,
 } from '../../src/domain/index.js';
+import { hashKey, ValidateApiKey } from '../../src/use-cases/index.js';
 
 /** Auth/scopes/management/security/validation step definitions. */
 interface AuthApiWorld {
@@ -22,23 +32,125 @@ interface AuthApiWorld {
   features: unknown[];
   server: http.Server | null;
   baseUrl: string;
-  response: { status: number; body: unknown; headers: Record<string, string> } | null;
+  response: {
+    status: number;
+    body: unknown;
+    headers: Record<string, string>;
+  } | null;
   currentApiKey: string | null;
   adminApiKey: string | null;
   apiKeys: Map<
     string,
-    { rawKey: string; scopes: string[]; name: string; expired?: boolean; revoked?: boolean }
+    {
+      rawKey: string;
+      scopes: string[];
+      name: string;
+      expired?: boolean;
+      revoked?: boolean;
+    }
   >;
-  apiKeyRepo: unknown;
-  requestLogs: Array<Record<string, unknown>>;
+  apiKeyRepo: InMemoryApiKeyRepo | null;
+  requestLogs: RequestLogEntry[];
   envOverrides: Record<string, string | undefined>;
+  rateLimiter: RateLimiter | null;
   [key: string]: unknown;
+}
+
+class InMemoryApiKeyRepo implements IApiKeyRepository {
+  private keys: ApiKey[] = [];
+  private nextId = 1;
+
+  async save(props: Omit<ApiKeyProps, 'id'>): Promise<void> {
+    this.keys.push(new ApiKey({ ...props, id: this.nextId++ }));
+  }
+
+  async findAll(): Promise<ApiKey[]> {
+    return [...this.keys];
+  }
+
+  async findById(id: number): Promise<ApiKey | null> {
+    return this.keys.find(k => k.id === id) ?? null;
+  }
+
+  async findByName(name: string): Promise<ApiKey | null> {
+    return this.keys.find(k => k.name === name) ?? null;
+  }
+
+  async revoke(id: number): Promise<void> {
+    const idx = this.keys.findIndex(k => k.id === id);
+    if (idx === -1) {
+      throw new Error(`API key not found: ${id}`);
+    }
+    const old = this.keys[idx];
+    this.keys[idx] = new ApiKey({
+      id: old.id,
+      name: old.name,
+      key_hash: old.key_hash,
+      salt: old.salt,
+      scopes: old.scopes,
+      created_at: old.created_at,
+      is_active: false,
+      expires_at: old.expires_at,
+      last_used_at: old.last_used_at,
+    });
+  }
+
+  async updateLastUsed(id: number): Promise<void> {
+    const idx = this.keys.findIndex(k => k.id === id);
+    if (idx === -1) {
+      return;
+    }
+    const old = this.keys[idx];
+    this.keys[idx] = new ApiKey({
+      id: old.id,
+      name: old.name,
+      key_hash: old.key_hash,
+      salt: old.salt,
+      scopes: old.scopes,
+      created_at: old.created_at,
+      is_active: old.is_active,
+      expires_at: old.expires_at,
+      last_used_at: new Date().toISOString(),
+    });
+  }
+
+  addKey(
+    rawKey: string,
+    info: {
+      name: string;
+      scopes: string[];
+      expired?: boolean;
+      revoked?: boolean;
+    }
+  ): void {
+    const salt = 'test-salt';
+    const keyHash = hashKey(rawKey, salt);
+    const past = '2020-01-01T00:00:00.000Z';
+    this.keys.push(
+      new ApiKey({
+        id: this.nextId++,
+        name: info.name,
+        key_hash: keyHash,
+        salt,
+        scopes: info.scopes as ApiKeyScope[],
+        created_at: new Date().toISOString(),
+        is_active: !info.revoked,
+        expires_at: info.expired ? past : null,
+        last_used_at: null,
+      })
+    );
+  }
 }
 
 function buildRepos(world: AuthApiWorld) {
   const nodeRepo: INodeRepository = {
     findAll: async () => world.nodes,
-    findById: async (id: string) => world.nodes.find(n => n.id === id) ?? null,
+    findById: async (id: string) => {
+      if (id === 'trigger-500') {
+        throw new Error('DB connection lost');
+      }
+      return world.nodes.find(n => n.id === id) ?? null;
+    },
     findByType: async (type: string) => world.nodes.filter(n => n.type === type),
     findByLayer: async (lid: string) => world.nodes.filter(n => n.layer === lid),
     exists: async (id: string) => world.nodes.some(n => n.id === id),
@@ -88,7 +200,7 @@ function buildRepos(world: AuthApiWorld) {
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
 
-async function initAuthWorld(world: AuthApiWorld): Promise<void> {
+function ensureWorldInit(world: AuthApiWorld): void {
   if (!world.nodes) {
     world.nodes = [];
   }
@@ -110,27 +222,92 @@ async function initAuthWorld(world: AuthApiWorld): Promise<void> {
   if (!world.envOverrides) {
     world.envOverrides = {};
   }
+}
+
+async function stopServer(world: AuthApiWorld): Promise<void> {
   if (world.server) {
     const s = world.server;
+    world.server = null;
     await new Promise<void>(resolve => {
       s.close(() => resolve());
       s.closeAllConnections();
     });
   }
-  world.server = null;
-  world.response = null;
-  world.currentApiKey = null;
-  world.adminApiKey = null;
+}
+
+function addKeyToRepo(
+  world: AuthApiWorld,
+  rawKey: string,
+  info: {
+    name: string;
+    scopes: string[];
+    expired?: boolean;
+    revoked?: boolean;
+  }
+): void {
+  if (world.apiKeyRepo) {
+    world.apiKeyRepo.addKey(rawKey, info);
+  }
 }
 
 async function startAuthServer(world: AuthApiWorld): Promise<void> {
-  await initAuthWorld(world);
+  ensureWorldInit(world);
+  await stopServer(world);
+  world.response = null;
+  world.requestLogs = [];
+
+  const repo = new InMemoryApiKeyRepo();
+  world.apiKeyRepo = repo;
+
+  // Sync pre-existing keys
+  for (const [, info] of world.apiKeys) {
+    repo.addKey(info.rawKey, info);
+  }
+
   const repos = buildRepos(world);
-  // createApp will be extended with auth options in phase 5
-  const app = createApp(repos);
+  const validateApiKey = new ValidateApiKey({ apiKeyRepo: repo });
+
+  const authMw = createAuthMiddleware({
+    validateKey: async (plaintext: string) => {
+      const result = await validateApiKey.execute(plaintext);
+      if (result.status !== 'valid') {
+        return result;
+      }
+      return {
+        status: 'valid' as const,
+        key: {
+          id: result.key.id,
+          name: result.key.name,
+          scopes: [...result.key.scopes],
+          is_active: result.key.is_active,
+        },
+      };
+    },
+  });
+
+  const writeLimit = (world.writeRateLimit as number | undefined) ?? undefined;
+  const rateLimiter = world.rateLimiter ?? new RateLimiter(writeLimit ? { writeLimit } : undefined);
+  world.rateLimiter = rateLimiter;
+
+  const adminRoutes = buildAdminRoutes({ apiKeyRepo: repo });
+
+  const allowedOrigins = world.envOverrides?.ALLOWED_ORIGINS
+    ? world.envOverrides.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+    : undefined;
+
+  const app = createApp(repos, {
+    authMiddleware: authMw,
+    rateLimiter,
+    adminRoutes,
+    allowedOrigins,
+    onLog: (entry: RequestLogEntry) => {
+      world.requestLogs.push(entry);
+    },
+  });
+
   await new Promise<void>(resolve => {
     world.server = app.listen(0, () => {
-      const addr = world.server!.address();
+      const addr = world.server?.address();
       if (typeof addr === 'object' && addr !== null) {
         world.baseUrl = `http://127.0.0.1:${addr.port}`;
       }
@@ -144,20 +321,31 @@ async function authHttpRequest(
   method: string,
   path: string,
   options?: { body?: string; headers?: Record<string, string> }
-): Promise<{ status: number; body: unknown; headers: Record<string, string> }> {
+): Promise<{
+  status: number;
+  body: unknown;
+  headers: Record<string, string>;
+}> {
   return new Promise((resolve, reject) => {
     const url = new URL(path, baseUrl);
     const extraHeaders = options?.headers ?? {};
     const body = options?.body;
     const contentHeaders = body
-      ? { 'Content-Type': 'application/json', 'Content-Length': String(Buffer.byteLength(body)) }
+      ? {
+          'Content-Type': 'application/json',
+          'Content-Length': String(Buffer.byteLength(body)),
+        }
       : {};
     const reqOptions: http.RequestOptions = {
       method,
       hostname: url.hostname,
       port: url.port,
       path: url.pathname,
-      headers: { Connection: 'close', ...contentHeaders, ...extraHeaders },
+      headers: {
+        Connection: 'close',
+        ...contentHeaders,
+        ...extraHeaders,
+      },
       agent: false,
     };
 
@@ -179,7 +367,11 @@ async function authHttpRequest(
             headers[key] = val;
           }
         }
-        resolve({ status: res.statusCode ?? 500, body: parsed, headers });
+        resolve({
+          status: res.statusCode ?? 500,
+          body: parsed,
+          headers,
+        });
       });
     });
     req.on('error', reject);
@@ -189,6 +381,18 @@ async function authHttpRequest(
     req.end();
   });
 }
+
+// ─── Before hook: auto-start auth server for @v1 scenarios ──────────
+
+Before({ tags: '@v1' }, async function (this: AuthApiWorld) {
+  ensureWorldInit(this);
+  this.currentApiKey = null;
+  this.adminApiKey = null;
+  this.rateLimiter = null;
+  this.apiKeyRepo = null;
+});
+
+// ─── Given steps ─────────────────────────────────────────────────────
 
 Given('the API server is running with authentication enabled', async function (this: AuthApiWorld) {
   await startAuthServer(this);
@@ -200,68 +404,101 @@ Given(
     if (!this.apiKeys) {
       this.apiKeys = new Map();
     }
-    this.apiKeys.set(rawKey, { rawKey, scopes: [scope], name: `key-${rawKey}` });
+    const info = { rawKey, scopes: [scope], name: `key-${rawKey}` };
+    this.apiKeys.set(rawKey, info);
     this.currentApiKey = rawKey;
+    addKeyToRepo(this, rawKey, info);
   }
 );
 
-Given('a valid API key with scope {string}', function (this: AuthApiWorld, scope: string) {
+Given('a valid API key with scope {string}', async function (this: AuthApiWorld, scope: string) {
   if (!this.apiKeys) {
     this.apiKeys = new Map();
   }
   const rawKey = `rmap_test_${scope}_${Date.now().toString(16)}`;
-  this.apiKeys.set(rawKey, { rawKey, scopes: [scope], name: `key-${scope}` });
+  const info = { rawKey, scopes: [scope], name: `key-${scope}` };
+  this.apiKeys.set(rawKey, info);
   this.currentApiKey = rawKey;
   if (scope === 'admin') {
     this.adminApiKey = rawKey;
+  }
+  if (!this.server) {
+    await startAuthServer(this);
+  } else {
+    addKeyToRepo(this, rawKey, info);
   }
 });
 
 Given(
   'a valid API key with scopes {string} and {string}',
-  function (this: AuthApiWorld, s1: string, s2: string) {
+  async function (this: AuthApiWorld, s1: string, s2: string) {
     if (!this.apiKeys) {
       this.apiKeys = new Map();
     }
     const rawKey = `rmap_test_${s1}_${s2}_${Date.now().toString(16)}`;
-    this.apiKeys.set(rawKey, { rawKey, scopes: [s1, s2], name: `key-${s1}-${s2}` });
+    const info = { rawKey, scopes: [s1, s2], name: `key-${s1}-${s2}` };
+    this.apiKeys.set(rawKey, info);
     this.currentApiKey = rawKey;
+    if (!this.server) {
+      await startAuthServer(this);
+    } else {
+      addKeyToRepo(this, rawKey, info);
+    }
   }
 );
 
 Given(
   'a valid API key with scopes {string} and {string} but not {string}',
-  function (this: AuthApiWorld, s1: string, s2: string, _notScope: string) {
+  async function (this: AuthApiWorld, s1: string, s2: string, _notScope: string) {
     if (!this.apiKeys) {
       this.apiKeys = new Map();
     }
     const rawKey = `rmap_test_${s1}_${s2}_${Date.now().toString(16)}`;
-    this.apiKeys.set(rawKey, { rawKey, scopes: [s1, s2], name: `key-${s1}-${s2}` });
+    const info = { rawKey, scopes: [s1, s2], name: `key-${s1}-${s2}` };
+    this.apiKeys.set(rawKey, info);
     this.currentApiKey = rawKey;
+    if (!this.server) {
+      await startAuthServer(this);
+    } else {
+      addKeyToRepo(this, rawKey, info);
+    }
   }
 );
 
-Given('a valid API key with scope {string} only', function (this: AuthApiWorld, scope: string) {
-  if (!this.apiKeys) {
-    this.apiKeys = new Map();
+Given(
+  'a valid API key with scope {string} only',
+  async function (this: AuthApiWorld, scope: string) {
+    if (!this.apiKeys) {
+      this.apiKeys = new Map();
+    }
+    const rawKey = `rmap_test_${scope}_only_${Date.now().toString(16)}`;
+    const info = { rawKey, scopes: [scope], name: `key-${scope}-only` };
+    this.apiKeys.set(rawKey, info);
+    this.currentApiKey = rawKey;
+    if (!this.server) {
+      await startAuthServer(this);
+    } else {
+      addKeyToRepo(this, rawKey, info);
+    }
   }
-  const rawKey = `rmap_test_${scope}_only_${Date.now().toString(16)}`;
-  this.apiKeys.set(rawKey, { rawKey, scopes: [scope], name: `key-${scope}-only` });
-  this.currentApiKey = rawKey;
-});
+);
 
 Given('an expired API key {string} exists', function (this: AuthApiWorld, rawKey: string) {
   if (!this.apiKeys) {
     this.apiKeys = new Map();
   }
-  this.apiKeys.set(rawKey, { rawKey, scopes: ['read'], name: `expired-${rawKey}`, expired: true });
+  const info = { rawKey, scopes: ['read'], name: `expired-${rawKey}`, expired: true };
+  this.apiKeys.set(rawKey, info);
+  addKeyToRepo(this, rawKey, info);
 });
 
 Given('a revoked API key {string} exists', function (this: AuthApiWorld, rawKey: string) {
   if (!this.apiKeys) {
     this.apiKeys = new Map();
   }
-  this.apiKeys.set(rawKey, { rawKey, scopes: ['read'], name: `revoked-${rawKey}`, revoked: true });
+  const info = { rawKey, scopes: ['read'], name: `revoked-${rawKey}`, revoked: true };
+  this.apiKeys.set(rawKey, info);
+  addKeyToRepo(this, rawKey, info);
 });
 
 Given('{int} API keys exist in the database', function (this: AuthApiWorld, count: number) {
@@ -270,7 +507,9 @@ Given('{int} API keys exist in the database', function (this: AuthApiWorld, coun
   }
   for (let i = 0; i < count; i++) {
     const rawKey = `rmap_bulk_${i}_${Date.now().toString(16)}`;
-    this.apiKeys.set(rawKey, { rawKey, scopes: ['read'], name: `bulk-key-${i}` });
+    const info = { rawKey, scopes: ['read'], name: `bulk-key-${i}` };
+    this.apiKeys.set(rawKey, info);
+    addKeyToRepo(this, rawKey, info);
   }
 });
 
@@ -279,7 +518,9 @@ Given('a key with name {string} exists and is active', function (this: AuthApiWo
     this.apiKeys = new Map();
   }
   const rawKey = `rmap_active_${name}_${Date.now().toString(16)}`;
-  this.apiKeys.set(rawKey, { rawKey, scopes: ['read'], name });
+  const info = { rawKey, scopes: ['read'], name };
+  this.apiKeys.set(rawKey, info);
+  addKeyToRepo(this, rawKey, info);
 });
 
 Given(
@@ -309,14 +550,16 @@ Given(
 
 Given(
   'the API server is running with default rate limit of {int} requests per minute',
-  async function (this: AuthApiWorld, _limit: number) {
+  async function (this: AuthApiWorld, limit: number) {
+    this.rateLimiter = new RateLimiter({ defaultLimit: limit });
     await startAuthServer(this);
   }
 );
 
 Given(
   'the API server is running with rate limit of {int} requests per minute',
-  async function (this: AuthApiWorld, _limit: number) {
+  async function (this: AuthApiWorld, limit: number) {
+    this.rateLimiter = new RateLimiter({ defaultLimit: limit });
     await startAuthServer(this);
   }
 );
@@ -347,10 +590,14 @@ Given(
     if (!this.apiKeys) {
       this.apiKeys = new Map();
     }
-    this.apiKeys.set(rawKey, { rawKey, scopes: [scope], name: `key-${rawKey}` });
+    const info = { rawKey, scopes: [scope], name: `key-${rawKey}` };
+    this.apiKeys.set(rawKey, info);
     this.currentApiKey = rawKey;
+    addKeyToRepo(this, rawKey, info);
   }
 );
+
+// ─── When steps ──────────────────────────────────────────────────────
 
 When(
   'I send a GET request to {string} without an API key',
@@ -393,7 +640,6 @@ When(
 When(
   'I send an authenticated GET request to {string} with the expired key',
   async function (this: AuthApiWorld, path: string) {
-    // Find the expired key
     const expired = [...(this.apiKeys?.values() ?? [])].find(k => k.expired);
     assert.ok(expired, 'No expired key found');
     this.response = await authHttpRequest(this.baseUrl, 'GET', path, {
@@ -471,7 +717,9 @@ When(
   async function (this: AuthApiWorld, path: string) {
     assert.ok(this.currentApiKey, 'No current API key');
     this.response = await authHttpRequest(this.baseUrl, 'DELETE', path, {
-      headers: { Authorization: `Bearer ${this.currentApiKey}` },
+      headers: {
+        Authorization: `Bearer ${this.currentApiKey}`,
+      },
     });
   }
 );
@@ -496,255 +744,6 @@ When(
   }
 );
 
-When(
-  'I send a DELETE request to {string} with that key',
-  async function (this: AuthApiWorld, path: string) {
-    assert.ok(this.currentApiKey, 'No current API key');
-    this.response = await authHttpRequest(this.baseUrl, 'DELETE', path, {
-      headers: { Authorization: `Bearer ${this.currentApiKey}` },
-    });
-  }
-);
-
-When(
-  'I send a GET request to {string} with the admin key',
-  async function (this: AuthApiWorld, path: string) {
-    assert.ok(this.adminApiKey, 'No admin API key');
-    this.response = await authHttpRequest(this.baseUrl, 'GET', path, {
-      headers: { Authorization: `Bearer ${this.adminApiKey}` },
-    });
-  }
-);
-
-When(
-  'I send a DELETE request to {string} with the admin key',
-  async function (this: AuthApiWorld, path: string) {
-    assert.ok(this.adminApiKey, 'No admin API key');
-    this.response = await authHttpRequest(this.baseUrl, 'DELETE', path, {
-      headers: { Authorization: `Bearer ${this.adminApiKey}` },
-    });
-  }
-);
-
-When(
-  'I send a POST request to {string} with the admin key and body:',
-  async function (this: AuthApiWorld, path: string, body: string) {
-    assert.ok(this.adminApiKey, 'No admin API key');
-    this.response = await authHttpRequest(this.baseUrl, 'POST', path, {
-      body,
-      headers: { Authorization: `Bearer ${this.adminApiKey}` },
-    });
-  }
-);
-
-When(
-  'I send a POST request to {string} with body {string}',
-  async function (this: AuthApiWorld, path: string, body: string) {
-    this.response = await authHttpRequest(this.baseUrl, 'POST', path, { body });
-  }
-);
-
-When('I send a POST request with a body larger than 1MB', async function (this: AuthApiWorld) {
-  const largeBody = 'x'.repeat(1024 * 1024 + 1);
-  this.response = await authHttpRequest(this.baseUrl, 'POST', '/api/components', {
-    body: largeBody,
-  });
-});
-
-When('I send a POST request with name {string}', async function (this: AuthApiWorld, name: string) {
-  assert.ok(this.currentApiKey, 'No current API key');
-  const body = JSON.stringify({
-    id: 'html-test',
-    name,
-    type: 'component',
-    layer: 'supervisor-layer',
-  });
-  this.response = await authHttpRequest(this.baseUrl, 'POST', '/api/components', {
-    body,
-    headers: { Authorization: `Bearer ${this.currentApiKey}` },
-  });
-});
-
-When('I send a POST request with id {string}', async function (this: AuthApiWorld, id: string) {
-  assert.ok(this.currentApiKey, 'No current API key');
-  const body = JSON.stringify({
-    id,
-    name: 'Test',
-    type: 'component',
-    layer: 'supervisor-layer',
-  });
-  this.response = await authHttpRequest(this.baseUrl, 'POST', '/api/components', {
-    body,
-    headers: { Authorization: `Bearer ${this.currentApiKey}` },
-  });
-});
-
-When('I send any request to the API', async function (this: AuthApiWorld) {
-  this.response = await authHttpRequest(this.baseUrl, 'GET', '/api/health');
-});
-
-When(
-  'I send an OPTIONS request with {string}',
-  async function (this: AuthApiWorld, originHeader: string) {
-    const [, value] = originHeader.split(':').map(s => s.trim());
-    this.response = await authHttpRequest(this.baseUrl, 'OPTIONS', '/api/components', {
-      headers: { Origin: value },
-    });
-  }
-);
-
-When('any API request results in an error', async function (this: AuthApiWorld) {
-  this.response = await authHttpRequest(this.baseUrl, 'GET', '/api/components/nonexistent-err');
-});
-
-When('an unexpected error occurs during request handling', async function (this: AuthApiWorld) {
-  // Trigger a 500 by calling a route that causes an internal error
-  // In phase 5, the server will have a test route or we'll inject an error
-  this.response = await authHttpRequest(this.baseUrl, 'GET', '/api/components/trigger-500');
-});
-
-When('I send a GET request with an invalid API key', async function (this: AuthApiWorld) {
-  this.response = await authHttpRequest(this.baseUrl, 'GET', '/api/components', {
-    headers: { Authorization: 'Bearer rmap_totally_invalid' },
-  });
-});
-
-When('I send a request with header {string}', async function (this: AuthApiWorld, header: string) {
-  const [name, ...valueParts] = header.split(':');
-  const value = valueParts.join(':').trim();
-  this.response = await authHttpRequest(this.baseUrl, 'GET', '/api/health', {
-    headers: { [name.trim()]: value },
-  });
-});
-
-Then(
-  "the key's last_used_at timestamp is updated to the current time",
-  function (this: AuthApiWorld) {
-    // Will be verified against the API key repo in phase 5
-    assert.ok(this.response, 'No response');
-    assert.equal(this.response.status, 200);
-  }
-);
-
-Then('the response status is not {int}', function (this: AuthApiWorld, status: number) {
-  assert.ok(this.response, 'No response');
-  assert.notEqual(
-    this.response.status,
-    status,
-    `Expected status NOT ${status}, but got ${status}. Body: ${JSON.stringify(this.response.body)}`
-  );
-});
-
-Then(
-  'the following scope mapping applies:',
-  function (_dataTable: { hashes: () => Array<{ method: string; scope: string }> }) {
-    // This is a documentation/verification scenario. The mapping is:
-    // GET -> read, POST/PUT/PATCH/DELETE -> write
-    // Verified by the individual scope scenarios above.
-    assert.ok(true, 'Scope mapping verified by individual scenarios');
-  }
-);
-
-Then(
-  'the response body is an array of {int} key records',
-  function (this: AuthApiWorld, count: number) {
-    assert.ok(this.response, 'No response');
-    const body = this.response.body;
-    assert.ok(Array.isArray(body), `Expected array, got ${typeof body}`);
-    assert.equal(
-      (body as unknown[]).length,
-      count,
-      `Expected ${count} records, got ${(body as unknown[]).length}`
-    );
-  }
-);
-
-Then('the response body is an array', function (this: AuthApiWorld) {
-  assert.ok(this.response, 'No response');
-  assert.ok(Array.isArray(this.response.body), `Expected array, got ${typeof this.response.body}`);
-});
-
-Then('no record contains the raw key or key_hash', function (this: AuthApiWorld) {
-  assert.ok(this.response, 'No response');
-  const records = this.response.body as Array<Record<string, unknown>>;
-  for (const record of records) {
-    assert.ok(!('key' in record), 'Record should not contain raw key');
-    assert.ok(!('key_hash' in record), 'Record should not contain key_hash');
-  }
-});
-
-Then('the key {string} is marked as inactive', function (this: AuthApiWorld, _name: string) {
-  // Verified via subsequent 401 response
-  assert.ok(this.response, 'No response');
-  assert.equal(this.response.status, 200);
-});
-
-Then('subsequent requests with that key return 401', function (this: AuthApiWorld) {
-  // Will be verified in phase 5 with an actual follow-up request
-  assert.ok(true, 'Will be verified by revocation test');
-});
-
-Then('the response body contains the raw key \\(displayed once)', function (this: AuthApiWorld) {
-  assert.ok(this.response, 'No response');
-  const body = this.response.body as Record<string, unknown>;
-  assert.ok('key' in body, 'Response should contain the raw key');
-  assert.ok(
-    typeof body.key === 'string' && (body.key as string).startsWith('rmap_'),
-    'Key should start with rmap_'
-  );
-});
-
-// 'the response body has field {string} with value {string}' — defined in rest-api.steps.ts
-// 'the response body has field {string}' — defined in rest-api.steps.ts
-
-Then(
-  'the response body has field {string} containing {string}',
-  function (this: AuthApiWorld, field: string, substring: string) {
-    assert.ok(this.response, 'No response received');
-    const body = this.response.body as Record<string, unknown>;
-    assert.ok(field in body, `Field "${field}" not found`);
-    assert.ok(
-      String(body[field]).toLowerCase().includes(substring.toLowerCase()),
-      `Expected "${field}" to contain "${substring}", got "${body[field]}"`
-    );
-  }
-);
-
-Then(
-  'the response has header {string} with a UUID value',
-  function (this: AuthApiWorld, header: string) {
-    assert.ok(this.response, 'No response');
-    const val = this.response.headers[header.toLowerCase()];
-    assert.ok(val, `Header "${header}" not found`);
-    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    assert.ok(uuidRe.test(val), `Expected UUID, got "${val}"`);
-  }
-);
-
-Then(
-  'the response has header {string} with a positive integer value',
-  function (this: AuthApiWorld, header: string) {
-    assert.ok(this.response, 'No response');
-    const val = this.response.headers[header.toLowerCase()];
-    assert.ok(val, `Header "${header}" not found`);
-    const num = parseInt(val, 10);
-    assert.ok(num > 0, `Expected positive integer, got "${val}"`);
-  }
-);
-
-Then('the response does not have header {string}', function (this: AuthApiWorld, header: string) {
-  assert.ok(this.response, 'No response');
-  const val = this.response.headers[header.toLowerCase()];
-  assert.equal(val, undefined, `Header "${header}" should not be present, but got "${val}"`);
-});
-
 After({ tags: '@v1' }, async function (this: AuthApiWorld) {
-  if (this.server) {
-    const s = this.server;
-    this.server = null;
-    await new Promise<void>(resolve => {
-      s.close(() => resolve());
-      s.closeAllConnections();
-    });
-  }
+  await stopServer(this);
 });

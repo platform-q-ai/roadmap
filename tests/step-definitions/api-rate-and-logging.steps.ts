@@ -84,8 +84,9 @@ Given('the key has exhausted its rate limit', function (this: AuthApiWorld) {
 
 Given(
   'write endpoints have a rate limit of {int} requests per minute',
-  function (this: AuthApiWorld, _limit: number) {
-    // Config stored for rate limiting implementation
+  function (this: AuthApiWorld, limit: number) {
+    // Store for use when rate limiter is created
+    this.writeRateLimit = limit;
   }
 );
 
@@ -95,15 +96,37 @@ Given(
     if (!this.apiKeys) {
       this.apiKeys = new Map();
     }
-    this.apiKeys.set(key1, { rawKey: key1, scopes: ['read'], name: `key-${key1}` });
-    this.apiKeys.set(key2, { rawKey: key2, scopes: ['read'], name: `key-${key2}` });
+    const info1 = { rawKey: key1, scopes: ['read'], name: `key-${key1}` };
+    const info2 = { rawKey: key2, scopes: ['read'], name: `key-${key2}` };
+    this.apiKeys.set(key1, info1);
+    this.apiKeys.set(key2, info2);
+    // Sync to auth repo if server is already running
+    const repo = this.apiKeyRepo as { addKey?: (k: string, i: typeof info1) => void } | null;
+    if (repo?.addKey) {
+      repo.addKey(key1, info1);
+      repo.addKey(key2, info2);
+    }
   }
 );
 
 Given(
   'API key {string} has a custom rate limit of {int} requests per minute',
-  function (this: AuthApiWorld, _key: string, _limit: number) {
-    // Config stored for rate limiting implementation
+  function (this: AuthApiWorld, key: string, limit: number) {
+    if (!this.apiKeys) {
+      this.apiKeys = new Map();
+    }
+    // The rate limiter uses the key name (not raw key) for limits
+    const info = { rawKey: key, scopes: ['read'], name: `key-${key}` };
+    this.apiKeys.set(key, info);
+    const repo = this.apiKeyRepo as { addKey?: (k: string, i: typeof info) => void } | null;
+    if (repo?.addKey) {
+      repo.addKey(key, info);
+    }
+    // Set custom rate limit using the key name
+    const rl = this.rateLimiter as { setKeyLimit?: (k: string, l: number) => void } | null;
+    if (rl?.setKeyLimit) {
+      rl.setKeyLimit(info.name, limit);
+    }
   }
 );
 
@@ -112,10 +135,13 @@ Given(
 When(
   'I send {int} GET requests to {string} within 1 minute',
   async function (this: AuthApiWorld, count: number, path: string) {
-    assert.ok(this.currentApiKey, 'No current API key');
+    const headers: Record<string, string> = {};
+    if (this.currentApiKey) {
+      headers.Authorization = `Bearer ${this.currentApiKey}`;
+    }
     for (let i = 0; i < count; i++) {
       this.response = await authHttpRequest(this.baseUrl, 'GET', path, {
-        headers: { Authorization: `Bearer ${this.currentApiKey}` },
+        headers,
       });
     }
   }

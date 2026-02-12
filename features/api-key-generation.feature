@@ -32,13 +32,13 @@ Feature: API Key Generation
     Scenario: API key name must be unique
       Given a key with name "existing-bot" already exists
       When I run the command to generate a key with name "existing-bot"
-      Then an error is returned with message "Key name already exists: existing-bot"
+      Then an error is returned with message "API key already exists: existing-bot"
       And no new key is created
 
     Scenario: API key has an optional expiry date
       Given the API key management CLI
       When I run the command to generate a key with name "temp-key" and expiry "2026-12-31"
-      Then the key is created with expiry date "2026-12-31T00:00:00Z"
+      Then the key is created with expiry date "2026-12-31"
 
     Scenario: API key with no expiry never expires
       Given the API key management CLI

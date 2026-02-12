@@ -7,7 +7,7 @@ Feature: API Security Headers and CORS
   Rule: API responses include security headers
 
     Scenario: All responses include standard security headers
-      Given the API server is running
+      Given the API server is running with authentication enabled
       When I send any request to the API
       Then the response has header "X-Content-Type-Options" with value "nosniff"
       And the response has header "X-Frame-Options" with value "DENY"
@@ -17,15 +17,18 @@ Feature: API Security Headers and CORS
 
     Scenario: CORS is restricted to configured origins
       Given the environment variable "ALLOWED_ORIGINS" is set to "https://app.example.com"
+      And the API server is running with authentication enabled
       When I send an OPTIONS request with "Origin: https://app.example.com"
       Then the response has header "Access-Control-Allow-Origin" with value "https://app.example.com"
 
     Scenario: CORS rejects unconfigured origins
       Given the environment variable "ALLOWED_ORIGINS" is set to "https://app.example.com"
+      And the API server is running with authentication enabled
       When I send an OPTIONS request with "Origin: https://evil.example.com"
       Then the response does not have header "Access-Control-Allow-Origin"
 
     Scenario: CORS allows all origins when not configured (development)
       Given the environment variable "ALLOWED_ORIGINS" is not set
+      And the API server is running with authentication enabled
       When I send an OPTIONS request with "Origin: http://localhost:3000"
       Then the response has header "Access-Control-Allow-Origin" with value "*"

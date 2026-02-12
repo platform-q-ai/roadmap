@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { Readable } from 'node:stream';
 
 import { describe, expect, it, vi } from 'vitest';
 
@@ -39,7 +40,6 @@ function createMockRes(): {
 }
 
 function createMockReq(method: string, url: string, body?: string): http.IncomingMessage {
-  const { Readable } = require('node:stream');
   const req = new Readable({ read() {} }) as unknown as http.IncomingMessage;
   Object.assign(req, { method, url, headers: {} });
   if (body) {
@@ -157,10 +157,35 @@ describe('Admin Routes (/api/admin/keys)', () => {
 
       expect(res.writeHead).toHaveBeenCalledWith(400, expect.anything());
     });
+
+    it('returns 409 when key name already exists', async () => {
+      const { buildAdminRoutes } = await import('../../../../src/adapters/api/admin-routes.js');
+      const repo = createMockApiKeyRepo();
+      repo.save.mockRejectedValue(new Error('Key already exists'));
+      repo.findByName.mockResolvedValue({ id: 1, name: 'dup' });
+      const routes = buildAdminRoutes({ apiKeyRepo: repo });
+      const createRoute = routes.find(
+        r => r.method === 'POST' && r.pattern.test('/api/admin/keys')
+      );
+
+      const body = JSON.stringify({ name: 'dup', scopes: ['read'] });
+      const req = createMockReq('POST', '/api/admin/keys', body);
+      (req as unknown as Record<string, unknown>).requestId = 'test-id';
+      const res = createMockRes();
+      await createRoute!.handler(
+        req,
+        res as unknown as http.ServerResponse,
+        '/api/admin/keys'.match(createRoute!.pattern)!
+      );
+
+      expect(res.writeHead).toHaveBeenCalledWith(409, expect.anything());
+      const parsed = JSON.parse(res.body);
+      expect(parsed.request_id).toBe('test-id');
+    });
   });
 
   describe('DELETE /api/admin/keys/:id', () => {
-    it('revokes a key and returns 204', async () => {
+    it('revokes a key by numeric id and returns 200', async () => {
       const { buildAdminRoutes } = await import('../../../../src/adapters/api/admin-routes.js');
       const repo = createMockApiKeyRepo();
       repo.findById.mockResolvedValue({ id: 5, is_active: true });
@@ -174,13 +199,51 @@ describe('Admin Routes (/api/admin/keys)', () => {
       const match = '/api/admin/keys/5'.match(revokeRoute!.pattern)!;
       await revokeRoute!.handler(req, res as unknown as http.ServerResponse, match);
 
-      expect(res.writeHead).toHaveBeenCalledWith(204);
+      expect(res.writeHead).toHaveBeenCalledWith(200, expect.anything());
+      expect(repo.revoke).toHaveBeenCalledWith(5);
     });
 
-    it('returns 404 when key does not exist', async () => {
+    it('revokes a key by name lookup', async () => {
+      const { buildAdminRoutes } = await import('../../../../src/adapters/api/admin-routes.js');
+      const repo = createMockApiKeyRepo();
+      repo.findByName.mockResolvedValue({ id: 7, name: 'my-key', is_active: true });
+      repo.findById.mockResolvedValue({ id: 7, name: 'my-key', is_active: true });
+      const routes = buildAdminRoutes({ apiKeyRepo: repo });
+      const revokeRoute = routes.find(
+        r => r.method === 'DELETE' && r.pattern.test('/api/admin/keys/my-key')
+      );
+
+      const req = createMockReq('DELETE', '/api/admin/keys/my-key');
+      const res = createMockRes();
+      const match = '/api/admin/keys/my-key'.match(revokeRoute!.pattern)!;
+      await revokeRoute!.handler(req, res as unknown as http.ServerResponse, match);
+
+      expect(res.writeHead).toHaveBeenCalledWith(200, expect.anything());
+      expect(repo.revoke).toHaveBeenCalledWith(7);
+    });
+
+    it('returns 404 when name-based lookup finds nothing', async () => {
+      const { buildAdminRoutes } = await import('../../../../src/adapters/api/admin-routes.js');
+      const repo = createMockApiKeyRepo();
+      repo.findByName.mockResolvedValue(null);
+      const routes = buildAdminRoutes({ apiKeyRepo: repo });
+      const revokeRoute = routes.find(
+        r => r.method === 'DELETE' && r.pattern.test('/api/admin/keys/no-such')
+      );
+
+      const req = createMockReq('DELETE', '/api/admin/keys/no-such');
+      const res = createMockRes();
+      const match = '/api/admin/keys/no-such'.match(revokeRoute!.pattern)!;
+      await revokeRoute!.handler(req, res as unknown as http.ServerResponse, match);
+
+      expect(res.writeHead).toHaveBeenCalledWith(404, expect.anything());
+    });
+
+    it('returns 404 when numeric key does not exist', async () => {
       const { buildAdminRoutes } = await import('../../../../src/adapters/api/admin-routes.js');
       const repo = createMockApiKeyRepo();
       repo.findById.mockResolvedValue(null);
+      repo.revoke.mockRejectedValue(new Error('API key not found: 999'));
       const routes = buildAdminRoutes({ apiKeyRepo: repo });
       const revokeRoute = routes.find(
         r => r.method === 'DELETE' && r.pattern.test('/api/admin/keys/999')
