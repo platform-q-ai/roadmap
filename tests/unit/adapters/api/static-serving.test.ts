@@ -48,6 +48,7 @@ function buildEmptyRepos() {
     deleteAll: vi.fn(async () => {}),
     deleteByNode: vi.fn(async () => {}),
     deleteByNodeAndFilename: vi.fn(async () => false),
+    getStepCountSummary: vi.fn(async () => ({ totalSteps: 0, featureCount: 0 })),
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

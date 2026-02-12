@@ -30,6 +30,7 @@ function createMockRepos(existingNodeIds: string[]) {
     }),
     deleteByNode: vi.fn(),
     deleteByNodeAndFilename: vi.fn(),
+    getStepCountSummary: vi.fn().mockResolvedValue({ totalSteps: 0, featureCount: 0 }),
   };
 
   return {

@@ -56,6 +56,7 @@ export function applySchema(db: BetterSQLite3Database): void {
     filename TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT,
+    step_count INTEGER DEFAULT 0,
     updated_at TEXT DEFAULT (datetime('now'))
   )`);
 

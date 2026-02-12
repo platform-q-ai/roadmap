@@ -5,6 +5,7 @@ export interface FeatureProps {
   filename: string;
   title: string;
   content?: string | null;
+  step_count?: number | null;
   updated_at?: string | null;
 }
 
@@ -18,6 +19,7 @@ export class Feature {
   readonly filename: string;
   readonly title: string;
   readonly content: string | null;
+  readonly step_count: number;
   readonly updated_at: string | null;
 
   constructor(props: FeatureProps) {
@@ -27,6 +29,7 @@ export class Feature {
     this.filename = props.filename;
     this.title = props.title;
     this.content = props.content ?? null;
+    this.step_count = props.step_count ?? 0;
     this.updated_at = props.updated_at ?? null;
   }
 
@@ -53,6 +56,7 @@ export class Feature {
       filename: this.filename,
       title: this.title,
       content: this.content,
+      step_count: this.step_count,
       updated_at: this.updated_at,
     };
   }

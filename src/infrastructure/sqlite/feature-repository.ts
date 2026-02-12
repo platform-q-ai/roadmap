@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3';
 
-import type { IFeatureRepository } from '../../domain/index.js';
+import type { IFeatureRepository, StepCountSummary } from '../../domain/index.js';
 import { Feature } from '../../domain/index.js';
 
 export class SqliteFeatureRepository implements IFeatureRepository {
@@ -27,13 +27,32 @@ export class SqliteFeatureRepository implements IFeatureRepository {
     return rows.map(r => new Feature(r as ConstructorParameters<typeof Feature>[0]));
   }
 
+  async getStepCountSummary(nodeId: string, version: string): Promise<StepCountSummary> {
+    const row = this.db
+      .prepare(
+        `SELECT COALESCE(SUM(step_count), 0) AS totalSteps,
+                COUNT(*) AS featureCount
+         FROM features
+         WHERE node_id = ? AND version = ?`
+      )
+      .get(nodeId, version) as StepCountSummary;
+    return row;
+  }
+
   async save(feature: Feature): Promise<void> {
     this.db
       .prepare(
-        `INSERT INTO features (node_id, version, filename, title, content)
-       VALUES (?, ?, ?, ?, ?)`
+        `INSERT INTO features (node_id, version, filename, title, content, step_count)
+       VALUES (?, ?, ?, ?, ?, ?)`
       )
-      .run(feature.node_id, feature.version, feature.filename, feature.title, feature.content);
+      .run(
+        feature.node_id,
+        feature.version,
+        feature.filename,
+        feature.title,
+        feature.content,
+        feature.step_count
+      );
   }
 
   async deleteAll(): Promise<void> {

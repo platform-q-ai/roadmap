@@ -121,6 +121,7 @@ function buildTrackingRepos(world: World) {
       world.deletedFeatureNodeIds.push(nid);
     },
     deleteByNodeAndFilename: async () => false,
+    getStepCountSummary: async () => ({ totalSteps: 0, featureCount: 0 }),
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

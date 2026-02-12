@@ -80,6 +80,7 @@ function buildTestRepos(data: WorldData) {
       data.features = data.features.filter(f => !(f.node_id === nid && f.filename === filename));
       return data.features.length < before;
     }),
+    getStepCountSummary: vi.fn(async () => ({ totalSteps: 0, featureCount: 0 })),
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

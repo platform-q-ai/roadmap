@@ -41,6 +41,7 @@ function createMockRepos() {
     findAll: vi.fn().mockResolvedValue([]),
     findByNode: vi.fn(),
     findByNodeAndVersion: vi.fn(),
+    getStepCountSummary: vi.fn().mockResolvedValue({ totalSteps: 0, featureCount: 0 }),
     save: vi.fn(),
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),

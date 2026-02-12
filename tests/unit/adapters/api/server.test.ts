@@ -41,6 +41,7 @@ function buildMinimalRepos() {
     findAll: vi.fn(async () => []),
     findByNode: vi.fn(async () => []),
     findByNodeAndVersion: vi.fn(async () => []),
+    getStepCountSummary: vi.fn(async () => ({ totalSteps: 0, featureCount: 0 })),
     save: vi.fn(),
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),

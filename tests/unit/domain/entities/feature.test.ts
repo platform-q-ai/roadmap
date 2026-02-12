@@ -85,6 +85,7 @@ describe('Feature Entity', () => {
       filename: 'mvp-test.feature',
       title: 'Test',
       content: 'Feature: Test',
+      step_count: 0,
       updated_at: '2025-01-01',
     });
   });

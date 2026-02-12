@@ -1,7 +1,7 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 
-import type { IFeatureRepository } from '../../domain/index.js';
+import type { IFeatureRepository, StepCountSummary } from '../../domain/index.js';
 import { Feature } from '../../domain/index.js';
 
 import { featuresTable } from './schema.js';
@@ -38,6 +38,18 @@ export class DrizzleFeatureRepository implements IFeatureRepository {
     return rows.map(r => new Feature(r as ConstructorParameters<typeof Feature>[0]));
   }
 
+  async getStepCountSummary(nodeId: string, version: string): Promise<StepCountSummary> {
+    const rows = this.db
+      .select({
+        totalSteps: sql<number>`COALESCE(SUM(${featuresTable.step_count}), 0)`,
+        featureCount: count(),
+      })
+      .from(featuresTable)
+      .where(and(eq(featuresTable.node_id, nodeId), eq(featuresTable.version, version)))
+      .all();
+    return rows[0] ?? { totalSteps: 0, featureCount: 0 };
+  }
+
   async save(feature: Feature): Promise<void> {
     this.db
       .insert(featuresTable)
@@ -47,6 +59,7 @@ export class DrizzleFeatureRepository implements IFeatureRepository {
         filename: feature.filename,
         title: feature.title,
         content: feature.content,
+        step_count: feature.step_count,
       })
       .run();
   }
