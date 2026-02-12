@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import type { Node } from '../../use-cases/index.js';
+import type { Node, UpdateComponentInput } from '../../use-cases/index.js';
 import {
   CreateComponent,
   DeleteComponent,
@@ -186,7 +186,11 @@ async function handleUpdateComponent(
     json(res, 400, { error: 'Invalid JSON body' }, req);
     return;
   }
-  const input = parsePatchInput(body);
+  const { input, error } = parsePatchInput(body);
+  if (!input) {
+    json(res, 400, { error: error ?? 'No updatable fields provided' }, req);
+    return;
+  }
   const uc = new UpdateComponent({
     nodeRepo: deps.nodeRepo,
     versionRepo: deps.versionRepo,
@@ -200,24 +204,38 @@ async function handleUpdateComponent(
   }
 }
 
-function parsePatchInput(body: Record<string, unknown>) {
-  const input: Record<string, unknown> = {};
+interface PatchParseResult {
+  input: UpdateComponentInput | null;
+  error?: string;
+}
+
+const MAX_TAGS = 50;
+
+function parsePatchInput(body: Record<string, unknown>): PatchParseResult {
+  const input: UpdateComponentInput = {};
   if (body.name !== undefined) {
-    input.name = stripHtml(String(body.name));
+    const sanitised = stripHtml(String(body.name));
+    if (!sanitised) {
+      return { input: null, error: 'Invalid name: name must not be empty' };
+    }
+    input.name = sanitised;
   }
   if (body.description !== undefined) {
     input.description = stripHtml(String(body.description));
   }
   if (body.tags !== undefined && Array.isArray(body.tags)) {
-    input.tags = body.tags.map(t => stripHtml(String(t)));
+    input.tags = body.tags.slice(0, MAX_TAGS).map(t => stripHtml(String(t)));
   }
   if (body.sort_order !== undefined && Number.isFinite(Number(body.sort_order))) {
     input.sort_order = Number(body.sort_order);
   }
   if (body.current_version !== undefined) {
-    input.current_version = String(body.current_version);
+    input.current_version = stripHtml(String(body.current_version));
   }
-  return input;
+  if (Object.keys(input).length === 0) {
+    return { input: null, error: 'No updatable fields provided' };
+  }
+  return { input };
 }
 
 async function handleGetFeatures(

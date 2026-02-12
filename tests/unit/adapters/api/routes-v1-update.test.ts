@@ -289,4 +289,26 @@ describe('API Routes — v1 component PATCH update', () => {
       expect(resBody.current_version).toBe('0.7.5');
     });
   });
+
+  it('returns 400 for empty patch body with no recognised fields', async () => {
+    const repos = buildTestRepos(seedData());
+    await withServer(repos, async server => {
+      const body = JSON.stringify({ unknown_field: 'value' });
+      const res = await request(server, 'PATCH', '/api/components/comp-a', body);
+      expect(res.status).toBe(400);
+      const resBody = res.body as Record<string, unknown>;
+      expect(String(resBody.error).toLowerCase()).toContain('no updatable fields');
+    });
+  });
+
+  it('returns 400 for empty name', async () => {
+    const repos = buildTestRepos(seedData());
+    await withServer(repos, async server => {
+      const body = JSON.stringify({ name: '' });
+      const res = await request(server, 'PATCH', '/api/components/comp-a', body);
+      expect(res.status).toBe(400);
+      const resBody = res.body as Record<string, unknown>;
+      expect(String(resBody.error).toLowerCase()).toContain('name');
+    });
+  });
 });
