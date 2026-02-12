@@ -81,8 +81,8 @@ roadmap/
 │   └── adapters/               # Entry points
 │       ├── api/                # REST API server (11 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
-├── components/                 # 12 component directories with Gherkin feature files
-│   ├── roadmap/features/       # 25 feature files (self-tracking)
+├── components/                 # 50 component directories with Gherkin feature files
+│   ├── roadmap/features/       # 72 feature files (self-tracking)
 │   ├── supervisor/features/
 │   ├── meta-agent/features/
 │   ├── worker/features/
@@ -110,7 +110,7 @@ Everything lives in four SQLite tables:
 - **nodes** -- 67 components (layers, components, apps, stores, external tools, pipeline phases). Each has an id, name, type, color, icon, description, and JSON tags array.
 - **edges** -- 119 typed relationships (CONTAINS, CONTROLS, DEPENDS_ON, READS_FROM, WRITES_TO, DISPATCHES_TO, ESCALATES_TO, PROXIES, SANITISES, GATES, SEQUENCE).
 - **node_versions** -- 105 versioned specs. Each component has overview, MVP, v1, and v2 documentation with progress (0-100%) and status (planned / in-progress / complete).
-- **features** -- 36 Gherkin feature files linked to components and versions.
+- **features** -- 83 Gherkin feature files linked to components and versions.
 
 ### Data Flow
 
