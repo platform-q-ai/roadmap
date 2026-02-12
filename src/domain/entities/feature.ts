@@ -103,7 +103,7 @@ export class Feature {
 
   /** Check whether a filename ends with .feature */
   static isValidFeatureExtension(filename: string): boolean {
-    return filename.endsWith('.feature') && !filename.endsWith('.feature.bak');
+    return filename.endsWith('.feature');
   }
 
   /** Check whether the base name (before .feature) is kebab-case. */

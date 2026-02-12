@@ -1,4 +1,4 @@
-@wip @v1
+@v1
 Feature: API Feature File Validation
   As an LLM engineer working autonomously
   I want uploaded feature files validated for Gherkin syntax
