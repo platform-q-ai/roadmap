@@ -23,6 +23,7 @@ function createMockRepos(existingNodes: Node[] = [], existingEdges: Edge[] = [])
 
   const edgeRepo: IEdgeRepository = {
     findAll: vi.fn(),
+    findById: vi.fn(),
     findBySource: vi
       .fn()
       .mockImplementation(async (sid: string) => existingEdges.filter(e => e.source_id === sid)),
@@ -31,6 +32,7 @@ function createMockRepos(existingNodes: Node[] = [], existingEdges: Edge[] = [])
       .mockImplementation(async (tid: string) => existingEdges.filter(e => e.target_id === tid)),
     findByType: vi.fn(),
     findRelationships: vi.fn(),
+    existsBySrcTgtType: vi.fn(),
     save: vi.fn(),
     delete: vi.fn(),
   };

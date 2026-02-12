@@ -5,7 +5,6 @@
  * that hold nodes[], edges[], versions[], features[].
  */
 import type {
-  Edge,
   Feature,
   IEdgeRepository,
   IFeatureRepository,
@@ -14,6 +13,7 @@ import type {
   Node,
   Version,
 } from '../../src/domain/index.js';
+import { Edge } from '../../src/domain/index.js';
 
 export interface InMemoryWorld {
   nodes: Node[];
@@ -40,11 +40,14 @@ export function buildRepos(world: InMemoryWorld, overrides?: RepoOverrides) {
   };
   const edgeRepo: IEdgeRepository = {
     findAll: async () => world.edges,
+    findById: async (id: number) => world.edges.find(e => e.id === id) ?? null,
     findBySource: async (sid: string) => world.edges.filter(e => e.source_id === sid),
     findByTarget: async (tid: string) => world.edges.filter(e => e.target_id === tid),
     findByType: async (type: string) => world.edges.filter(e => e.type === type),
     findRelationships: async () => world.edges.filter(e => !e.isContainment()),
-    save: async () => {},
+    existsBySrcTgtType: async (src: string, tgt: string, type: string) =>
+      world.edges.some(e => e.source_id === src && e.target_id === tgt && e.type === type),
+    save: async (edge: Edge) => edge,
     delete: async () => {},
   };
   const versionRepo: IVersionRepository = {

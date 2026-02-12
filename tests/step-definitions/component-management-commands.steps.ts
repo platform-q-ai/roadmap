@@ -92,12 +92,16 @@ function buildTrackingRepos(world: World) {
   };
   const edgeRepo: IEdgeRepository = {
     findAll: async () => world.edges,
+    findById: async (id: number) => world.edges.find(e => e.id === id) ?? null,
     findBySource: async (sid: string) => world.edges.filter(e => e.source_id === sid),
     findByTarget: async (tid: string) => world.edges.filter(e => e.target_id === tid),
     findByType: async (type: string) => world.edges.filter(e => e.type === type),
     findRelationships: async () => world.edges.filter(e => !e.isContainment()),
+    existsBySrcTgtType: async (src: string, tgt: string, type: string) =>
+      world.edges.some(e => e.source_id === src && e.target_id === tgt && e.type === type),
     save: async (edge: Edge) => {
       world.savedEdges.push(edge);
+      return edge;
     },
     delete: async (id: number) => {
       world.deletedEdgeIds.push(id);

@@ -12,6 +12,7 @@ import type {
   INodeRepository,
   IVersionRepository,
 } from '../../src/domain/index.js';
+import { Edge } from '../../src/domain/index.js';
 
 interface RenderWorld {
   renderServer: http.Server | null;
@@ -36,11 +37,13 @@ function buildStubRepos() {
   };
   const edgeRepo: IEdgeRepository = {
     findAll: async () => [],
+    findById: async () => null,
     findBySource: async () => [],
     findByTarget: async () => [],
     findByType: async () => [],
     findRelationships: async () => [],
-    save: async () => {},
+    existsBySrcTgtType: async () => false,
+    save: async (edge: Edge) => edge,
     delete: async () => {},
   };
   const versionRepo: IVersionRepository = {

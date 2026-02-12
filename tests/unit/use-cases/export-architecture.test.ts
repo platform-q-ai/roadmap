@@ -23,10 +23,12 @@ function createMockRepos() {
   };
   const edgeRepo: IEdgeRepository = {
     findAll: vi.fn().mockResolvedValue([]),
+    findById: vi.fn(),
     findBySource: vi.fn(),
     findByTarget: vi.fn(),
     findByType: vi.fn(),
     findRelationships: vi.fn(),
+    existsBySrcTgtType: vi.fn(),
     save: vi.fn(),
     delete: vi.fn(),
   };

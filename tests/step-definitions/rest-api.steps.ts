@@ -43,19 +43,32 @@ function buildApiRepos(world: ApiWorld) {
       world.nodes = world.nodes.filter(n => n.id !== id);
     },
   };
-  const edgeRepo: IEdgeRepository = {
+  const edgeRepo = {
     findAll: async () => world.edges,
+    findById: async (id: number) => world.edges.find(e => e.id === id) ?? null,
     findBySource: async (sid: string) => world.edges.filter(e => e.source_id === sid),
     findByTarget: async (tid: string) => world.edges.filter(e => e.target_id === tid),
     findByType: async (type: string) => world.edges.filter(e => e.type === type),
     findRelationships: async () => world.edges.filter(e => !e.isContainment()),
+    existsBySrcTgtType: async (src: string, tgt: string, type: string) =>
+      world.edges.some(e => e.source_id === src && e.target_id === tgt && e.type === type),
     save: async (edge: Edge) => {
-      world.edges.push(edge);
+      const nextId = world.edges.length > 0 ? Math.max(...world.edges.map(e => e.id ?? 0)) + 1 : 1;
+      const withId = new Edge({
+        id: edge.id ?? nextId,
+        source_id: edge.source_id,
+        target_id: edge.target_id,
+        type: edge.type,
+        label: edge.label,
+        metadata: edge.metadata,
+      });
+      world.edges.push(withId);
+      return withId;
     },
     delete: async (id: number) => {
       world.edges = world.edges.filter(e => e.id !== id);
     },
-  };
+  } as IEdgeRepository;
   const versionRepo: IVersionRepository = {
     findAll: async () => world.versions,
     findByNode: async (nid: string) => world.versions.filter(v => v.node_id === nid),

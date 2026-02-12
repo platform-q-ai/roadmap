@@ -76,12 +76,14 @@ roadmap/
 │   │   ├── upload-feature.ts
 │   │   ├── delete-feature.ts
 │   │   ├── update-component.ts
+│   │   ├── create-edge.ts
+│   │   ├── delete-edge.ts
 │   │   └── errors.ts
 │   ├── infrastructure/         # Concrete implementations
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (14 endpoints + static files)
+│       ├── api/                # REST API server (17 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -163,6 +165,9 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a feature file | `204` | `404` |
 | `GET` | `/api/components/:id/edges` | Inbound and outbound edges | `200` | `404` |
 | `GET` | `/api/components/:id/dependencies` | DEPENDS_ON edges (dependencies + dependents) | `200` | `404` |
+| `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` `409` |
+| `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200` | `400` |
+| `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` |
 | `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` `207` | `400` |
 | `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` `207` | `400` |
 | `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` |
@@ -194,6 +199,32 @@ Updatable fields: `name` (non-empty string), `description` (string), `tags` (str
 ```bash
 curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp-exec.feature \
   --data-binary @components/worker/features/mvp-task-execution.feature
+```
+
+### Example: Create an edge
+
+```bash
+curl -X POST https://roadmap-5vvp.onrender.com/api/edges \
+  -H "Content-Type: application/json" \
+  -d '{"source_id":"comp-a","target_id":"comp-b","type":"DEPENDS_ON"}'
+```
+
+Required: `source_id`, `target_id` (must reference existing nodes), `type` (valid edge type). Optional: `label` (max 500 chars), `metadata` (JSON object, max 4 KB). Self-referencing edges are rejected. Duplicate edges (same source, target, type) return `409`.
+
+### Example: List and filter edges
+
+```bash
+# List all edges
+curl https://roadmap-5vvp.onrender.com/api/edges
+
+# Filter by type
+curl "https://roadmap-5vvp.onrender.com/api/edges?type=DEPENDS_ON"
+
+# With pagination (default limit 1000)
+curl "https://roadmap-5vvp.onrender.com/api/edges?limit=50&offset=0"
+
+# Delete an edge
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/edges/42
 ```
 
 ## Edge Types

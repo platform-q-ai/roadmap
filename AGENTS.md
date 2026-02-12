@@ -42,6 +42,8 @@ src/
 │   ├── get-step-totals.ts      # Aggregate step counts per component/version
 │   ├── seed-features.ts        # Parse + insert feature files
 │   ├── update-component.ts     # Partial update (merge-patch) with version recalc
+│   ├── create-edge.ts          # Create edge with validation (type, self-ref, duplicates)
+│   ├── delete-edge.ts          # Delete edge by ID with existence check
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations
@@ -466,6 +468,9 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a single feature file | `204` | `404` not found |
 | `GET` | `/api/components/:id/edges` | Get inbound and outbound edges | `200 { inbound, outbound }` | `404` component not found |
 | `GET` | `/api/components/:id/dependencies` | Get DEPENDS_ON edges (dependencies + dependents) | `200 { dependencies, dependents }` | `404` component not found |
+| `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` invalid type/self-ref/missing nodes, `409` duplicate |
+| `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200 [...]` | `400` invalid type filter |
+| `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` not found |
 | `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` all created, `207` partial | `400` invalid body or limit exceeded |
 | `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` all created, `207` partial | `400` invalid body or limit exceeded |
 | `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` invalid body or limit exceeded |
@@ -503,6 +508,20 @@ Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
 ```
 
 All fields are optional. Only supplied fields are changed; unmentioned fields are preserved (merge-patch semantics). `name` must be non-empty if provided. `tags` is capped at 50 entries. `current_version` must be a valid semver string (`MAJOR.MINOR` or `MAJOR.MINOR.PATCH`). When `current_version` changes, all phase version records are automatically recalculated. All string inputs are HTML-sanitized. Returns the full updated node object in the `200` response.
+
+### POST /api/edges body
+
+```json
+{
+  "source_id": "comp-a",
+  "target_id": "comp-b",
+  "type": "DEPENDS_ON",
+  "label": "optional label",
+  "metadata": {"optional": "JSON object"}
+}
+```
+
+Required: `source_id` (must reference an existing node), `target_id` (must reference an existing node), `type` (must be a valid edge type). Optional: `label` (max 500 chars), `metadata` (JSON object, max 4 KB, max depth 4). Self-referencing edges (`source_id === target_id`) are rejected. Duplicate edges (same source, target, type) return `409`. All string inputs are HTML-sanitized. Returns the full edge object (with generated `id`) in the `201` response.
 
 ### curl examples
 
@@ -544,6 +563,23 @@ curl https://roadmap-5vvp.onrender.com/api/components/worker/dependencies
 
 # Full architecture export
 curl https://roadmap-5vvp.onrender.com/api/architecture
+
+# Create an edge
+curl -X POST https://roadmap-5vvp.onrender.com/api/edges \
+  -H "Content-Type: application/json" \
+  -d '{"source_id":"comp-a","target_id":"comp-b","type":"DEPENDS_ON"}'
+
+# List all edges
+curl https://roadmap-5vvp.onrender.com/api/edges
+
+# List edges filtered by type
+curl "https://roadmap-5vvp.onrender.com/api/edges?type=DEPENDS_ON"
+
+# List edges with pagination
+curl "https://roadmap-5vvp.onrender.com/api/edges?limit=50&offset=0"
+
+# Delete an edge
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/edges/42
 
 # Bulk create components
 curl -X POST https://roadmap-5vvp.onrender.com/api/bulk/components \

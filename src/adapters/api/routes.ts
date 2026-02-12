@@ -3,8 +3,11 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Node, UpdateComponentInput } from '../../use-cases/index.js';
 import {
   CreateComponent,
+  CreateEdge,
   DeleteComponent,
+  DeleteEdge,
   DeleteFeature,
+  Edge,
   GetArchitecture,
   UpdateComponent,
   UpdateVersion,
@@ -383,10 +386,158 @@ async function handleUpdateVersion(
   }
 }
 
+// ─── Edge management helpers ────────────────────────────────────────
+
+const MAX_LABEL_LENGTH = 500;
+const MAX_METADATA_LENGTH = 4096;
+const MAX_METADATA_DEPTH = 4;
+const DEFAULT_EDGE_LIMIT = 1000;
+
+function checkDepth(value: unknown, depth: number): boolean {
+  if (depth > MAX_METADATA_DEPTH) {
+    return false;
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.values(value as Record<string, unknown>).every(v => checkDepth(v, depth + 1));
+  }
+  return true;
+}
+
+function sanitizeMetadata(raw: unknown): string | undefined {
+  const serialised = JSON.stringify(raw);
+  if (serialised.length > MAX_METADATA_LENGTH) {
+    return undefined;
+  }
+  if (!checkDepth(raw, 0)) {
+    return undefined;
+  }
+  return stripHtml(serialised);
+}
+
+// ─── Edge management handlers ───────────────────────────────────────
+
+async function handleCreateEdge(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
+  let raw: string;
+  try {
+    raw = await readBody(req);
+  } catch (err) {
+    if (err instanceof BodyTooLargeError) {
+      json(res, 413, { error: 'Request body too large' }, req);
+      return;
+    }
+    throw err;
+  }
+  const body = parseJsonBody(raw);
+  if (!body) {
+    json(res, 400, { error: 'Invalid JSON body' }, req);
+    return;
+  }
+  const sourceId = body.source_id ? stripHtml(String(body.source_id)) : '';
+  const targetId = body.target_id ? stripHtml(String(body.target_id)) : '';
+  const edgeType = body.type ? stripHtml(String(body.type)) : '';
+  const label = body.label ? stripHtml(String(body.label)).slice(0, MAX_LABEL_LENGTH) : undefined;
+  const metadata = body.metadata !== undefined ? sanitizeMetadata(body.metadata) : undefined;
+
+  const uc = new CreateEdge({ nodeRepo: deps.nodeRepo, edgeRepo: deps.edgeRepo });
+  try {
+    const edge = await uc.execute({
+      source_id: sourceId,
+      target_id: targetId,
+      type: edgeType,
+      label,
+      metadata,
+    });
+    json(res, 201, edge.toJSON());
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg }, req);
+  }
+}
+
+async function handleListEdges(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
+  const params = parseQueryParams(req);
+  const typeFilter = params.get('type');
+  const validTypes = Edge.TYPES as readonly string[];
+
+  if (typeFilter && !validTypes.includes(typeFilter)) {
+    json(res, 400, { error: `Invalid edge type: ${stripHtml(typeFilter)}` }, req);
+    return;
+  }
+
+  const limitParam = params.get('limit');
+  const offsetParam = params.get('offset');
+  const limit =
+    limitParam && Number.isFinite(Number(limitParam))
+      ? Math.min(Math.max(Number(limitParam), 1), DEFAULT_EDGE_LIMIT)
+      : DEFAULT_EDGE_LIMIT;
+  const offset =
+    offsetParam && Number.isFinite(Number(offsetParam)) ? Math.max(Number(offsetParam), 0) : 0;
+
+  let edges;
+  if (typeFilter) {
+    edges = await deps.edgeRepo.findByType(typeFilter);
+  } else {
+    edges = await deps.edgeRepo.findAll();
+  }
+  const paged = edges.slice(offset, offset + limit);
+  json(
+    res,
+    200,
+    paged.map(e => e.toJSON())
+  );
+}
+
+async function handleDeleteEdge(
+  deps: ApiDeps,
+  req: IncomingMessage,
+  res: ServerResponse,
+  id: number
+) {
+  const uc = new DeleteEdge({ edgeRepo: deps.edgeRepo });
+  try {
+    await uc.execute(id);
+    res.writeHead(204);
+    res.end();
+  } catch (err) {
+    const msg = errorMessage(err);
+    json(res, errorStatus(msg), { error: msg }, req);
+  }
+}
+
 // ─── Route table ────────────────────────────────────────────────────
 
 interface RouteOptions {
   packageVersion?: string;
+}
+
+function edgeRoutes(deps: ApiDeps): Route[] {
+  return [
+    {
+      method: 'GET',
+      pattern: /^\/api\/edges$/,
+      handler: async (req, res) => handleListEdges(deps, req, res),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/api\/edges$/,
+      handler: async (req, res) => handleCreateEdge(deps, req, res),
+    },
+    {
+      method: 'DELETE',
+      pattern: /^\/api\/edges\/(\d+)$/,
+      handler: async (req, res, m) => handleDeleteEdge(deps, req, res, Number(m[1])),
+    },
+    {
+      method: 'GET',
+      pattern: /^\/api\/components\/([^/]+)\/edges$/,
+      handler: async (req, res, m) => handleGetEdges(deps, req, res, m[1]),
+    },
+    {
+      method: 'GET',
+      pattern: /^\/api\/components\/([^/]+)\/dependencies$/,
+      handler: async (req, res, m) => handleGetDependencies(deps, req, res, m[1]),
+    },
+  ];
 }
 
 export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
@@ -416,6 +567,7 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       pattern: /^\/api\/bulk\/delete\/components$/,
       handler: async (req, res) => handleBulkDeleteComponents(deps, req, res),
     },
+    ...edgeRoutes(deps),
     {
       method: 'GET',
       pattern: /^\/api\/components$/,
@@ -463,16 +615,6 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
       handler: async (req, res, m) =>
         handleDeleteFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/components\/([^/]+)\/edges$/,
-      handler: async (req, res, m) => handleGetEdges(deps, req, res, m[1]),
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/components\/([^/]+)\/dependencies$/,
-      handler: async (req, res, m) => handleGetDependencies(deps, req, res, m[1]),
     },
   ];
 }

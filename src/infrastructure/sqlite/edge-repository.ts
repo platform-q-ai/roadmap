@@ -11,6 +11,14 @@ export class SqliteEdgeRepository implements IEdgeRepository {
     return rows.map(r => new Edge(r as ConstructorParameters<typeof Edge>[0]));
   }
 
+  async findById(id: number): Promise<Edge | null> {
+    const row = this.db.prepare('SELECT * FROM edges WHERE id = ?').get(id);
+    if (!row) {
+      return null;
+    }
+    return new Edge(row as ConstructorParameters<typeof Edge>[0]);
+  }
+
   async findBySource(sourceId: string): Promise<Edge[]> {
     const rows = this.db
       .prepare('SELECT * FROM edges WHERE source_id = ? ORDER BY id')
@@ -35,13 +43,28 @@ export class SqliteEdgeRepository implements IEdgeRepository {
     return rows.map(r => new Edge(r as ConstructorParameters<typeof Edge>[0]));
   }
 
-  async save(edge: Edge): Promise<void> {
-    this.db
+  async existsBySrcTgtType(sourceId: string, targetId: string, type: string): Promise<boolean> {
+    const row = this.db
+      .prepare('SELECT 1 FROM edges WHERE source_id = ? AND target_id = ? AND type = ?')
+      .get(sourceId, targetId, type);
+    return row !== undefined;
+  }
+
+  async save(edge: Edge): Promise<Edge> {
+    const result = this.db
       .prepare(
         `INSERT OR REPLACE INTO edges (source_id, target_id, type, label, metadata)
        VALUES (?, ?, ?, ?, ?)`
       )
       .run(edge.source_id, edge.target_id, edge.type, edge.label, edge.metadata);
+    return new Edge({
+      id: Number(result.lastInsertRowid),
+      source_id: edge.source_id,
+      target_id: edge.target_id,
+      type: edge.type,
+      label: edge.label,
+      metadata: edge.metadata,
+    });
   }
 
   async delete(id: number): Promise<void> {

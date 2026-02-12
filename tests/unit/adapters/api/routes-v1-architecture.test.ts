@@ -31,10 +31,12 @@ function buildTestRepos(data: WorldData) {
   };
   const edgeRepo: IEdgeRepository = {
     findAll: vi.fn(async () => data.edges),
+    findById: vi.fn(async (id: number) => data.edges.find(e => e.id === id) ?? null),
     findBySource: vi.fn(async (sid: string) => data.edges.filter(e => e.source_id === sid)),
     findByTarget: vi.fn(async (tid: string) => data.edges.filter(e => e.target_id === tid)),
     findByType: vi.fn(async (type: string) => data.edges.filter(e => e.type === type)),
     findRelationships: vi.fn(async () => data.edges.filter(e => !e.isContainment())),
+    existsBySrcTgtType: vi.fn(),
     save: vi.fn(),
     delete: vi.fn(),
   };

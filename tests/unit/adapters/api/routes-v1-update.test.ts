@@ -40,12 +40,19 @@ function buildTestRepos(data: WorldData) {
   };
   const edgeRepo: IEdgeRepository = {
     findAll: vi.fn(async () => data.edges),
+    findById: vi.fn(async (id: number) => data.edges.find(e => e.id === id) ?? null),
     findBySource: vi.fn(async (sid: string) => data.edges.filter(e => e.source_id === sid)),
     findByTarget: vi.fn(async (tid: string) => data.edges.filter(e => e.target_id === tid)),
     findByType: vi.fn(async (type: string) => data.edges.filter(e => e.type === type)),
     findRelationships: vi.fn(async () => data.edges.filter(e => !e.isContainment())),
+    existsBySrcTgtType: vi.fn(async (src: string, tgt: string, type: string) =>
+      data.edges.some(e => e.source_id === src && e.target_id === tgt && e.type === type)
+    ),
     save: vi.fn(async (edge: Edge) => {
-      data.edges.push(edge);
+      const nextId = data.edges.length > 0 ? Math.max(...data.edges.map(e => e.id ?? 0)) + 1 : 1;
+      const saved = new Edge({ ...edge.toJSON(), id: edge.id ?? nextId });
+      data.edges.push(saved);
+      return saved;
     }),
     delete: vi.fn(async (id: number) => {
       data.edges = data.edges.filter(e => e.id !== id);
