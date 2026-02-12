@@ -36,6 +36,7 @@ function buildApiRepos(world: ApiWorld) {
     findByLayer: async (layerId: string) => world.nodes.filter(n => n.layer === layerId),
     exists: async (id: string) => world.nodes.some(n => n.id === id),
     save: async (node: Node) => {
+      world.nodes = world.nodes.filter(n => n.id !== node.id);
       world.nodes.push(node);
     },
     delete: async (id: string) => {
@@ -61,6 +62,9 @@ function buildApiRepos(world: ApiWorld) {
     findByNodeAndVersion: async (nid: string, ver: string) =>
       world.versions.find(v => v.node_id === nid && v.version === ver) ?? null,
     save: async (version: Version) => {
+      world.versions = world.versions.filter(
+        v => !(v.node_id === version.node_id && v.version === version.version)
+      );
       world.versions.push(version);
     },
     deleteByNode: async (nid: string) => {
