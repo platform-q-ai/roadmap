@@ -126,7 +126,7 @@ export class Feature {
     const lines = content.split('\n');
     let insideScenario = false;
     const validLineRe =
-      /^\s*(Feature:|Scenario(?:\s+Outline)?:|Rule:|Background:|Examples:|Given\s|When\s|Then\s|And\s|But\s|\*\s|@|#|\||\"\"\"|$)/;
+      /^\s*(Feature:|Scenario(?:\s+Outline)?:|Rule:|Background:|Examples:|Given\s|When\s|Then\s|And\s|But\s|\*\s|@|#|\||"""|$)/;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (/^\s*Scenario(?:\s+Outline)?:/.test(line)) {
