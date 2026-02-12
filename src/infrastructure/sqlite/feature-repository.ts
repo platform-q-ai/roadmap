@@ -30,10 +30,17 @@ export class SqliteFeatureRepository implements IFeatureRepository {
   async save(feature: Feature): Promise<void> {
     this.db
       .prepare(
-        `INSERT INTO features (node_id, version, filename, title, content)
-       VALUES (?, ?, ?, ?, ?)`
+        `INSERT INTO features (node_id, version, filename, title, content, step_count)
+       VALUES (?, ?, ?, ?, ?, ?)`
       )
-      .run(feature.node_id, feature.version, feature.filename, feature.title, feature.content);
+      .run(
+        feature.node_id,
+        feature.version,
+        feature.filename,
+        feature.title,
+        feature.content,
+        feature.step_count
+      );
   }
 
   async deleteAll(): Promise<void> {

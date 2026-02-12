@@ -19,6 +19,8 @@ export type {
   ProgressionTree,
 } from './get-architecture.js';
 export { GetArchitecture } from './get-architecture.js';
+export type { StepTotalsResult } from './get-step-totals.js';
+export { GetStepTotals } from './get-step-totals.js';
 export { ListApiKeys } from './list-api-keys.js';
 export { RevokeApiKey } from './revoke-api-key.js';
 export type { FeatureFileInput } from './seed-features.js';

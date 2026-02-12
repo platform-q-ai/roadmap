@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS features (
     filename    TEXT NOT NULL,
     title       TEXT NOT NULL,
     content     TEXT,
+    step_count  INTEGER DEFAULT 0,
     updated_at  TEXT DEFAULT (datetime('now'))
 );
 
