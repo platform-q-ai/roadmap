@@ -192,10 +192,12 @@ function buildRepos(world: AuthApiWorld) {
       world.versions = world.versions.filter(v => v.node_id !== nid);
     },
   };
-  const featureRepo: IFeatureRepository = {
-    findAll: async () => world.features as never[],
-    findByNode: async () => [],
-    findByNodeAndVersion: async () => [],
+  const fts = world.features as Array<{ node_id: string; version: string }>;
+  const featureRepo = {
+    findAll: async () => fts,
+    findByNode: async (nid: string) => fts.filter(f => f.node_id === nid),
+    findByNodeAndVersion: async (nid: string, v: string) =>
+      fts.filter(f => f.node_id === nid && f.version === v),
     save: async () => {},
     saveMany: async () => {},
     deleteAll: async () => {
@@ -206,7 +208,7 @@ function buildRepos(world: AuthApiWorld) {
     deleteByNodeAndVersionAndFilename: async () => false,
     deleteByNodeAndVersion: async () => 0,
     getStepCountSummary: async () => ({ totalSteps: 0, featureCount: 0 }),
-  };
+  } as unknown as IFeatureRepository;
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
 function ensureWorldInit(world: AuthApiWorld): void {
@@ -599,7 +601,6 @@ Given(
 );
 
 // ─── When steps ──────────────────────────────────────────────────────
-
 When(
   'I send a GET request to {string} without an API key',
   async function (this: AuthApiWorld, path: string) {
