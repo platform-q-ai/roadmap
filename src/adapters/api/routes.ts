@@ -514,15 +514,26 @@ function validateBulkArray(
   return items;
 }
 
+function bulkCreateStatus(created: number, errorCount: number): number {
+  if (errorCount > 0 && created > 0) {
+    return 207;
+  }
+  return errorCount > 0 ? 400 : 201;
+}
+
 async function handleBulkCreateComponents(
   deps: ApiDeps,
   req: IncomingMessage,
   res: ServerResponse
 ) {
   const body = await readJsonBody(req, res);
-  if (!body) return;
+  if (!body) {
+    return;
+  }
   const items = validateBulkArray(body, 'components', req, res);
-  if (!items) return;
+  if (!items) {
+    return;
+  }
 
   const uc = new CreateComponent({
     nodeRepo: deps.nodeRepo,
@@ -549,15 +560,18 @@ async function handleBulkCreateComponents(
     }
   }
 
-  const status = errors.length > 0 && created > 0 ? 207 : errors.length > 0 ? 400 : 201;
-  json(res, status, { created, errors }, req);
+  json(res, bulkCreateStatus(created, errors.length), { created, errors }, req);
 }
 
 async function handleBulkCreateEdges(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
   const body = await readJsonBody(req, res);
-  if (!body) return;
+  if (!body) {
+    return;
+  }
   const items = validateBulkArray(body, 'edges', req, res);
-  if (!items) return;
+  if (!items) {
+    return;
+  }
 
   let created = 0;
   for (const item of items as Array<Record<string, unknown>>) {
@@ -585,9 +599,13 @@ async function handleBulkDeleteComponents(
   res: ServerResponse
 ) {
   const body = await readJsonBody(req, res);
-  if (!body) return;
+  if (!body) {
+    return;
+  }
   const items = validateBulkArray(body, 'ids', req, res);
-  if (!items) return;
+  if (!items) {
+    return;
+  }
 
   const uc = new DeleteComponent(deps);
   let deleted = 0;
