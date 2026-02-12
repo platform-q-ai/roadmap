@@ -1,3 +1,5 @@
+const SCENARIO_RE = /^\s*Scenario(?:\s+Outline)?:/gm;
+
 export interface FeatureProps {
   id?: number | null;
   node_id: string;
@@ -53,6 +55,16 @@ export class Feature {
     const stepPattern = /^\s*(Given|When|Then|And|But)\s+/gm;
     let count = 0;
     while (stepPattern.exec(content)) {
+      count++;
+    }
+    return count;
+  }
+
+  /** Count Scenario/Scenario Outline lines in Gherkin content. */
+  static countScenarios(content: string): number {
+    SCENARIO_RE.lastIndex = 0;
+    let count = 0;
+    while (SCENARIO_RE.exec(content)) {
       count++;
     }
     return count;

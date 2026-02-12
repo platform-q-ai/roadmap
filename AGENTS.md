@@ -48,6 +48,8 @@ src/
 │   ├── delete-feature-version-scoped.ts # Version-scoped feature deletion (single, version, all)
 │   ├── get-feature-version-scoped.ts # Version-scoped feature retrieval with totals
 │   ├── search-features.ts      # Search feature content across all components
+│   ├── seed-features-api.ts    # API-triggered feature seeding with step totals
+│   ├── export-features.ts      # Export features from DB to filesystem
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations
@@ -486,6 +488,8 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 | `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` all created, `207` partial | `400` invalid body or limit exceeded |
 | `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` all created, `207` partial | `400` invalid body or limit exceeded |
 | `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` invalid body or limit exceeded |
+| `POST` | `/api/admin/seed-features` | Re-seed features from filesystem (admin scope) | `200` | `403` forbidden, `500` internal |
+| `POST` | `/api/admin/export-features` | Export features to filesystem (optional `?component=` filter, admin scope) | `200` | `400` invalid component, `403` forbidden, `500` internal |
 
 ### POST /api/components body
 
@@ -684,6 +688,18 @@ curl -X POST https://roadmap-5vvp.onrender.com/api/bulk/edges \
 curl -X POST https://roadmap-5vvp.onrender.com/api/bulk/delete/components \
   -H "Content-Type: application/json" \
   -d '{"ids":["svc-a","svc-b"]}'
+
+# Re-seed features from filesystem (admin scope)
+curl -X POST https://roadmap-5vvp.onrender.com/api/admin/seed-features \
+  -H "Authorization: Bearer <admin-api-key>"
+
+# Export features to filesystem (admin scope)
+curl -X POST https://roadmap-5vvp.onrender.com/api/admin/export-features \
+  -H "Authorization: Bearer <admin-api-key>"
+
+# Export features for a single component
+curl -X POST "https://roadmap-5vvp.onrender.com/api/admin/export-features?component=worker" \
+  -H "Authorization: Bearer <admin-api-key>"
 ```
 
 ## Adding New Features (BDD Workflow)

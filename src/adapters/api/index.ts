@@ -9,6 +9,8 @@ export type { RateLimiterOptions, RateLimitResult } from './rate-limiter.js';
 export { RateLimiter } from './rate-limiter.js';
 export type { ApiDeps, Route } from './routes.js';
 export { buildRoutes } from './routes.js';
+export type { SeedExportDeps } from './routes-seed-export.js';
+export { buildSeedExportRoutes } from './routes-seed-export.js';
 export type { SeedApiKeysDeps } from './seed-api-keys.js';
 export { parseSeedEntries, seedApiKeys } from './seed-api-keys.js';
 export type { AppOptions, RequestLogEntry } from './server.js';

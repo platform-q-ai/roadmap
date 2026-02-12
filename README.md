@@ -81,12 +81,14 @@ roadmap/
 │   │   ├── batch-upload-features.ts
 │   │   ├── delete-feature-version-scoped.ts
 │   │   ├── get-feature-version-scoped.ts
+│   │   ├── seed-features-api.ts
+│   │   ├── export-features.ts
 │   │   └── errors.ts
 │   ├── infrastructure/         # Concrete implementations
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (25 endpoints + static files)
+│       ├── api/                # REST API server (27 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -182,6 +184,8 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` `207` | `400` |
 | `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` `207` | `400` |
 | `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` |
+| `POST` | `/api/admin/seed-features` | Re-seed features from filesystem (admin scope) | `200` | `403` `500` |
+| `POST` | `/api/admin/export-features` | Export features to filesystem (optional `?component=` filter, admin scope) | `200` | `400` `403` `500` |
 
 ### Example: Create a component
 
@@ -265,6 +269,24 @@ curl "https://roadmap-5vvp.onrender.com/api/edges?limit=50&offset=0"
 # Delete an edge
 curl -X DELETE https://roadmap-5vvp.onrender.com/api/edges/42
 ```
+
+### Example: Admin feature seeding and export
+
+```bash
+# Re-seed features from filesystem (requires admin API key)
+curl -X POST https://roadmap-5vvp.onrender.com/api/admin/seed-features \
+  -H "Authorization: Bearer <admin-api-key>"
+
+# Export all features to filesystem
+curl -X POST https://roadmap-5vvp.onrender.com/api/admin/export-features \
+  -H "Authorization: Bearer <admin-api-key>"
+
+# Export features for a single component
+curl -X POST "https://roadmap-5vvp.onrender.com/api/admin/export-features?component=worker" \
+  -H "Authorization: Bearer <admin-api-key>"
+```
+
+The seed endpoint scans `components/**/features/*.feature` files, parses version from filename prefix (`mvp-`, `v1-`, `v2-`), and inserts them into the database. The response includes `seeded` count, `skipped` count, and `step_totals` per version. The export endpoint writes features from the database back to the filesystem. Both require an API key with `admin` scope.
 
 ## Edge Types
 
