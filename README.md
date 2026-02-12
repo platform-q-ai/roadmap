@@ -80,7 +80,7 @@ roadmap/
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (11 endpoints + static files)
+│       ├── api/                # REST API server (14 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -161,6 +161,9 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a feature file | `204` | `404` |
 | `GET` | `/api/components/:id/edges` | Inbound and outbound edges | `200` | `404` |
 | `GET` | `/api/components/:id/dependencies` | DEPENDS_ON edges (dependencies + dependents) | `200` | `404` |
+| `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` `207` | `400` |
+| `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` `207` | `400` |
+| `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` |
 
 ### Example: Create a component
 

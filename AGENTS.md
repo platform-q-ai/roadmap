@@ -464,6 +464,9 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a single feature file | `204` | `404` not found |
 | `GET` | `/api/components/:id/edges` | Get inbound and outbound edges | `200 { inbound, outbound }` | `404` component not found |
 | `GET` | `/api/components/:id/dependencies` | Get DEPENDS_ON edges (dependencies + dependents) | `200 { dependencies, dependents }` | `404` component not found |
+| `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` all created, `207` partial | `400` invalid body or limit exceeded |
+| `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` all created, `207` partial | `400` invalid body or limit exceeded |
+| `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` invalid body or limit exceeded |
 
 ### POST /api/components body
 
@@ -520,6 +523,21 @@ curl https://roadmap-5vvp.onrender.com/api/components/worker/dependencies
 
 # Full architecture export
 curl https://roadmap-5vvp.onrender.com/api/architecture
+
+# Bulk create components
+curl -X POST https://roadmap-5vvp.onrender.com/api/bulk/components \
+  -H "Content-Type: application/json" \
+  -d '{"components":[{"id":"svc-a","name":"Service A","type":"component","layer":"supervisor-layer"},{"id":"svc-b","name":"Service B","type":"component","layer":"supervisor-layer"}]}'
+
+# Bulk create edges
+curl -X POST https://roadmap-5vvp.onrender.com/api/bulk/edges \
+  -H "Content-Type: application/json" \
+  -d '{"edges":[{"source_id":"svc-a","target_id":"svc-b","type":"DEPENDS_ON"}]}'
+
+# Bulk delete components
+curl -X POST https://roadmap-5vvp.onrender.com/api/bulk/delete/components \
+  -H "Content-Type: application/json" \
+  -d '{"ids":["svc-a","svc-b"]}'
 ```
 
 ## Adding New Features (BDD Workflow)
