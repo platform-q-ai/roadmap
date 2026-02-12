@@ -4,7 +4,6 @@ import { Given, Then, When } from '@cucumber/cucumber';
 
 import { Feature } from '../../src/domain/entities/feature.js';
 import type { IFeatureRepository } from '../../src/domain/repositories/feature-repository.js';
-import type { INodeRepository } from '../../src/domain/repositories/node-repository.js';
 import { GetStepTotals } from '../../src/use-cases/get-step-totals.js';
 import type { StepTotalsResult } from '../../src/use-cases/get-step-totals.js';
 
@@ -17,17 +16,8 @@ interface World {
   [key: string]: unknown;
 }
 
-function buildRepos(world: World) {
-  const nodeRepo: INodeRepository = {
-    findAll: async () => [],
-    findById: async () => null,
-    findByType: async () => [],
-    findByLayer: async () => [],
-    exists: async () => true,
-    save: async () => {},
-    delete: async () => {},
-  };
-  const featureRepo: IFeatureRepository = {
+function buildFeatureRepo(world: World): IFeatureRepository {
+  return {
     findAll: async () => world.features,
     findByNode: async (nid: string) => world.features.filter(f => f.node_id === nid),
     findByNodeAndVersion: async (nid: string, ver: string) =>
@@ -48,7 +38,6 @@ function buildRepos(world: World) {
       return false;
     },
   };
-  return { nodeRepo, featureRepo };
 }
 
 // ─── Given ──────────────────────────────────────────────────────────
@@ -183,15 +172,15 @@ Given(
 When(
   'I query the step totals for {string} version {string}',
   async function (this: World, componentId: string, version: string) {
-    const repos = buildRepos(this);
-    const useCase = new GetStepTotals({ featureRepo: repos.featureRepo });
+    const featureRepo = buildFeatureRepo(this);
+    const useCase = new GetStepTotals({ featureRepo });
     this.result = await useCase.execute(componentId, version);
   }
 );
 
 When('I query the step totals for each version', async function (this: World) {
-  const repos = buildRepos(this);
-  const useCase = new GetStepTotals({ featureRepo: repos.featureRepo });
+  const featureRepo = buildFeatureRepo(this);
+  const useCase = new GetStepTotals({ featureRepo });
   this.resultsByVersion = {};
   const versions = [...new Set(this.features.map(f => f.version))];
   for (const ver of versions) {
@@ -211,8 +200,8 @@ When(
         step_count: steps,
       })
     );
-    const repos = buildRepos(this);
-    const useCase = new GetStepTotals({ featureRepo: repos.featureRepo });
+    const featureRepo = buildFeatureRepo(this);
+    const useCase = new GetStepTotals({ featureRepo });
     this.result = await useCase.execute(this.componentId, version);
   }
 );
@@ -227,8 +216,8 @@ When(
     if (idx >= 0) {
       this.features.splice(idx, 1);
     }
-    const repos = buildRepos(this);
-    const useCase = new GetStepTotals({ featureRepo: repos.featureRepo });
+    const featureRepo = buildFeatureRepo(this);
+    const useCase = new GetStepTotals({ featureRepo });
     this.result = await useCase.execute(this.componentId, version);
   }
 );
