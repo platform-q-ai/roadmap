@@ -159,6 +159,33 @@ describe('GetDependencyTree', () => {
   });
 });
 
+// ─── GetDependencyTree (edge cases) ─────────────────────────────────
+
+describe('GetDependencyTree — edge cases', () => {
+  it('skips already-visited nodes (cycle protection)', async () => {
+    const nodes = [makeNode('a'), makeNode('b')];
+    // a -> b and b -> a would form a cycle, but we also add a -> b
+    const edges = [makeEdge(1, 'a', 'b'), makeEdge(2, 'b', 'a')];
+    const repos = createMockRepos({ nodes, edges });
+    const uc = new GetDependencyTree(repos);
+    const result = await uc.execute('a', 3);
+
+    // Should include b but not recurse infinitely back to a
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('b');
+  });
+
+  it('skips edges pointing to non-existent nodes', async () => {
+    const nodes = [makeNode('a')]; // 'ghost' does not exist
+    const edges = [makeEdge(1, 'a', 'ghost')];
+    const repos = createMockRepos({ nodes, edges });
+    const uc = new GetDependencyTree(repos);
+    const result = await uc.execute('a', 1);
+
+    expect(result).toHaveLength(0);
+  });
+});
+
 // ─── GetDependents ──────────────────────────────────────────────────
 
 describe('GetDependents', () => {
@@ -182,6 +209,49 @@ describe('GetDependents', () => {
     const result = await uc.execute('standalone');
 
     expect(result).toHaveLength(0);
+  });
+
+  it('skips dependents whose node no longer exists', async () => {
+    const nodes = [makeNode('provider')]; // 'ghost' not in nodes
+    const edges = [makeEdge(1, 'ghost', 'provider')];
+    const repos = createMockRepos({ nodes, edges });
+    const uc = new GetDependents(repos);
+    const result = await uc.execute('provider');
+
+    expect(result).toHaveLength(0);
+  });
+});
+
+// ─── GetComponentContext (edge cases) ───────────────────────────────
+
+describe('GetComponentContext — edge cases', () => {
+  it('handles component with no layer', async () => {
+    const comp = new Node({ id: 'no-layer', name: 'No Layer', type: 'component' });
+    const nodes = [comp];
+    const repos = createMockRepos({ nodes, edges: [] });
+    const uc = new GetComponentContext(repos);
+    const result = await uc.execute('no-layer');
+
+    expect(result.layer).toBeNull();
+    expect(result.siblings).toHaveLength(0);
+  });
+
+  it('handles edge targets that no longer exist', async () => {
+    const comp = makeNode('ctx-comp');
+    const nodes = [comp]; // 'ghost' not in nodes
+    const edges = [
+      makeEdge(1, 'ctx-comp', 'ghost', 'DEPENDS_ON'),
+      makeEdge(2, 'phantom', 'ctx-comp', 'DEPENDS_ON'),
+    ];
+    const repos = createMockRepos({ nodes, edges });
+    const uc = new GetComponentContext(repos);
+    const result = await uc.execute('ctx-comp');
+
+    // Should include references even when node is not found (fallback to id-only)
+    expect(result.dependencies).toHaveLength(1);
+    expect(result.dependencies[0].id).toBe('ghost');
+    expect(result.dependents).toHaveLength(1);
+    expect(result.dependents[0].id).toBe('phantom');
   });
 });
 
@@ -275,6 +345,18 @@ describe('GetImplementationOrder', () => {
     expect(order).not.toContain('test-layer');
     expect(order).toContain('comp-1');
   });
+
+  it('ignores DEPENDS_ON edges referencing non-component nodes', async () => {
+    const nodes = [makeNode('test-layer', 'layer'), makeNode('a')];
+    // Edge from 'a' to 'test-layer' — layer is not in component set
+    const edges = [makeEdge(1, 'a', 'test-layer')];
+    const repos = createMockRepos({ nodes, edges });
+    const uc = new GetImplementationOrder(repos);
+    const result = await uc.execute();
+
+    expect(result.order).toBeDefined();
+    expect(result.order).toContain('a');
+  });
 });
 
 // ─── GetComponentsByStatus ──────────────────────────────────────────
@@ -320,6 +402,20 @@ describe('GetComponentsByStatus', () => {
   });
 });
 
+// ─── GetComponentsByStatus (edge cases) ─────────────────────────────
+
+describe('GetComponentsByStatus — edge cases', () => {
+  it('treats component with no version record as planned', async () => {
+    const nodes = [makeNode('test-layer', 'layer'), makeNode('no-ver')];
+    // No versions at all for no-ver => ver?.progress ?? 0 => 0
+    const repos = createMockRepos({ nodes, edges: [] });
+    const uc = new GetComponentsByStatus(repos);
+    const result = await uc.execute('mvp');
+
+    expect(result.planned.some(c => c.id === 'no-ver')).toBe(true);
+  });
+});
+
 // ─── GetNextImplementable ───────────────────────────────────────────
 
 describe('GetNextImplementable', () => {
@@ -345,6 +441,24 @@ describe('GetNextImplementable', () => {
     const result = await uc.execute('mvp');
 
     expect(Array.isArray(result)).toBe(true);
+  });
+
+  it('ignores DEPENDS_ON edges referencing non-component nodes', async () => {
+    const nodes = [makeNode('test-layer', 'layer'), makeNode('comp'), makeNode('dep')];
+    const edges = [
+      makeEdge(1, 'comp', 'dep'),
+      makeEdge(2, 'comp', 'test-layer'), // target is a layer, not a component
+    ];
+    const versions = [
+      new Version({ node_id: 'dep', version: 'mvp', progress: 100, status: 'complete' }),
+      new Version({ node_id: 'comp', version: 'mvp', progress: 30, status: 'in-progress' }),
+    ];
+    const repos = createMockRepos({ nodes, edges, versions });
+    const uc = new GetNextImplementable(repos);
+    const result = await uc.execute('mvp');
+
+    // comp's only valid dep (dep) is complete, so comp should be implementable
+    expect(result.some(c => c.id === 'comp')).toBe(true);
   });
 });
 
@@ -383,6 +497,29 @@ describe('GetShortestPath', () => {
     expect(result.path).toHaveLength(1);
     expect(result.path[0].id).toBe('x');
   });
+
+  it('returns empty path when same-node does not exist', async () => {
+    const repos = createMockRepos({ nodes: [] });
+    const uc = new GetShortestPath(repos);
+    const result = await uc.execute('ghost', 'ghost');
+
+    expect(result.path).toHaveLength(0);
+    expect(result.edges).toHaveLength(0);
+  });
+
+  it('falls back to unknown type for nodes missing during reconstruct', async () => {
+    // a -> b -> c, but only a exists in nodeRepo
+    const nodes = [makeNode('a')];
+    const edges = [makeEdge(1, 'a', 'b'), makeEdge(2, 'b', 'c')];
+    const repos = createMockRepos({ nodes, edges });
+    const uc = new GetShortestPath(repos);
+    const result = await uc.execute('a', 'c');
+
+    // b and c won't be found, should use fallback { id, name: id, type: 'unknown' }
+    expect(result.path.length).toBe(3);
+    const bNode = result.path[1];
+    expect(bNode.type).toBe('unknown');
+  });
 });
 
 // ─── GetNeighbourhood ───────────────────────────────────────────────
@@ -409,6 +546,19 @@ describe('GetNeighbourhood', () => {
     const ids = result.nodes.map((n: Record<string, unknown>) => n.id);
     expect(ids).toContain('n1');
     expect(ids).not.toContain('n2');
+  });
+
+  it('skips nodes that no longer exist during resolution', async () => {
+    const nodes = [makeNode('c')]; // 'ghost' not in nodes
+    const edges = [makeEdge(1, 'c', 'ghost')];
+    const repos = createMockRepos({ nodes, edges });
+    const uc = new GetNeighbourhood(repos);
+    const result = await uc.execute('c', 1);
+
+    // 'ghost' visited via BFS but won't resolve to a node
+    const ids = result.nodes.map((n: Record<string, unknown>) => n.id);
+    expect(ids).toContain('c');
+    expect(ids).not.toContain('ghost');
   });
 });
 
@@ -453,5 +603,30 @@ describe('GetLayerOverview', () => {
     const result = await uc.execute();
 
     expect(result).toHaveLength(0);
+  });
+
+  it('counts completed v1 versions', async () => {
+    const layer = makeNode('test-layer', 'layer');
+    const comp = makeNode('comp-v1');
+    const nodes = [layer, comp];
+    const versions = [
+      new Version({ node_id: 'comp-v1', version: 'v1', progress: 100, status: 'complete' }),
+    ];
+    const repos = createMockRepos({ nodes, edges: [], versions });
+    const uc = new GetLayerOverview(repos);
+    const result = await uc.execute();
+
+    const summary = result[0];
+    expect(summary.completed_v1).toBe(1);
+  });
+
+  it('handles component with no versions (zero progress)', async () => {
+    const layer = makeNode('test-layer', 'layer');
+    const comp = makeNode('no-versions');
+    const repos = createMockRepos({ nodes: [layer, comp], edges: [] });
+    const uc = new GetLayerOverview(repos);
+    const result = await uc.execute();
+
+    expect(result[0].overall_progress).toBe(0);
   });
 });

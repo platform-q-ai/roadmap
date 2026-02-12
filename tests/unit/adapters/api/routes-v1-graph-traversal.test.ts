@@ -332,6 +332,16 @@ describe('API Routes — v1 graph traversal', () => {
         expect((body.path as unknown[]).length).toBe(0);
       });
     });
+
+    it('returns 400 when from or to is missing', async () => {
+      const repos = buildTestRepos(graphData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/graph/path?from=comp-a');
+        expect(res.status).toBe(400);
+        const body = res.body as Record<string, unknown>;
+        expect(body.error).toBeDefined();
+      });
+    });
   });
 
   describe('GET /api/components/:id/neighbourhood', () => {
@@ -343,6 +353,24 @@ describe('API Routes — v1 graph traversal', () => {
         const body = res.body as Record<string, unknown>;
         expect(body.nodes).toBeDefined();
         expect(body.edges).toBeDefined();
+      });
+    });
+
+    it('returns 404 for non-existent component', async () => {
+      const repos = buildTestRepos(graphData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/components/missing/neighbourhood');
+        expect(res.status).toBe(404);
+      });
+    });
+  });
+
+  describe('GET /api/components/:id/dependents', () => {
+    it('returns 404 for non-existent component', async () => {
+      const repos = buildTestRepos(graphData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/components/missing/dependents');
+        expect(res.status).toBe(404);
       });
     });
   });
