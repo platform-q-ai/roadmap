@@ -202,32 +202,17 @@ function buildRepos(world: AuthApiWorld) {
 }
 
 function ensureWorldInit(world: AuthApiWorld): void {
-  if (!world.nodes) {
-    world.nodes = [];
-  }
-  if (!world.edges) {
-    world.edges = [];
-  }
-  if (!world.versions) {
-    world.versions = [];
-  }
-  if (!world.features) {
-    world.features = [];
-  }
-  if (!world.apiKeys) {
-    world.apiKeys = new Map();
-  }
-  if (!world.requestLogs) {
-    world.requestLogs = [];
-  }
-  if (!world.envOverrides) {
-    world.envOverrides = {};
-  }
+  world.nodes ??= [];
+  world.edges ??= [];
+  world.versions ??= [];
+  world.features ??= [];
+  world.apiKeys ??= new Map();
+  world.requestLogs ??= [];
+  world.envOverrides ??= {};
   // Ensure default layers exist for component creation
-  const defaultLayers = ['supervisor-layer', 'shared-state'];
-  for (const layerId of defaultLayers) {
-    if (!world.nodes.some(n => n.id === layerId)) {
-      world.nodes.push(new Node({ id: layerId, name: layerId, type: 'layer' }));
+  for (const id of ['supervisor-layer', 'shared-state']) {
+    if (!world.nodes.some(n => n.id === id)) {
+      world.nodes.push(new Node({ id, name: id, type: 'layer' }));
     }
   }
 }

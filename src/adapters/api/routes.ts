@@ -135,35 +135,45 @@ interface ParseResult {
   error?: string;
 }
 
-function parseCreateInput(body: Record<string, unknown>): ParseResult {
-  const { id, name, type, layer, description, tags, color, icon, sort_order } = body;
+const MAX_ID_LENGTH = 64;
+
+function validateRequiredFields(
+  body: Record<string, unknown>
+): { idStr: string; nameStr: string; typeStr: string; layer: string } | string {
+  const { id, name, type, layer } = body;
   if (!id || !type || !layer) {
-    return { input: null, error: 'Missing or invalid fields: id, name, type, layer' };
+    return 'Missing or invalid fields: id, name, type, layer';
   }
-  const idStr = String(id);
   const nameStr = name !== undefined && name !== null ? String(name) : '';
   if (!nameStr) {
-    return { input: null, error: 'Invalid name: name must not be empty' };
+    return 'Invalid name: name must not be empty';
   }
-  if (idStr.length > 64) {
-    return {
-      input: null,
-      error: `Invalid id: must be 64 characters or fewer (got ${idStr.length})`,
-    };
+  const idStr = String(id);
+  if (idStr.length > MAX_ID_LENGTH) {
+    return `Invalid id: must be ${MAX_ID_LENGTH} characters or fewer (got ${idStr.length})`;
   }
   if (!KEBAB_CASE_RE.test(idStr)) {
-    return { input: null, error: `Invalid id format: must be kebab-case (got "${idStr}")` };
+    return `Invalid id format: must be kebab-case (got "${idStr}")`;
   }
   const typeStr = String(type);
   if (!VALID_NODE_TYPES.includes(typeStr)) {
-    return { input: null, error: `Invalid node type: ${typeStr}` };
+    return `Invalid node type: ${typeStr}`;
   }
+  return { idStr, nameStr, typeStr, layer: String(layer) };
+}
+
+function parseCreateInput(body: Record<string, unknown>): ParseResult {
+  const validated = validateRequiredFields(body);
+  if (typeof validated === 'string') {
+    return { input: null, error: validated };
+  }
+  const { description, tags, color, icon, sort_order } = body;
   return {
     input: {
-      id: idStr,
-      name: stripHtml(nameStr),
-      type: typeStr as NodeType,
-      layer: String(layer),
+      id: validated.idStr,
+      name: stripHtml(validated.nameStr),
+      type: validated.typeStr as NodeType,
+      layer: validated.layer,
       description: description ? stripHtml(String(description)) : undefined,
       tags: Array.isArray(tags) ? tags.map(t => stripHtml(String(t))) : undefined,
       color: color ? stripHtml(String(color)) : undefined,
