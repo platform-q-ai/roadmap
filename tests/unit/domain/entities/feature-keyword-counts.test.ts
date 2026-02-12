@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { Feature } from '@domain/entities/feature.js';
+import { describe, expect, it } from 'vitest';
 
 /* ──────────────────────────────────────────────────────────────────
  * Unit tests for Feature.countByKeyword() static method.

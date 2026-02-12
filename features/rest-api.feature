@@ -114,7 +114,7 @@ Feature: REST API Adapter
   Scenario: Upload a feature file for a component
     Given the API server is running
     And a component "upload-comp" exists in the database
-    When I send a PUT request to "/api/components/upload-comp/features/mvp-test.feature" with body:
+    When I send a PUT request to "/api/components/upload-comp/versions/mvp/features/mvp-test.feature" with body:
       """
       Feature: Test Upload
         Scenario: A test scenario
@@ -126,7 +126,7 @@ Feature: REST API Adapter
 
   Scenario: Upload a feature file for a nonexistent component returns 404
     Given the API server is running
-    When I send a PUT request to "/api/components/ghost-upload/features/mvp-test.feature" with body:
+    When I send a PUT request to "/api/components/ghost-upload/versions/mvp/features/mvp-test.feature" with body:
       """
       Feature: Ghost Upload
         Scenario: A test

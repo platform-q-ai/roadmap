@@ -271,7 +271,7 @@ async function handleUploadFeature(
   deps: ApiDeps,
   req: IncomingMessage,
   res: ServerResponse,
-  params: { nodeId: string; filename: string }
+  params: { nodeId: string; version: string; filename: string }
 ) {
   let content: string;
   try {
@@ -285,7 +285,12 @@ async function handleUploadFeature(
   }
   const uc = new UploadFeature({ featureRepo: deps.featureRepo, nodeRepo: deps.nodeRepo });
   try {
-    const result = await uc.execute({ nodeId: params.nodeId, filename: params.filename, content });
+    const result = await uc.execute({
+      nodeId: params.nodeId,
+      version: params.version,
+      filename: params.filename,
+      content,
+    });
     json(res, 200, result);
   } catch (err) {
     const msg = errorMessage(err);
@@ -547,6 +552,55 @@ function edgeRoutes(deps: ApiDeps): Route[] {
   ];
 }
 
+function featureRoutes(deps: ApiDeps): Route[] {
+  return [
+    ...buildFeatureSearchRoutes(deps),
+    {
+      method: 'POST',
+      pattern: /^\/api\/features\/batch$/,
+      handler: async (req, res) => handleCrossComponentBatchFeatures(deps, req, res),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)\/features\/batch$/,
+      handler: async (req, res, m) =>
+        handleBatchUploadFeatures(deps, req, res, { nodeId: m[1], version: m[2] }),
+    },
+    ...buildFeatureDeletionRoutes(deps),
+    {
+      method: 'GET',
+      pattern: /^\/api\/components\/([^/]+)\/features$/,
+      handler: async (req, res, m) => handleGetFeatures(deps, req, res, m[1]),
+    },
+    {
+      method: 'PUT',
+      pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)\/features\/([^/]+)$/,
+      handler: async (req, res, m) =>
+        handleUploadFeature(deps, req, res, {
+          nodeId: m[1],
+          version: m[2],
+          filename: m[3],
+        }),
+    },
+    {
+      method: 'PUT',
+      pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
+      handler: async (_req, res) =>
+        json(res, 400, {
+          error:
+            'version is required — use PUT /api/components/:id/versions/:ver/features/:filename',
+        }),
+    },
+    {
+      method: 'DELETE',
+      pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
+      handler: async (req, res, m) =>
+        handleDeleteFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
+    },
+    ...buildFeatureRetrievalRoutes(deps),
+  ];
+}
+
 export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
   return [
     {
@@ -606,36 +660,6 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       handler: async (req, res, m) =>
         handleUpdateVersion(deps, req, res, { nodeId: m[1], version: m[2] }),
     },
-    ...buildFeatureSearchRoutes(deps),
-    {
-      method: 'POST',
-      pattern: /^\/api\/features\/batch$/,
-      handler: async (req, res) => handleCrossComponentBatchFeatures(deps, req, res),
-    },
-    {
-      method: 'POST',
-      pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)\/features\/batch$/,
-      handler: async (req, res, m) =>
-        handleBatchUploadFeatures(deps, req, res, { nodeId: m[1], version: m[2] }),
-    },
-    ...buildFeatureDeletionRoutes(deps),
-    {
-      method: 'GET',
-      pattern: /^\/api\/components\/([^/]+)\/features$/,
-      handler: async (req, res, m) => handleGetFeatures(deps, req, res, m[1]),
-    },
-    {
-      method: 'PUT',
-      pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
-      handler: async (req, res, m) =>
-        handleUploadFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
-    },
-    {
-      method: 'DELETE',
-      pattern: /^\/api\/components\/([^/]+)\/features\/([^/]+)$/,
-      handler: async (req, res, m) =>
-        handleDeleteFeature(deps, req, res, { nodeId: m[1], filename: m[2] }),
-    },
-    ...buildFeatureRetrievalRoutes(deps),
+    ...featureRoutes(deps),
   ];
 }

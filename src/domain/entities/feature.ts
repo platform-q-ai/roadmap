@@ -70,6 +70,32 @@ export class Feature {
     return count;
   }
 
+  /**
+   * Count Given/When/Then steps individually.
+   *
+   * And/But inherit the preceding primary keyword's category.
+   * If And/But appears before any primary keyword, it defaults to "given".
+   */
+  static countByKeyword(content: string): { given: number; when: number; then: number } {
+    const stepRe = /^\s*(Given|When|Then|And|But)\s+/gm;
+    const counts = { given: 0, when: 0, then: 0 };
+    let lastPrimary: 'given' | 'when' | 'then' = 'given';
+    let m: RegExpExecArray | null = stepRe.exec(content);
+    while (m) {
+      const kw = m[1];
+      if (kw === 'Given') {
+        lastPrimary = 'given';
+      } else if (kw === 'When') {
+        lastPrimary = 'when';
+      } else if (kw === 'Then') {
+        lastPrimary = 'then';
+      }
+      counts[lastPrimary]++;
+      m = stepRe.exec(content);
+    }
+    return counts;
+  }
+
   /** Check whether content contains a valid Feature: line. */
   static hasValidGherkin(content: string): boolean {
     return /^Feature:\s*\S/m.test(content);

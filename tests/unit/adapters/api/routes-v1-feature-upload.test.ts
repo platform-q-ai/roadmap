@@ -115,7 +115,9 @@ async function request(
       });
     });
     req.on('error', reject);
-    if (body) req.write(body);
+    if (body) {
+      req.write(body);
+    }
     req.end();
   });
 }
