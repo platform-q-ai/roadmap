@@ -1,4 +1,4 @@
-import type { Feature } from '../entities/feature.js';
+import type { Feature } from '../entities/index.js';
 
 export interface IFeatureRepository {
   findAll(): Promise<Feature[]>;

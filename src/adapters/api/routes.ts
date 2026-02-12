@@ -123,6 +123,13 @@ const VALID_NODE_TYPES: readonly string[] = [
   'app',
 ];
 
+/**
+ * Strip HTML tags from a string to prevent XSS / injection.
+ */
+function stripHtml(input: string): string {
+  return input.replace(/<[^>]*>/g, '');
+}
+
 interface ParseResult {
   input: CreateComponentInput | null;
   error?: string;
@@ -144,11 +151,11 @@ function parseCreateInput(body: Record<string, unknown>): ParseResult {
   return {
     input: {
       id: idStr,
-      name: String(name),
+      name: stripHtml(String(name)),
       type: typeStr as NodeType,
       layer: String(layer),
-      description: description ? String(description) : undefined,
-      tags: Array.isArray(tags) ? tags.map(String) : undefined,
+      description: description ? stripHtml(String(description)) : undefined,
+      tags: Array.isArray(tags) ? tags.map(t => stripHtml(String(t))) : undefined,
     },
   };
 }

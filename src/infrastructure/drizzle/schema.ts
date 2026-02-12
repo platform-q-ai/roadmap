@@ -67,3 +67,21 @@ export const featuresTable = sqliteTable('features', {
   content: text('content'),
   updated_at: text('updated_at'),
 });
+
+// ─── API Keys ─────────────────────────────────────────────────────────
+
+export const apiKeysTable = sqliteTable(
+  'api_keys',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    name: text('name').notNull(),
+    key_hash: text('key_hash').notNull(),
+    salt: text('salt').notNull(),
+    scopes: text('scopes').notNull(),
+    created_at: text('created_at').notNull(),
+    expires_at: text('expires_at'),
+    last_used_at: text('last_used_at'),
+    is_active: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  },
+  table => [uniqueIndex('api_keys_name').on(table.name)]
+);

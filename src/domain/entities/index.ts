@@ -1,3 +1,5 @@
+export type { ApiKeyProps, ApiKeyScope } from './api-key.js';
+export { ApiKey } from './api-key.js';
 export type { EdgeProps, EdgeType } from './edge.js';
 export { Edge } from './edge.js';
 export type { FeatureProps } from './feature.js';
