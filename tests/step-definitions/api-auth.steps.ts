@@ -211,6 +211,7 @@ function buildRepos(world: AuthApiWorld) {
     deleteByNodeAndVersionAndFilename: async () => false,
     deleteByNodeAndVersion: async () => 0,
     getStepCountSummary: async () => ({ totalSteps: 0, featureCount: 0 }),
+    search: async () => [],
   } as unknown as IFeatureRepository;
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
@@ -343,7 +344,7 @@ async function authHttpRequest(
       method,
       hostname: url.hostname,
       port: url.port,
-      path: url.pathname,
+      path: url.pathname + url.search,
       headers: {
         Connection: 'close',
         ...contentHeaders,

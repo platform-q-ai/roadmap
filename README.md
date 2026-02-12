@@ -86,7 +86,7 @@ roadmap/
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (24 endpoints + static files)
+│       ├── api/                # REST API server (25 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -177,6 +177,7 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200` | `400` |
 | `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` |
 | `POST` | `/api/components/:id/versions/:ver/features/batch` | Batch upload up to 50 features for one component/version | `201` `207` | `400` `404` |
+| `GET` | `/api/features/search` | Search feature content across all components (`?q=`, optional `?version=`) | `200` | `400` |
 | `POST` | `/api/features/batch` | Cross-component batch upload up to 50 features | `201` `207` | `400` |
 | `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` `207` | `400` |
 | `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` `207` | `400` |
@@ -236,6 +237,18 @@ curl -X POST https://roadmap-5vvp.onrender.com/api/edges \
 ```
 
 Required: `source_id`, `target_id` (must reference existing nodes), `type` (valid edge type). Optional: `label` (max 500 chars), `metadata` (JSON object, max 4 KB). Self-referencing edges are rejected. Duplicate edges (same source, target, type) return `409`.
+
+### Example: Search features
+
+```bash
+# Search feature content across all components
+curl "https://roadmap-5vvp.onrender.com/api/features/search?q=authentication"
+
+# Search scoped to a specific version
+curl "https://roadmap-5vvp.onrender.com/api/features/search?q=rate+limiting&version=v1"
+```
+
+Returns an array of matching features. Each result includes `node_id`, `filename`, `version`, `title`, `step_count`, and a `snippet` field showing context around the match. The full `content` field is excluded to keep payloads small. The `q` parameter is required (max 200 characters). Results are capped at 100.
 
 ### Example: List and filter edges
 

@@ -147,4 +147,21 @@ export class DrizzleFeatureRepository implements IFeatureRepository {
       .run();
     return result.changes;
   }
+
+  async search(query: string, version?: string, limit = 100): Promise<Feature[]> {
+    const escaped = query.toLowerCase().replace(/[%_\\]/g, c => `\\${c}`);
+    const pattern = `%${escaped}%`;
+    const contentMatch = sql`LOWER(${featuresTable.content}) LIKE ${pattern} ESCAPE '\\'`;
+    const condition = version
+      ? and(contentMatch, eq(featuresTable.version, version))
+      : contentMatch;
+    const rows = this.db
+      .select()
+      .from(featuresTable)
+      .where(condition)
+      .orderBy(featuresTable.node_id, featuresTable.filename)
+      .limit(limit)
+      .all();
+    return rows.map(r => new Feature(r as ConstructorParameters<typeof Feature>[0]));
+  }
 }

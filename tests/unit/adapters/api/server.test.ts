@@ -51,6 +51,8 @@ function buildMinimalRepos() {
     deleteByNodeAndFilename: vi.fn(async () => false),
     deleteByNodeAndVersionAndFilename: vi.fn(async () => false),
     deleteByNodeAndVersion: vi.fn(async () => 0),
+    search: async () => [],
+    findByNodeVersionAndFilename: vi.fn(async () => null),
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
