@@ -35,6 +35,15 @@ export function hashKey(plaintext: string, salt: string): string {
 }
 
 /**
+ * Derive a deterministic salt from a plaintext key.
+ * Used when seeding pre-set keys so the same plaintext always
+ * produces the same hash across database rebuilds.
+ */
+function deriveSalt(plaintext: string): string {
+  return createHash('sha256').update(plaintext).digest('hex').slice(0, 32);
+}
+
+/**
  * GenerateApiKey use case.
  *
  * Generates a new API key with the format rmap_<32 hex chars>.
@@ -60,11 +69,7 @@ export class GenerateApiKey {
 
     const plaintext = input.plaintext ?? `rmap_${randomBytes(16).toString('hex')}`;
 
-    // When a pre-set plaintext is provided, derive the salt deterministically
-    // from the key so the same seed always produces the same hash.
-    const salt = input.plaintext
-      ? createHash('sha256').update(plaintext).digest('hex').slice(0, 32)
-      : randomBytes(16).toString('hex');
+    const salt = input.plaintext ? deriveSalt(plaintext) : randomBytes(16).toString('hex');
 
     const key_hash = hashKey(plaintext, salt);
 
