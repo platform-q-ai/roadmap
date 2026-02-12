@@ -1,22 +1,18 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import { DeleteFeatureVersionScoped, NodeNotFoundError } from '../../use-cases/index.js';
+import { DeleteFeatureVersionScoped } from '../../use-cases/index.js';
 
 import type { ApiDeps, Route } from './routes-shared.js';
 import { errorMessage, errorStatus, json } from './routes-shared.js';
 
 // ─── Version-scoped feature deletion handlers ───────────────────────
 
-export async function handleDeleteFeatureVersionScoped(
-  deps: ApiDeps,
+async function handleDeleteFeatureVersionScoped(
+  uc: DeleteFeatureVersionScoped,
   req: IncomingMessage,
   res: ServerResponse,
   params: { nodeId: string; version: string; filename: string }
 ): Promise<void> {
-  const uc = new DeleteFeatureVersionScoped({
-    featureRepo: deps.featureRepo,
-    nodeRepo: deps.nodeRepo,
-  });
   try {
     await uc.executeSingle(params.nodeId, params.version, params.filename);
     res.writeHead(204);
@@ -27,16 +23,12 @@ export async function handleDeleteFeatureVersionScoped(
   }
 }
 
-export async function handleDeleteAllFeaturesForVersion(
-  deps: ApiDeps,
+async function handleDeleteAllFeaturesForVersion(
+  uc: DeleteFeatureVersionScoped,
   req: IncomingMessage,
   res: ServerResponse,
   params: { nodeId: string; version: string }
 ): Promise<void> {
-  const uc = new DeleteFeatureVersionScoped({
-    featureRepo: deps.featureRepo,
-    nodeRepo: deps.nodeRepo,
-  });
   try {
     await uc.executeVersion(params.nodeId, params.version);
     res.writeHead(204);
@@ -48,17 +40,13 @@ export async function handleDeleteAllFeaturesForVersion(
 }
 
 async function handleDeleteAllFeaturesForNode(
-  deps: ApiDeps,
+  uc: DeleteFeatureVersionScoped,
   req: IncomingMessage,
   res: ServerResponse,
   nodeId: string
 ): Promise<void> {
   try {
-    const exists = await deps.nodeRepo.exists(nodeId);
-    if (!exists) {
-      throw new NodeNotFoundError(nodeId);
-    }
-    await deps.featureRepo.deleteByNode(nodeId);
+    await uc.executeAll(nodeId);
     res.writeHead(204);
     res.end();
   } catch (err) {
@@ -70,12 +58,17 @@ async function handleDeleteAllFeaturesForNode(
 // ─── Route builder ──────────────────────────────────────────────────
 
 export function buildFeatureDeletionRoutes(deps: ApiDeps): Route[] {
+  const uc = new DeleteFeatureVersionScoped({
+    featureRepo: deps.featureRepo,
+    nodeRepo: deps.nodeRepo,
+  });
+
   return [
     {
       method: 'DELETE',
       pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)\/features\/([^/]+)$/,
       handler: async (req, res, m) =>
-        handleDeleteFeatureVersionScoped(deps, req, res, {
+        handleDeleteFeatureVersionScoped(uc, req, res, {
           nodeId: m[1],
           version: m[2],
           filename: m[3],
@@ -85,7 +78,7 @@ export function buildFeatureDeletionRoutes(deps: ApiDeps): Route[] {
       method: 'DELETE',
       pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)\/features$/,
       handler: async (req, res, m) =>
-        handleDeleteAllFeaturesForVersion(deps, req, res, {
+        handleDeleteAllFeaturesForVersion(uc, req, res, {
           nodeId: m[1],
           version: m[2],
         }),
@@ -93,7 +86,7 @@ export function buildFeatureDeletionRoutes(deps: ApiDeps): Route[] {
     {
       method: 'DELETE',
       pattern: /^\/api\/components\/([^/]+)\/features$/,
-      handler: async (req, res, m) => handleDeleteAllFeaturesForNode(deps, req, res, m[1]),
+      handler: async (req, res, m) => handleDeleteAllFeaturesForNode(uc, req, res, m[1]),
     },
   ];
 }

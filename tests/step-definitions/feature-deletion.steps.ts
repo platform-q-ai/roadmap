@@ -3,9 +3,7 @@ import http from 'node:http';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
-import { Feature } from '../../src/domain/entities/feature.js';
-import { Node } from '../../src/domain/entities/node.js';
-import { Version } from '../../src/domain/entities/version.js';
+import { Feature, Node, Version } from '../../src/domain/index.js';
 
 interface FeatureDeletionWorld {
   nodes: Node[];

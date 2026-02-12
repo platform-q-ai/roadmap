@@ -49,4 +49,13 @@ export class DeleteFeatureVersionScoped {
 
     return this.featureRepo.deleteByNodeAndVersion(nodeId, version);
   }
+
+  async executeAll(nodeId: string): Promise<void> {
+    const exists = await this.nodeRepo.exists(nodeId);
+    if (!exists) {
+      throw new NodeNotFoundError(nodeId);
+    }
+
+    await this.featureRepo.deleteByNode(nodeId);
+  }
 }

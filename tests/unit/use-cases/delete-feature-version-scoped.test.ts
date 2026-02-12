@@ -12,10 +12,11 @@ function buildMockRepos(opts: {
   };
   const featureRepo: Pick<
     IFeatureRepository,
-    'deleteByNodeAndVersionAndFilename' | 'deleteByNodeAndVersion'
+    'deleteByNodeAndVersionAndFilename' | 'deleteByNodeAndVersion' | 'deleteByNode'
   > = {
     deleteByNodeAndVersionAndFilename: vi.fn(async () => opts.featureDeleted ?? true),
     deleteByNodeAndVersion: vi.fn(async () => opts.versionDeletedCount ?? 0),
+    deleteByNode: vi.fn(async () => undefined),
   };
   return {
     nodeRepo: nodeRepo as INodeRepository,
@@ -73,6 +74,22 @@ describe('DeleteFeatureVersionScoped use case', () => {
       const uc = new DeleteFeatureVersionScoped(repos);
       const count = await uc.executeVersion('comp-1', 'v1');
       expect(count).toBe(0);
+    });
+  });
+
+  describe('executeAll', () => {
+    it('deletes all features for a node across all versions', async () => {
+      const repos = buildMockRepos({ nodeExists: true });
+      const uc = new DeleteFeatureVersionScoped(repos);
+      await expect(uc.executeAll('comp-1')).resolves.toBeUndefined();
+      expect(repos.nodeRepo.exists).toHaveBeenCalledWith('comp-1');
+      expect(repos.featureRepo.deleteByNode).toHaveBeenCalledWith('comp-1');
+    });
+
+    it('throws NodeNotFoundError when the component does not exist', async () => {
+      const repos = buildMockRepos({ nodeExists: false });
+      const uc = new DeleteFeatureVersionScoped(repos);
+      await expect(uc.executeAll('ghost')).rejects.toThrow(/not found/i);
     });
   });
 });

@@ -274,4 +274,32 @@ describe('API Routes — v1 version-scoped feature deletion', () => {
       });
     });
   });
+
+  describe('DELETE /api/components/:id/features', () => {
+    it('deletes all features for a component and returns 204', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'DELETE', '/api/components/comp-a/features');
+        expect(res.status).toBe(204);
+      });
+    });
+
+    it('returns 404 for non-existent component', async () => {
+      const repos = buildTestRepos(seedData());
+      await withServer(repos, async server => {
+        const res = await request(server, 'DELETE', '/api/components/no-such/features');
+        expect(res.status).toBe(404);
+      });
+    });
+
+    it('returns 204 even when component has no features', async () => {
+      const data = seedData();
+      data.features = [];
+      const repos = buildTestRepos(data);
+      await withServer(repos, async server => {
+        const res = await request(server, 'DELETE', '/api/components/comp-a/features');
+        expect(res.status).toBe(204);
+      });
+    });
+  });
 });
