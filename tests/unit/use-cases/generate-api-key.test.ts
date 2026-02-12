@@ -124,4 +124,80 @@ describe('GenerateApiKey', () => {
     expect(result).toHaveProperty('record');
     expect(result.record.name).toBe('test-bot');
   });
+
+  it('uses pre-set plaintext when provided', async () => {
+    const { GenerateApiKey } = await import('../../../src/use-cases/generate-api-key.js');
+    const repo = createMockApiKeyRepo();
+    const uc = new GenerateApiKey({ apiKeyRepo: repo });
+
+    const result = await uc.execute({
+      name: 'preset-key',
+      scopes: ['read'],
+      plaintext: 'rmap_preset_abc123def456',
+    });
+
+    expect(result.plaintext).toBe('rmap_preset_abc123def456');
+  });
+
+  it('hashes the pre-set plaintext with a deterministic salt', async () => {
+    const { GenerateApiKey, hashKey } = await import('../../../src/use-cases/generate-api-key.js');
+    const repo = createMockApiKeyRepo();
+    const uc = new GenerateApiKey({ apiKeyRepo: repo });
+
+    await uc.execute({
+      name: 'det-key',
+      scopes: ['read'],
+      plaintext: 'rmap_fixed_key_value',
+    });
+
+    const saved = repo.save.mock.calls[0][0];
+    const expectedHash = hashKey('rmap_fixed_key_value', saved.salt);
+    expect(saved.key_hash).toBe(expectedHash);
+  });
+
+  it('produces identical hashes for same plaintext across calls', async () => {
+    const { GenerateApiKey } = await import('../../../src/use-cases/generate-api-key.js');
+    const repo1 = createMockApiKeyRepo();
+    const uc1 = new GenerateApiKey({ apiKeyRepo: repo1 });
+    await uc1.execute({
+      name: 'stable',
+      scopes: ['read'],
+      plaintext: 'rmap_stable_key',
+    });
+    const saved1 = repo1.save.mock.calls[0][0];
+
+    // Second call — same plaintext, different repo (simulates fresh DB)
+    const repo2 = createMockApiKeyRepo();
+    const uc2 = new GenerateApiKey({ apiKeyRepo: repo2 });
+    await uc2.execute({
+      name: 'stable',
+      scopes: ['read'],
+      plaintext: 'rmap_stable_key',
+    });
+    const saved2 = repo2.save.mock.calls[0][0];
+
+    // Salt is derived from plaintext, so both should match
+    expect(saved1.salt).toBe(saved2.salt);
+    expect(saved1.key_hash).toBe(saved2.key_hash);
+  });
+
+  it('rejects pre-set plaintext that does not start with rmap_', async () => {
+    const { GenerateApiKey } = await import('../../../src/use-cases/generate-api-key.js');
+    const repo = createMockApiKeyRepo();
+    const uc = new GenerateApiKey({ apiKeyRepo: repo });
+
+    await expect(
+      uc.execute({ name: 'bad-prefix', scopes: ['read'], plaintext: 'invalid_prefix' })
+    ).rejects.toThrow(/must start with rmap_/i);
+  });
+
+  it('rejects empty pre-set plaintext', async () => {
+    const { GenerateApiKey } = await import('../../../src/use-cases/generate-api-key.js');
+    const repo = createMockApiKeyRepo();
+    const uc = new GenerateApiKey({ apiKeyRepo: repo });
+
+    await expect(uc.execute({ name: 'empty', scopes: ['read'], plaintext: '' })).rejects.toThrow(
+      /must start with rmap_/i
+    );
+  });
 });

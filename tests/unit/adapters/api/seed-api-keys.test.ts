@@ -43,6 +43,21 @@ describe('parseSeedEntries', () => {
     ]);
     expect(() => parseSeedEntries(raw)).toThrow('API_KEY_SEED[1]');
   });
+
+  it('preserves optional key field in parsed entries', () => {
+    const raw = JSON.stringify([
+      { name: 'keyed', scopes: ['read'], key: 'rmap_fixed_abc' },
+      { name: 'unkeyed', scopes: ['read'] },
+    ]);
+    const entries = parseSeedEntries(raw);
+    expect(entries[0]).toEqual({
+      name: 'keyed',
+      scopes: ['read'],
+      key: 'rmap_fixed_abc',
+    });
+    expect(entries[1]).toEqual({ name: 'unkeyed', scopes: ['read'] });
+    expect(entries[1]).not.toHaveProperty('key');
+  });
 });
 
 describe('seedApiKeys', () => {
@@ -125,6 +140,49 @@ describe('seedApiKeys', () => {
 
     await expect(seedApiKeys({ rawEnv: '{bad', generate, log })).rejects.toThrow(
       'API_KEY_SEED is not valid JSON'
+    );
+  });
+
+  it('passes explicit key through to generate.execute as plaintext', async () => {
+    const generate = {
+      execute: vi.fn().mockResolvedValue({ plaintext: 'rmap_explicit_key' }),
+    };
+    const log = vi.fn();
+    const rawEnv = JSON.stringify([{ name: 'keyed', scopes: ['read'], key: 'rmap_explicit_key' }]);
+
+    await seedApiKeys({ rawEnv, generate, log });
+
+    expect(generate.execute).toHaveBeenCalledWith({
+      name: 'keyed',
+      scopes: ['read'],
+      plaintext: 'rmap_explicit_key',
+    });
+  });
+
+  it('does not pass plaintext when no key field in entry', async () => {
+    const generate = {
+      execute: vi.fn().mockResolvedValue({ plaintext: 'rmap_random' }),
+    };
+    const log = vi.fn();
+    const rawEnv = JSON.stringify([{ name: 'unkeyed', scopes: ['read'] }]);
+
+    await seedApiKeys({ rawEnv, generate, log });
+
+    expect(generate.execute).toHaveBeenCalledWith({
+      name: 'unkeyed',
+      scopes: ['read'],
+    });
+  });
+
+  it('rejects seed entries with invalid key format', async () => {
+    const generate = {
+      execute: vi.fn().mockRejectedValue(new Error('Key must start with rmap_')),
+    };
+    const log = vi.fn();
+    const rawEnv = JSON.stringify([{ name: 'bad', scopes: ['read'], key: 'invalid_prefix' }]);
+
+    await expect(seedApiKeys({ rawEnv, generate, log })).rejects.toThrow(
+      'Key must start with rmap_'
     );
   });
 });
