@@ -15,11 +15,16 @@ import {
   DrizzleNodeRepository,
   DrizzleVersionRepository,
 } from '../../infrastructure/index.js';
-import type { ApiKeyScope } from '../../use-cases/index.js';
 import { GenerateApiKey, ValidateApiKey } from '../../use-cases/index.js';
 
 import type { RequestLogEntry } from './index.js';
-import { buildAdminRoutes, createApp, createAuthMiddleware, RateLimiter } from './index.js';
+import {
+  buildAdminRoutes,
+  createApp,
+  createAuthMiddleware,
+  RateLimiter,
+  seedApiKeys,
+} from './index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..', '..');
@@ -39,8 +44,9 @@ const versionRepo = new DrizzleVersionRepository(db);
 const featureRepo = new DrizzleFeatureRepository(db);
 const apiKeyRepo = new DrizzleApiKeyRepository(db);
 
-// Auth middleware
+// Use cases
 const validateApiKey = new ValidateApiKey({ apiKeyRepo });
+const generateApiKey = new GenerateApiKey({ apiKeyRepo });
 const authMiddleware = createAuthMiddleware({
   validateKey: async (plaintext: string) => {
     const result = await validateApiKey.execute(plaintext);
@@ -79,28 +85,11 @@ function onLog(entry: RequestLogEntry): void {
   );
 }
 
-// Seed API keys from environment on first boot.
-// API_KEY_SEED is a JSON array: [{"name":"admin","scopes":["read","write","admin"]}, ...]
-// For each entry, a key is generated if one with that name doesn't already exist.
-// The plaintext keys are logged to stderr once — save them immediately.
-async function seedApiKeys(): Promise<void> {
-  const raw = process.env.API_KEY_SEED;
-  if (!raw) {
-    return;
-  }
-  const entries = JSON.parse(raw) as Array<{ name: string; scopes: ApiKeyScope[] }>;
-  const generateApiKey = new GenerateApiKey({ apiKeyRepo });
-  for (const entry of entries) {
-    const existing = await apiKeyRepo.findByName(entry.name);
-    if (existing) {
-      continue;
-    }
-    const result = await generateApiKey.execute(entry);
-    console.warn(`  Seeded key "${entry.name}": ${result.plaintext}`);
-  }
-}
-
-await seedApiKeys();
+await seedApiKeys({
+  rawEnv: process.env.API_KEY_SEED,
+  generate: generateApiKey,
+  log: (msg: string) => console.warn(msg),
+});
 
 const server = createApp(
   { nodeRepo, edgeRepo, versionRepo, featureRepo },
