@@ -2,11 +2,11 @@ import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
+import { parseSeedEntries, seedApiKeys } from '../../src/adapters/api/index.js';
 import type { ApiKeyProps, ApiKeyScope } from '../../src/domain/entities/api-key.js';
 import { ApiKey } from '../../src/domain/entities/api-key.js';
 import type { IApiKeyRepository } from '../../src/domain/index.js';
-import { parseSeedEntries, seedApiKeys } from '../../src/adapters/api/index.js';
-import { GenerateApiKey, hashKey, ValidateApiKey } from '../../src/use-cases/index.js';
+import { GenerateApiKey, ValidateApiKey } from '../../src/use-cases/index.js';
 
 /**
  * Step definitions for features/api-key-seed-persistence.feature
