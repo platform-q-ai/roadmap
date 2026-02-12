@@ -16,10 +16,18 @@ interface RetrievalWorld {
 }
 
 function ensureComponent(world: RetrievalWorld, id: string): void {
-  if (!world.nodes) world.nodes = [];
-  if (!world.features) world.features = [];
-  if (!world.versions) world.versions = [];
-  if (!world.edges) world.edges = [];
+  if (!world.nodes) {
+    world.nodes = [];
+  }
+  if (!world.features) {
+    world.features = [];
+  }
+  if (!world.versions) {
+    world.versions = [];
+  }
+  if (!world.edges) {
+    world.edges = [];
+  }
   if (!world.nodes.some(n => n.id === 'supervisor-layer')) {
     world.nodes.push(new Node({ id: 'supervisor-layer', name: 'Supervisor Layer', type: 'layer' }));
   }
@@ -55,9 +63,15 @@ Given(
     v3: string
   ) {
     ensureComponent(this, nodeId);
-    for (let i = 0; i < c1; i++) this.features.push(makeFeature(nodeId, v1, `${v1}-f${i}.feature`));
-    for (let i = 0; i < c2; i++) this.features.push(makeFeature(nodeId, v2, `${v2}-f${i}.feature`));
-    for (let i = 0; i < c3; i++) this.features.push(makeFeature(nodeId, v3, `${v3}-f${i}.feature`));
+    for (let i = 0; i < c1; i++) {
+      this.features.push(makeFeature(nodeId, v1, `${v1}-f${i}.feature`));
+    }
+    for (let i = 0; i < c2; i++) {
+      this.features.push(makeFeature(nodeId, v2, `${v2}-f${i}.feature`));
+    }
+    for (let i = 0; i < c3; i++) {
+      this.features.push(makeFeature(nodeId, v3, `${v3}-f${i}.feature`));
+    }
   }
 );
 
@@ -65,8 +79,12 @@ Given(
   'component {string} has {int} {string} features and {int} {string} features',
   function (this: RetrievalWorld, nodeId: string, c1: number, v1: string, c2: number, v2: string) {
     ensureComponent(this, nodeId);
-    for (let i = 0; i < c1; i++) this.features.push(makeFeature(nodeId, v1, `${v1}-f${i}.feature`));
-    for (let i = 0; i < c2; i++) this.features.push(makeFeature(nodeId, v2, `${v2}-f${i}.feature`));
+    for (let i = 0; i < c1; i++) {
+      this.features.push(makeFeature(nodeId, v1, `${v1}-f${i}.feature`));
+    }
+    for (let i = 0; i < c2; i++) {
+      this.features.push(makeFeature(nodeId, v2, `${v2}-f${i}.feature`));
+    }
   }
 );
 

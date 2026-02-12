@@ -129,7 +129,9 @@ async function request(
         }
         const rh: Record<string, string> = {};
         for (const [key, val] of Object.entries(res.headers)) {
-          if (typeof val === 'string') rh[key] = val;
+          if (typeof val === 'string') {
+            rh[key] = val;
+          }
         }
         resolve({ status: res.statusCode ?? 500, body: parsed, headers: rh });
       });
@@ -186,6 +188,28 @@ describe('API Routes — v1 version-scoped feature retrieval', () => {
         expect(body.totals).toBeDefined();
         expect(body.totals.total_features).toBe(2);
         expect(body.totals.total_steps).toBeGreaterThan(0);
+      });
+    });
+
+    it('handles features with null content gracefully', async () => {
+      const data = seedData();
+      const nullFeat = new Feature({
+        node_id: 'comp-a',
+        version: 'v1',
+        filename: 'v1-null.feature',
+        title: 'Null',
+        content: null as unknown as string,
+        step_count: 0,
+      });
+      data.features.push(nullFeat);
+      const repos = buildTestRepos(data);
+      await withServer(repos, async server => {
+        const res = await request(server, 'GET', '/api/components/comp-a/versions/v1/features');
+        expect(res.status).toBe(200);
+        const body = res.body as { features: Array<Record<string, unknown>> };
+        const nullEntry = body.features.find(f => f.filename === 'v1-null.feature');
+        expect(nullEntry).toBeDefined();
+        expect(nullEntry?.scenario_count).toBe(0);
       });
     });
   });

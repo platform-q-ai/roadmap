@@ -20,12 +20,16 @@ interface ListResult {
 }
 
 function countScenarios(content: string | null): number {
-  if (!content) return 0;
+  if (!content) {
+    return 0;
+  }
   return (content.match(/^\s*Scenario(?:\s+Outline)?:/gm) ?? []).length;
 }
 
 function countByKeyword(content: string | null, keywords: string[]): number {
-  if (!content) return 0;
+  if (!content) {
+    return 0;
+  }
   const pattern = new RegExp(`^\\s*(${keywords.join('|')})\\s+`, 'gm');
   return (content.match(pattern) ?? []).length;
 }

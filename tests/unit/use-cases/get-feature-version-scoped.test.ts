@@ -58,6 +58,38 @@ describe('GetFeatureVersionScoped use case', () => {
       const result = await uc.executeList('comp-1', 'v1');
       expect(result.features).toHaveLength(0);
     });
+
+    it('computes zero totals when features have null content', async () => {
+      const repos = buildMockRepos({
+        nodeExists: true,
+        features: [{ node_id: 'comp-1', version: 'v1', filename: 'empty.feature' }],
+      });
+      // Override mock to return a feature with null content
+      const nullFeature = {
+        node_id: 'comp-1',
+        version: 'v1',
+        filename: 'empty.feature',
+        id: null,
+        title: 'empty.feature',
+        content: null as string | null,
+        step_count: 0,
+        updated_at: null,
+        toJSON: vi.fn().mockReturnValue({
+          node_id: 'comp-1',
+          version: 'v1',
+          filename: 'empty.feature',
+        }),
+      };
+      vi.mocked(repos.featureRepo.findByNodeAndVersion).mockResolvedValueOnce([
+        nullFeature as unknown as import('@domain/index.js').Feature,
+      ]);
+      const uc = new GetFeatureVersionScoped(repos);
+      const result = await uc.executeList('comp-1', 'v1');
+      expect(result.totals.total_scenarios).toBe(0);
+      expect(result.totals.total_given_steps).toBe(0);
+      expect(result.totals.total_when_steps).toBe(0);
+      expect(result.totals.total_then_steps).toBe(0);
+    });
   });
 
   describe('executeSingle', () => {

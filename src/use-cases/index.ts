@@ -25,7 +25,6 @@ export {
   ValidationError,
 } from './errors.js';
 export { ExportArchitecture } from './export-architecture.js';
-export { GetFeatureVersionScoped } from './get-feature-version-scoped.js';
 export type { GenerateApiKeyInput, GenerateApiKeyResult } from './generate-api-key.js';
 export { GenerateApiKey, hashKey } from './generate-api-key.js';
 export type {
@@ -35,6 +34,7 @@ export type {
   ProgressionTree,
 } from './get-architecture.js';
 export { GetArchitecture } from './get-architecture.js';
+export { GetFeatureVersionScoped } from './get-feature-version-scoped.js';
 export type { StepTotalsResult } from './get-step-totals.js';
 export { GetStepTotals } from './get-step-totals.js';
 export { ListApiKeys } from './list-api-keys.js';

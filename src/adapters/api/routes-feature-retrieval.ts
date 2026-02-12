@@ -13,7 +13,9 @@ function wantsPlainText(req: IncomingMessage): boolean {
 }
 
 function countScenarios(content: string | null): number {
-  if (!content) return 0;
+  if (!content) {
+    return 0;
+  }
   return (content.match(/^\s*Scenario(?:\s+Outline)?:/gm) ?? []).length;
 }
 
