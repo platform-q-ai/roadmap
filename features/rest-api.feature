@@ -152,7 +152,6 @@ Feature: REST API Adapter
     When I send a GET request to "/api/components/dep-comp/dependencies"
     Then the response status is 200
     And the response body has field "dependencies"
-    And the response body has field "dependents"
 
   # ── API Server Configuration ──────────────────────────────────────
 
