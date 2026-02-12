@@ -79,12 +79,13 @@ roadmap/
 │   │   ├── create-edge.ts
 │   │   ├── delete-edge.ts
 │   │   ├── batch-upload-features.ts
+│   │   ├── delete-feature-version-scoped.ts
 │   │   └── errors.ts
 │   ├── infrastructure/         # Concrete implementations
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (19 endpoints + static files)
+│       ├── api/                # REST API server (22 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -164,6 +165,9 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `GET` | `/api/components/:id/features` | List features for a component | `200` | `404` |
 | `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (raw Gherkin body) | `200` | `404` |
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a feature file | `204` | `404` |
+| `DELETE` | `/api/components/:id/versions/:ver/features/:filename` | Delete a single feature by version and filename | `204` | `404` |
+| `DELETE` | `/api/components/:id/versions/:ver/features` | Delete all features for a specific version | `204` | `404` |
+| `DELETE` | `/api/components/:id/features` | Delete all features for a component (all versions) | `204` | `404` |
 | `GET` | `/api/components/:id/edges` | Inbound and outbound edges | `200` | `404` |
 | `GET` | `/api/components/:id/dependencies` | DEPENDS_ON edges (dependencies + dependents) | `200` | `404` |
 | `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` `409` |
