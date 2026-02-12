@@ -1,9 +1,10 @@
 /**
  * Runtime API key seeding from environment variables.
  *
- * Reads API_KEY_SEED (JSON array of {name, scopes}) and generates keys
- * for any names not already in the database. Plaintext keys are logged
- * to stderr once — save them immediately; they cannot be retrieved later.
+ * Reads API_KEY_SEED (JSON array of {name, scopes, key?}) and generates keys
+ * for any names not already in the database. When "key" is provided, the
+ * seeder uses that exact plaintext, making the hash deterministic so keys
+ * survive database rebuilds across deploys.
  */
 
 import type { ApiKeyScope, GenerateApiKeyInput } from '../../use-cases/index.js';
@@ -30,7 +31,14 @@ export function parseSeedEntries(raw: string): GenerateApiKeyInput[] {
     if (typeof obj.name !== 'string' || !Array.isArray(obj.scopes)) {
       throw new Error(`API_KEY_SEED[${i}]: requires "name" (string) and "scopes" (array)`);
     }
-    return { name: obj.name, scopes: obj.scopes as ApiKeyScope[] };
+    const result: GenerateApiKeyInput = {
+      name: obj.name,
+      scopes: obj.scopes as ApiKeyScope[],
+    };
+    if (typeof obj.key === 'string') {
+      result.plaintext = obj.key;
+    }
+    return result;
   });
 }
 
@@ -44,7 +52,7 @@ export async function seedApiKeys(deps: SeedApiKeysDeps): Promise<void> {
       const result = await deps.generate.execute(entry);
       deps.log(`  Seeded key "${entry.name}": ${result.plaintext}`);
     } catch (err: unknown) {
-      if (err instanceof ValidationError) {
+      if (err instanceof ValidationError && /already exists/i.test(err.message)) {
         // Key already exists — skip silently (idempotent)
         continue;
       }

@@ -9,6 +9,10 @@ export interface GenerateApiKeyInput {
   name: string;
   scopes: ApiKeyScope[];
   expiresAt?: string;
+  /** Pre-determined plaintext key. When provided, the key and its salt are
+   *  deterministic so the same seed always produces the same hash.
+   *  Must start with "rmap_". */
+  plaintext?: string;
 }
 
 export interface GenerateApiKeyResult {
@@ -31,6 +35,15 @@ export function hashKey(plaintext: string, salt: string): string {
 }
 
 /**
+ * Derive a deterministic salt from a plaintext key.
+ * Used when seeding pre-set keys so the same plaintext always
+ * produces the same hash across database rebuilds.
+ */
+function deriveSalt(plaintext: string): string {
+  return createHash('sha256').update(plaintext).digest('hex').slice(0, 32);
+}
+
+/**
  * GenerateApiKey use case.
  *
  * Generates a new API key with the format rmap_<32 hex chars>.
@@ -50,8 +63,14 @@ export class GenerateApiKey {
       throw new ValidationError(`API key already exists: ${input.name}`);
     }
 
-    const plaintext = `rmap_${randomBytes(16).toString('hex')}`;
-    const salt = randomBytes(16).toString('hex');
+    if (input.plaintext !== undefined && !input.plaintext.startsWith('rmap_')) {
+      throw new ValidationError('Pre-set key must start with rmap_');
+    }
+
+    const plaintext = input.plaintext ?? `rmap_${randomBytes(16).toString('hex')}`;
+
+    const salt = input.plaintext ? deriveSalt(plaintext) : randomBytes(16).toString('hex');
+
     const key_hash = hashKey(plaintext, salt);
 
     const props = {
