@@ -44,7 +44,7 @@ describe('parseSeedEntries', () => {
     expect(() => parseSeedEntries(raw)).toThrow('API_KEY_SEED[1]');
   });
 
-  it('preserves optional key field in parsed entries', () => {
+  it('maps optional key field to plaintext in parsed entries', () => {
     const raw = JSON.stringify([
       { name: 'keyed', scopes: ['read'], key: 'rmap_fixed_abc' },
       { name: 'unkeyed', scopes: ['read'] },
@@ -53,10 +53,10 @@ describe('parseSeedEntries', () => {
     expect(entries[0]).toEqual({
       name: 'keyed',
       scopes: ['read'],
-      key: 'rmap_fixed_abc',
+      plaintext: 'rmap_fixed_abc',
     });
     expect(entries[1]).toEqual({ name: 'unkeyed', scopes: ['read'] });
-    expect(entries[1]).not.toHaveProperty('key');
+    expect(entries[1]).not.toHaveProperty('plaintext');
   });
 });
 

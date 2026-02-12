@@ -23,7 +23,7 @@ interface SeedPersistenceWorld {
   seedError: string | null;
   generatedPlaintexts: Map<string, string>;
   firstRunHashes: Map<string, string>;
-  parsedEntries: Array<{ name: string; scopes: ApiKeyScope[]; key?: string }> | null;
+  parsedEntries: Array<{ name: string; scopes: ApiKeyScope[]; plaintext?: string }> | null;
   [key: string]: unknown;
 }
 
@@ -323,7 +323,7 @@ Then(
     assert.ok(this.parsedEntries, 'No parsed entries');
     const entry = this.parsedEntries.find(e => e.name === name);
     assert.ok(entry, `No entry with name "${name}"`);
-    assert.equal(entry.key, key);
+    assert.equal(entry.plaintext, key, 'key should be mapped to plaintext');
   }
 );
 
@@ -333,6 +333,6 @@ Then(
     assert.ok(this.parsedEntries, 'No parsed entries');
     const entry = this.parsedEntries.find(e => e.name === name);
     assert.ok(entry, `No entry with name "${name}"`);
-    assert.equal(entry.key, undefined);
+    assert.equal(entry.plaintext, undefined);
   }
 );
