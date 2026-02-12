@@ -283,12 +283,15 @@ async function handleUploadFeature(
     }
     throw err;
   }
+  const nodeId = stripHtml(params.nodeId);
+  const version = stripHtml(params.version);
+  const filename = stripHtml(params.filename);
   const uc = new UploadFeature({ featureRepo: deps.featureRepo, nodeRepo: deps.nodeRepo });
   try {
     const result = await uc.execute({
-      nodeId: params.nodeId,
-      version: params.version,
-      filename: params.filename,
+      nodeId,
+      version,
+      filename,
       content,
     });
     json(res, 200, result);

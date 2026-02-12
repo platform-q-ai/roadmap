@@ -59,13 +59,13 @@ export class UploadFeature {
     const version = input.version ?? Feature.versionFromFilename(input.filename);
 
     if (!VERSION_RE.test(version)) {
-      throw new ValidationError(`Invalid version: ${version}`);
+      throw new ValidationError(`Invalid version: ${version.slice(0, 64)}`);
     }
 
     const title = Feature.titleFromContent(input.content, input.filename);
-    const stepCount = Feature.countSteps(input.content);
     const scenarioCount = Feature.countScenarios(input.content);
     const keywordCounts = Feature.countByKeyword(input.content);
+    const stepCount = keywordCounts.given + keywordCounts.when + keywordCounts.then;
 
     // Upsert: remove any existing feature with same node+version+filename
     await this.featureRepo.deleteByNodeAndVersionAndFilename(input.nodeId, version, input.filename);
