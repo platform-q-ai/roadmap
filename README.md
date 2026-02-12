@@ -78,12 +78,13 @@ roadmap/
 │   │   ├── update-component.ts
 │   │   ├── create-edge.ts
 │   │   ├── delete-edge.ts
+│   │   ├── batch-upload-features.ts
 │   │   └── errors.ts
 │   ├── infrastructure/         # Concrete implementations
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (17 endpoints + static files)
+│       ├── api/                # REST API server (19 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -168,6 +169,8 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` `409` |
 | `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200` | `400` |
 | `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` |
+| `POST` | `/api/components/:id/versions/:ver/features/batch` | Batch upload up to 50 features for one component/version | `201` `207` | `400` `404` |
+| `POST` | `/api/features/batch` | Cross-component batch upload up to 50 features | `201` `207` | `400` |
 | `POST` | `/api/bulk/components` | Batch create up to 100 components | `201` `207` | `400` |
 | `POST` | `/api/bulk/edges` | Batch create up to 100 edges (validates node refs) | `201` `207` | `400` |
 | `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` |

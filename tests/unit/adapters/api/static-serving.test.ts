@@ -47,6 +47,7 @@ function buildEmptyRepos() {
     findByNode: vi.fn(async () => []),
     findByNodeAndVersion: vi.fn(async () => []),
     save: vi.fn(async () => {}),
+    saveMany: vi.fn(async () => {}),
     deleteAll: vi.fn(async () => {}),
     deleteByNode: vi.fn(async () => {}),
     deleteByNodeAndFilename: vi.fn(async () => false),

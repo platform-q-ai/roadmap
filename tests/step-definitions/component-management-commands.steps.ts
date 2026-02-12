@@ -126,6 +126,7 @@ function buildTrackingRepos(world: World) {
     findByNodeAndVersion: async (nid: string, ver: string) =>
       world.features.filter(f => f.node_id === nid && f.version === ver),
     save: async () => {},
+    saveMany: async () => {},
     deleteAll: async () => {},
     deleteByNode: async (nid: string) => {
       world.deletedFeatureNodeIds.push(nid);

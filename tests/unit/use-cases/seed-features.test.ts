@@ -25,6 +25,11 @@ function createMockRepos(existingNodeIds: string[]) {
     save: vi.fn().mockImplementation(async (f: Feature) => {
       savedFeatures.push(f);
     }),
+    saveMany: vi.fn().mockImplementation(async (fs: Feature[]) => {
+      for (const f of fs) {
+        savedFeatures.push(f);
+      }
+    }),
     deleteAll: vi.fn().mockImplementation(async () => {
       deleteAllCalled = true;
     }),

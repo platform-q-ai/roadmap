@@ -11,6 +11,7 @@ export interface IFeatureRepository {
   findByNodeAndVersion(nodeId: string, version: string): Promise<Feature[]>;
   getStepCountSummary(nodeId: string, version: string): Promise<StepCountSummary>;
   save(feature: Feature): Promise<void>;
+  saveMany(features: Feature[]): Promise<void>;
   deleteAll(): Promise<void>;
   deleteByNode(nodeId: string): Promise<void>;
   deleteByNodeAndFilename(nodeId: string, filename: string): Promise<boolean>;

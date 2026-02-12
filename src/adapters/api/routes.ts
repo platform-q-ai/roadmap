@@ -15,6 +15,10 @@ import {
 } from '../../use-cases/index.js';
 
 import {
+  handleBatchUploadFeatures,
+  handleCrossComponentBatchFeatures,
+} from './routes-batch-features.js';
+import {
   handleBulkCreateComponents,
   handleBulkCreateEdges,
   handleBulkDeleteComponents,
@@ -598,6 +602,17 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)$/,
       handler: async (req, res, m) =>
         handleUpdateVersion(deps, req, res, { nodeId: m[1], version: m[2] }),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/api\/features\/batch$/,
+      handler: async (req, res) => handleCrossComponentBatchFeatures(deps, req, res),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)\/features\/batch$/,
+      handler: async (req, res, m) =>
+        handleBatchUploadFeatures(deps, req, res, { nodeId: m[1], version: m[2] }),
     },
     {
       method: 'GET',

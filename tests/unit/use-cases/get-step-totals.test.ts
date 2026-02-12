@@ -22,6 +22,7 @@ function createMockFeatureRepo(features: Feature[] = []): IFeatureRepository {
       };
     }),
     save: vi.fn(),
+    saveMany: vi.fn(),
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),
     deleteByNodeAndFilename: vi.fn(),

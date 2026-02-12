@@ -64,6 +64,25 @@ export class DrizzleFeatureRepository implements IFeatureRepository {
       .run();
   }
 
+  async saveMany(features: Feature[]): Promise<void> {
+    if (features.length === 0) {
+      return;
+    }
+    this.db
+      .insert(featuresTable)
+      .values(
+        features.map(f => ({
+          node_id: f.node_id,
+          version: f.version,
+          filename: f.filename,
+          title: f.title,
+          content: f.content,
+          step_count: f.step_count,
+        }))
+      )
+      .run();
+  }
+
   async deleteAll(): Promise<void> {
     this.db.delete(featuresTable).run();
   }

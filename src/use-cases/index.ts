@@ -1,3 +1,12 @@
+export type {
+  BatchFeatureEntry,
+  BatchFeatureError,
+  BatchUploadInput,
+  BatchUploadResult,
+  CrossComponentBatchInput,
+  CrossComponentFeatureEntry,
+} from './batch-upload-features.js';
+export { BatchUploadFeatures } from './batch-upload-features.js';
 export type { CreateComponentInput } from './create-component.js';
 export { CreateComponent } from './create-component.js';
 export type { CreateEdgeInput } from './create-edge.js';
