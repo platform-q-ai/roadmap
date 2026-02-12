@@ -9,6 +9,11 @@ export interface IFeatureRepository {
   findAll(): Promise<Feature[]>;
   findByNode(nodeId: string): Promise<Feature[]>;
   findByNodeAndVersion(nodeId: string, version: string): Promise<Feature[]>;
+  findByNodeVersionAndFilename(
+    nodeId: string,
+    version: string,
+    filename: string
+  ): Promise<Feature | null>;
   getStepCountSummary(nodeId: string, version: string): Promise<StepCountSummary>;
   save(feature: Feature): Promise<void>;
   saveMany(features: Feature[]): Promise<void>;

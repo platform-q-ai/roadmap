@@ -12,18 +12,6 @@ function wantsPlainText(req: IncomingMessage): boolean {
   return accept.includes('text/plain');
 }
 
-function countScenarios(content: string | null): number {
-  if (!content) {
-    return 0;
-  }
-  return (content.match(/^\s*Scenario(?:\s+Outline)?:/gm) ?? []).length;
-}
-
-function enrichFeature(f: Record<string, unknown>): Record<string, unknown> {
-  const content = typeof f.content === 'string' ? f.content : '';
-  return { ...f, scenario_count: countScenarios(content) };
-}
-
 // ─── Handlers ───────────────────────────────────────────────────────
 
 async function handleGetFeaturesByVersion(
@@ -34,8 +22,7 @@ async function handleGetFeaturesByVersion(
 ): Promise<void> {
   try {
     const result = await uc.executeList(params.nodeId, params.version);
-    const features = result.features.map(f => enrichFeature(f.toJSON()));
-    json(res, 200, { features, totals: result.totals });
+    json(res, 200, { features: result.features, totals: result.totals });
   } catch (err) {
     const msg = errorMessage(err);
     json(res, errorStatus(msg), { error: msg }, req);
@@ -49,13 +36,16 @@ async function handleGetSingleFeature(
   params: { nodeId: string; version: string; filename: string }
 ): Promise<void> {
   try {
-    const feature = await uc.executeSingle(params.nodeId, params.version, params.filename);
+    const { feature, enriched } = await uc.executeSingle(
+      params.nodeId,
+      params.version,
+      params.filename
+    );
     if (wantsPlainText(req)) {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end(feature.content ?? '');
       return;
     }
-    const enriched = enrichFeature(feature.toJSON());
     json(res, 200, enriched);
   } catch (err) {
     const msg = errorMessage(err);

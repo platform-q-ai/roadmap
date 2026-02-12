@@ -38,6 +38,29 @@ export class DrizzleFeatureRepository implements IFeatureRepository {
     return rows.map(r => new Feature(r as ConstructorParameters<typeof Feature>[0]));
   }
 
+  async findByNodeVersionAndFilename(
+    nodeId: string,
+    version: string,
+    filename: string
+  ): Promise<Feature | null> {
+    const rows = this.db
+      .select()
+      .from(featuresTable)
+      .where(
+        and(
+          eq(featuresTable.node_id, nodeId),
+          eq(featuresTable.version, version),
+          eq(featuresTable.filename, filename)
+        )
+      )
+      .limit(1)
+      .all();
+    if (rows.length === 0) {
+      return null;
+    }
+    return new Feature(rows[0] as ConstructorParameters<typeof Feature>[0]);
+  }
+
   async getStepCountSummary(nodeId: string, version: string): Promise<StepCountSummary> {
     const rows = this.db
       .select({

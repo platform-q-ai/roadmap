@@ -1,6 +1,25 @@
-import type { IFeatureRepository, INodeRepository } from '@domain/index.js';
+import type { Feature, IFeatureRepository, INodeRepository } from '@domain/index.js';
 import { GetFeatureVersionScoped } from '@use-cases/index.js';
 import { describe, expect, it, vi } from 'vitest';
+
+function makeMockFeature(f: {
+  node_id: string;
+  version: string;
+  filename: string;
+  content?: string | null;
+}) {
+  const content =
+    f.content !== undefined ? f.content : `Feature: ${f.filename}\n  Scenario: S\n    Given a step`;
+  return {
+    ...f,
+    id: null,
+    title: f.filename,
+    content,
+    step_count: content ? 1 : 0,
+    updated_at: null,
+    toJSON: vi.fn().mockReturnValue({ ...f, content }),
+  } as unknown as Feature;
+}
 
 function buildMockRepos(opts: {
   nodeExists?: boolean;
@@ -9,19 +28,18 @@ function buildMockRepos(opts: {
   const nodeRepo: Pick<INodeRepository, 'exists'> = {
     exists: vi.fn(async () => opts.nodeExists ?? true),
   };
-  const features = (opts.features ?? []).map(f => ({
-    ...f,
-    id: null,
-    title: f.filename,
-    content: `Feature: ${f.filename}\n  Scenario: S\n    Given a step`,
-    step_count: 1,
-    updated_at: null,
-    toJSON: vi.fn().mockReturnValue(f),
-  }));
-  const featureRepo: Pick<IFeatureRepository, 'findByNode' | 'findByNodeAndVersion'> = {
+  const features = (opts.features ?? []).map(f => makeMockFeature(f));
+  const featureRepo: Pick<
+    IFeatureRepository,
+    'findByNode' | 'findByNodeAndVersion' | 'findByNodeVersionAndFilename'
+  > = {
     findByNode: vi.fn(async (nid: string) => features.filter(f => f.node_id === nid)),
     findByNodeAndVersion: vi.fn(async (nid: string, ver: string) =>
       features.filter(f => f.node_id === nid && f.version === ver)
+    ),
+    findByNodeVersionAndFilename: vi.fn(
+      async (nid: string, ver: string, fname: string) =>
+        features.find(f => f.node_id === nid && f.version === ver && f.filename === fname) ?? null
     ),
   };
   return {
@@ -60,35 +78,46 @@ describe('GetFeatureVersionScoped use case', () => {
     });
 
     it('computes zero totals when features have null content', async () => {
-      const repos = buildMockRepos({
-        nodeExists: true,
-        features: [{ node_id: 'comp-1', version: 'v1', filename: 'empty.feature' }],
-      });
-      // Override mock to return a feature with null content
-      const nullFeature = {
+      const repos = buildMockRepos({ nodeExists: true, features: [] });
+      const nullFeature = makeMockFeature({
         node_id: 'comp-1',
         version: 'v1',
         filename: 'empty.feature',
-        id: null,
-        title: 'empty.feature',
-        content: null as string | null,
-        step_count: 0,
-        updated_at: null,
-        toJSON: vi.fn().mockReturnValue({
-          node_id: 'comp-1',
-          version: 'v1',
-          filename: 'empty.feature',
-        }),
-      };
-      vi.mocked(repos.featureRepo.findByNodeAndVersion).mockResolvedValueOnce([
-        nullFeature as unknown as import('@domain/index.js').Feature,
-      ]);
+        content: null,
+      });
+      vi.mocked(repos.featureRepo.findByNodeAndVersion).mockResolvedValueOnce([nullFeature]);
       const uc = new GetFeatureVersionScoped(repos);
       const result = await uc.executeList('comp-1', 'v1');
       expect(result.totals.total_scenarios).toBe(0);
       expect(result.totals.total_given_steps).toBe(0);
       expect(result.totals.total_when_steps).toBe(0);
       expect(result.totals.total_then_steps).toBe(0);
+    });
+
+    it('counts And/But steps under their preceding primary keyword', async () => {
+      const repos = buildMockRepos({ nodeExists: true, features: [] });
+      const gherkin = [
+        'Feature: And/But test',
+        '  Scenario: S1',
+        '    Given a precondition',
+        '    And another given',
+        '    When an action',
+        '    And another when-action',
+        '    Then a result',
+        '    But not this result',
+      ].join('\n');
+      const feat = makeMockFeature({
+        node_id: 'comp-1',
+        version: 'v1',
+        filename: 'and-but.feature',
+        content: gherkin,
+      });
+      vi.mocked(repos.featureRepo.findByNodeAndVersion).mockResolvedValueOnce([feat]);
+      const uc = new GetFeatureVersionScoped(repos);
+      const result = await uc.executeList('comp-1', 'v1');
+      expect(result.totals.total_given_steps).toBe(2);
+      expect(result.totals.total_when_steps).toBe(2);
+      expect(result.totals.total_then_steps).toBe(2);
     });
   });
 
@@ -104,7 +133,8 @@ describe('GetFeatureVersionScoped use case', () => {
       const uc = new GetFeatureVersionScoped(repos);
       const result = await uc.executeSingle('comp-1', 'v1', 'auth.feature');
       expect(result).toBeDefined();
-      expect(result.filename).toBe('auth.feature');
+      expect(result.feature.filename).toBe('auth.feature');
+      expect(result.enriched.scenario_count).toBeGreaterThanOrEqual(0);
     });
 
     it('throws NodeNotFoundError when the component does not exist', async () => {

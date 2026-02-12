@@ -7,8 +7,13 @@ interface Deps {
   nodeRepo: INodeRepository;
 }
 
+interface EnrichedFeature {
+  scenario_count: number;
+  [key: string]: unknown;
+}
+
 interface ListResult {
-  features: Feature[];
+  features: EnrichedFeature[];
   totals: {
     total_features: number;
     total_scenarios: number;
@@ -19,19 +24,50 @@ interface ListResult {
   };
 }
 
+// Pre-compiled regexes (avoids recompilation per call)
+const SCENARIO_RE = /^\s*Scenario(?:\s+Outline)?:/gm;
+const STEP_LINE_RE = /^\s*(Given|When|Then|And|But)\s+/gm;
+
 function countScenarios(content: string | null): number {
   if (!content) {
     return 0;
   }
-  return (content.match(/^\s*Scenario(?:\s+Outline)?:/gm) ?? []).length;
+  return (content.match(SCENARIO_RE) ?? []).length;
 }
 
-function countByKeyword(content: string | null, keywords: string[]): number {
+/**
+ * Stateful step keyword counter.
+ * `And`/`But` inherit the previous primary keyword (Given/When/Then).
+ */
+function countStepsByKeyword(content: string | null): {
+  given: number;
+  when: number;
+  then: number;
+} {
+  const result = { given: 0, when: 0, then: 0 };
   if (!content) {
-    return 0;
+    return result;
   }
-  const pattern = new RegExp(`^\\s*(${keywords.join('|')})\\s+`, 'gm');
-  return (content.match(pattern) ?? []).length;
+  let lastPrimary: 'given' | 'when' | 'then' = 'given';
+  let match: RegExpExecArray | null = null;
+  STEP_LINE_RE.lastIndex = 0;
+  while ((match = STEP_LINE_RE.exec(content)) !== null) {
+    const keyword = match[1];
+    if (keyword === 'Given') {
+      lastPrimary = 'given';
+    } else if (keyword === 'When') {
+      lastPrimary = 'when';
+    } else if (keyword === 'Then') {
+      lastPrimary = 'then';
+    }
+    // And/But inherit lastPrimary
+    result[lastPrimary]++;
+  }
+  return result;
+}
+
+function enrichFeature(f: Feature): EnrichedFeature {
+  return { ...f.toJSON(), scenario_count: countScenarios(f.content) };
 }
 
 function computeTotals(features: Feature[]): ListResult['totals'] {
@@ -43,9 +79,10 @@ function computeTotals(features: Feature[]): ListResult['totals'] {
   for (const f of features) {
     scenarios += countScenarios(f.content);
     steps += f.step_count;
-    givenSteps += countByKeyword(f.content, ['Given', 'And']);
-    whenSteps += countByKeyword(f.content, ['When']);
-    thenSteps += countByKeyword(f.content, ['Then', 'But']);
+    const counts = countStepsByKeyword(f.content);
+    givenSteps += counts.given;
+    whenSteps += counts.when;
+    thenSteps += counts.then;
   }
   return {
     total_features: features.length,
@@ -79,19 +116,25 @@ export class GetFeatureVersionScoped {
       throw new NodeNotFoundError(nodeId);
     }
     const features = await this.featureRepo.findByNodeAndVersion(nodeId, version);
-    return { features, totals: computeTotals(features) };
+    return {
+      features: features.map(enrichFeature),
+      totals: computeTotals(features),
+    };
   }
 
-  async executeSingle(nodeId: string, version: string, filename: string): Promise<Feature> {
+  async executeSingle(
+    nodeId: string,
+    version: string,
+    filename: string
+  ): Promise<{ feature: Feature; enriched: EnrichedFeature }> {
     const exists = await this.nodeRepo.exists(nodeId);
     if (!exists) {
       throw new NodeNotFoundError(nodeId);
     }
-    const features = await this.featureRepo.findByNodeAndVersion(nodeId, version);
-    const feature = features.find(f => f.filename === filename);
+    const feature = await this.featureRepo.findByNodeVersionAndFilename(nodeId, version, filename);
     if (!feature) {
       throw new FeatureNotFoundError(nodeId, filename);
     }
-    return feature;
+    return { feature, enriched: enrichFeature(feature) };
   }
 }
