@@ -1,5 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+export interface RequestWithId extends IncomingMessage {
+  requestId?: string;
+}
+
 import type {
   CreateComponentInput,
   IEdgeRepository,
@@ -7,7 +11,6 @@ import type {
   INodeRepository,
   IVersionRepository,
   NodeType,
-  VersionStatus,
 } from '../../use-cases/index.js';
 import {
   CreateComponent,
@@ -35,19 +38,20 @@ const MAX_BODY_SIZE = 1024 * 1024; // 1MB
 const KEBAB_CASE_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 
 function getRequestId(req: IncomingMessage): string | undefined {
-  return (req as IncomingMessage & { requestId?: string }).requestId;
+  return (req as RequestWithId).requestId;
 }
 
 function json(res: ServerResponse, status: number, data: unknown, req?: IncomingMessage): void {
+  let payload = data;
   // Inject request_id into error responses (status >= 400)
   if (req && status >= 400 && typeof data === 'object' && data !== null) {
     const requestId = getRequestId(req);
     if (requestId) {
-      (data as Record<string, unknown>).request_id = requestId;
+      payload = { ...(data as Record<string, unknown>), request_id: requestId };
     }
   }
   res.writeHead(status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(data));
+  res.end(JSON.stringify(payload));
 }
 
 async function readBody(req: IncomingMessage): Promise<string> {
@@ -370,7 +374,7 @@ async function handleUpdateVersion(
   }
   const content = body.content !== undefined ? String(body.content) : undefined;
   const progress = body.progress !== undefined ? Number(body.progress) : undefined;
-  const status = body.status !== undefined ? (String(body.status) as VersionStatus) : undefined;
+  const status = body.status !== undefined ? String(body.status) : undefined;
 
   if (!content) {
     json(res, 400, { error: 'content is required' }, req);

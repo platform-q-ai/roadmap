@@ -8,7 +8,7 @@ export interface UpdateVersionInput {
   version: string;
   content?: string;
   progress?: number;
-  status?: VersionStatus;
+  status?: string;
 }
 
 export interface UpdateVersionResult {
@@ -31,7 +31,10 @@ function validateInput(input: UpdateVersionInput): void {
   if (input.progress !== undefined && (input.progress < 0 || input.progress > 100)) {
     throw new ValidationError('progress must be between 0 and 100');
   }
-  if (input.status !== undefined && !Version.STATUSES.includes(input.status)) {
+  if (
+    input.status !== undefined &&
+    !(Version.STATUSES as readonly string[]).includes(input.status)
+  ) {
     throw new ValidationError(
       `Invalid status: ${input.status}. Must be one of: ${Version.STATUSES.join(', ')}`
     );
@@ -79,7 +82,7 @@ export class UpdateVersion {
       version: input.version,
       content: input.content ?? null,
       progress: input.progress ?? existing?.progress ?? 0,
-      status: input.status ?? existing?.status ?? 'planned',
+      status: (input.status as VersionStatus | undefined) ?? existing?.status ?? 'planned',
     });
 
     await this.versionRepo.save(version);

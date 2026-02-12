@@ -69,7 +69,6 @@ Feature: Update version descriptions via API
   # ── Error cases ─────────────────────────────────────────────────────
 
   Scenario: Update version for nonexistent component returns 404
-    Given the API server is running
     When I send a PUT request to "/api/components/ghost-comp/versions/mvp" with body:
       """
       {"content":"Should fail."}

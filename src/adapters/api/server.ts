@@ -4,7 +4,7 @@ import { stat } from 'node:fs/promises';
 import http from 'node:http';
 import { extname, normalize, resolve } from 'node:path';
 
-import type { ApiDeps, Route } from './routes.js';
+import type { ApiDeps, RequestWithId, Route } from './routes.js';
 import { buildRoutes } from './routes.js';
 
 export interface AppOptions {
@@ -94,7 +94,7 @@ async function tryApiRoute(routes: Route[], ctx: RequestContext): Promise<boolea
       await route.handler(ctx.req, ctx.res, match);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Internal server error';
-      const reqId = (ctx.req as http.IncomingMessage & { requestId?: string }).requestId;
+      const reqId = (ctx.req as RequestWithId).requestId;
       ctx.res.writeHead(500, { 'Content-Type': 'application/json' });
       ctx.res.end(JSON.stringify({ error: message, request_id: reqId }));
     }
@@ -125,7 +125,7 @@ export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
     setSecurityHeaders(res, requestId);
 
     // Store requestId on request for route handlers to include in error responses
-    (req as http.IncomingMessage & { requestId?: string }).requestId = requestId;
+    (req as RequestWithId).requestId = requestId;
 
     if (method === 'OPTIONS') {
       res.writeHead(204);
