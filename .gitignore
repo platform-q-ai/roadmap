@@ -5,3 +5,5 @@ reports/
 *.tsbuildinfo
 .env
 .env.*
+.opencode/
+opencode.json
