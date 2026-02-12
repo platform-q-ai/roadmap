@@ -1,4 +1,3 @@
-@v1
 Feature: API Feature File Validation
   As an LLM engineer working autonomously
   I want uploaded feature files validated for Gherkin syntax
@@ -8,14 +7,12 @@ Feature: API Feature File Validation
 
     Scenario: Valid Gherkin is accepted
       Given the API server is running
-      And a valid API key with scope "write"
       And a component "valid-gherkin" exists
-      When I send a PUT request to "/api/components/valid-gherkin/versions/v1/features/valid.feature" with valid Gherkin content
+      When I send a PUT request to "/api/components/valid-gherkin/versions/v1/features/valid.feature" with Gherkin content
       Then the response status is 200
 
     Scenario: Feature file without Feature: keyword is rejected
       Given the API server is running
-      And a valid API key with scope "write"
       And a component "bad-gherkin" exists
       When I send a PUT request to "/api/components/bad-gherkin/versions/v1/features/bad.feature" with body:
         """
@@ -27,7 +24,6 @@ Feature: API Feature File Validation
 
     Scenario: Feature file without any scenarios is rejected
       Given the API server is running
-      And a valid API key with scope "write"
       And a component "no-scenario" exists
       When I send a PUT request to "/api/components/no-scenario/versions/v1/features/empty.feature" with body:
         """
@@ -39,7 +35,6 @@ Feature: API Feature File Validation
 
     Scenario: Feature file with empty body is rejected
       Given the API server is running
-      And a valid API key with scope "write"
       And a component "empty-body" exists
       When I send a PUT request to "/api/components/empty-body/versions/v1/features/empty.feature" with empty body
       Then the response status is 400
@@ -47,7 +42,6 @@ Feature: API Feature File Validation
 
     Scenario: Feature file with scenarios but no steps is rejected
       Given the API server is running
-      And a valid API key with scope "write"
       And a component "no-steps" exists
       When I send a PUT request to "/api/components/no-steps/versions/v1/features/stepless.feature" with body:
         """
@@ -59,7 +53,6 @@ Feature: API Feature File Validation
 
     Scenario: Feature filename must end with .feature
       Given the API server is running
-      And a valid API key with scope "write"
       And a component "bad-ext" exists
       When I send a PUT request to "/api/components/bad-ext/versions/v1/features/test.txt" with Gherkin content
       Then the response status is 400
@@ -67,7 +60,6 @@ Feature: API Feature File Validation
 
     Scenario: Feature filename must be kebab-case
       Given the API server is running
-      And a valid API key with scope "write"
       And a component "bad-name" exists
       When I send a PUT request to "/api/components/bad-name/versions/v1/features/under_score.feature" with Gherkin content
       Then the response status is 400
@@ -75,7 +67,6 @@ Feature: API Feature File Validation
 
     Scenario: Validation response includes line number for parse errors
       Given the API server is running
-      And a valid API key with scope "write"
       And a component "parse-err" exists
       When I send a PUT request to "/api/components/parse-err/versions/v1/features/broken.feature" with Gherkin containing a syntax error at line 5
       Then the response status is 400

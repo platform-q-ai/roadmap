@@ -51,6 +51,9 @@ export class UploadFeature {
   }
 
   async execute(input: UploadFeatureInput): Promise<UploadFeatureResult> {
+    this.validateFilename(input.filename);
+    const validated = this.validateContent(input.content);
+
     const node = await this.nodeRepo.findById(input.nodeId);
     if (!node) {
       throw new NodeNotFoundError(input.nodeId);
@@ -63,8 +66,7 @@ export class UploadFeature {
     }
 
     const title = Feature.titleFromContent(input.content, input.filename);
-    const scenarioCount = Feature.countScenarios(input.content);
-    const keywordCounts = Feature.countByKeyword(input.content);
+    const { scenarioCount, keywordCounts } = validated;
     const stepCount = keywordCounts.given + keywordCounts.when + keywordCounts.then;
 
     // Upsert: remove any existing feature with same node+version+filename
@@ -92,5 +94,44 @@ export class UploadFeature {
       when_count: keywordCounts.when,
       then_count: keywordCounts.then,
     };
+  }
+
+  private validateFilename(filename: string): void {
+    if (!Feature.isValidFeatureExtension(filename)) {
+      throw new ValidationError('Invalid filename: must end with .feature');
+    }
+    if (!Feature.isKebabCaseFilename(filename)) {
+      throw new ValidationError(
+        `Invalid filename: must be kebab-case (got "${filename.slice(0, 64)}")`
+      );
+    }
+  }
+
+  private validateContent(content: string): {
+    scenarioCount: number;
+    keywordCounts: { given: number; when: number; then: number };
+  } {
+    if (!content.trim()) {
+      throw new ValidationError('Content must not be empty');
+    }
+    if (!Feature.hasValidGherkin(content)) {
+      throw new ValidationError('Invalid Gherkin: missing Feature: line');
+    }
+    const scenarioCount = Feature.countScenarios(content);
+    if (scenarioCount === 0) {
+      throw new ValidationError('Invalid Gherkin: no scenario found');
+    }
+    const keywordCounts = Feature.countByKeyword(content);
+    const stepCount = keywordCounts.given + keywordCounts.when + keywordCounts.then;
+    if (stepCount === 0) {
+      throw new ValidationError('Invalid Gherkin: no steps found in any scenario');
+    }
+    const syntaxError = Feature.findFirstSyntaxError(content);
+    if (syntaxError) {
+      throw new ValidationError(
+        `Invalid Gherkin at line ${syntaxError.line}: ${syntaxError.text.slice(0, 120)}`
+      );
+    }
+    return { scenarioCount, keywordCounts };
   }
 }

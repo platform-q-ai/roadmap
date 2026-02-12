@@ -1,4 +1,8 @@
 const SCENARIO_RE = /^\s*Scenario(?:\s+Outline)?:/gm;
+const SCENARIO_LINE_RE = /^\s*Scenario(?:\s+Outline)?:/;
+const SECTION_HEADER_RE = /^\s*(Feature:|Rule:|Background:|Examples:)/;
+const VALID_LINE_RE =
+  /^\s*(Feature:|Scenario(?:\s+Outline)?:|Rule:|Background:|Examples:|Given\s|When\s|Then\s|And\s|But\s|\*\s|@|#|\||"""|$)/;
 
 export interface FeatureProps {
   id?: number | null;
@@ -99,6 +103,47 @@ export class Feature {
   /** Check whether content contains a valid Feature: line. */
   static hasValidGherkin(content: string): boolean {
     return /^Feature:\s*\S/m.test(content);
+  }
+
+  /** Check whether a filename ends with .feature */
+  static isValidFeatureExtension(filename: string): boolean {
+    return filename.endsWith('.feature');
+  }
+
+  /** Check whether the base name (before .feature) is kebab-case. */
+  static isKebabCaseFilename(filename: string): boolean {
+    const base = filename.replace(/\.feature$/, '');
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(base);
+  }
+
+  /**
+   * Find the first line inside a scenario that is not a valid Gherkin keyword.
+   * Returns `{ line, text }` or null if no syntax error is found.
+   *
+   * Valid lines inside a scenario: Given, When, Then, And, But, #, |, """, @,
+   * blank lines, Scenario/Scenario Outline, Feature, Rule, Background, Examples.
+   */
+  static findFirstSyntaxError(content: string): { line: number; text: string } | null {
+    if (!content.trim()) {
+      return null;
+    }
+    const lines = content.split('\n');
+    let insideScenario = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (SCENARIO_LINE_RE.test(line)) {
+        insideScenario = true;
+        continue;
+      }
+      if (SECTION_HEADER_RE.test(line)) {
+        insideScenario = false;
+        continue;
+      }
+      if (insideScenario && line.trim() !== '' && !VALID_LINE_RE.test(line)) {
+        return { line: i + 1, text: line.trim() };
+      }
+    }
+    return null;
   }
 
   toJSON() {
