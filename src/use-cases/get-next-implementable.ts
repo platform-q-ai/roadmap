@@ -37,17 +37,31 @@ export class GetNextImplementable {
     const components = allNodes.filter(n => n.type !== 'layer');
     const componentIds = new Set(components.map(n => n.id));
 
-    // Build progress map
-    const progressMap = new Map<string, number>();
+    const progressMap = await this.buildProgressMap(components, version);
+    const depsMap = this.buildDependencyMap(componentIds, allEdges);
+
+    return this.findImplementable(components, version, progressMap, depsMap);
+  }
+
+  private async buildProgressMap(
+    components: Array<{ id: string }>,
+    version: string
+  ): Promise<Map<string, number>> {
+    const map = new Map<string, number>();
     for (const comp of components) {
       const ver = await this.deps.versionRepo.findByNodeAndVersion(comp.id, version);
-      progressMap.set(comp.id, ver?.progress ?? 0);
+      map.set(comp.id, ver?.progress ?? 0);
     }
+    return map;
+  }
 
-    // Build dependency map
-    const depsMap = new Map<string, string[]>();
+  private buildDependencyMap(
+    componentIds: Set<string>,
+    allEdges: Array<{ source_id: string; target_id: string; type: string }>
+  ): Map<string, string[]> {
+    const map = new Map<string, string[]>();
     for (const id of componentIds) {
-      depsMap.set(id, []);
+      map.set(id, []);
     }
     for (const edge of allEdges) {
       if (edge.type !== 'DEPENDS_ON') {
@@ -56,19 +70,25 @@ export class GetNextImplementable {
       if (!componentIds.has(edge.source_id) || !componentIds.has(edge.target_id)) {
         continue;
       }
-      depsMap.get(edge.source_id)!.push(edge.target_id);
+      map.get(edge.source_id)?.push(edge.target_id);
     }
+    return map;
+  }
 
+  private async findImplementable(
+    components: Array<{ id: string; name: string }>,
+    version: string,
+    progressMap: Map<string, number>,
+    depsMap: Map<string, string[]>
+  ): Promise<ImplementableComponent[]> {
     const result: ImplementableComponent[] = [];
     for (const comp of components) {
       const selfProgress = progressMap.get(comp.id) ?? 0;
       if (selfProgress >= 100) {
-        continue; // Already done
+        continue;
       }
-
       const depIds = depsMap.get(comp.id) ?? [];
       const allDepsComplete = depIds.every(depId => (progressMap.get(depId) ?? 0) >= 100);
-
       if (allDepsComplete) {
         const summary = await this.deps.featureRepo.getStepCountSummary(comp.id, version);
         result.push({
@@ -79,7 +99,6 @@ export class GetNextImplementable {
         });
       }
     }
-
     return result;
   }
 }

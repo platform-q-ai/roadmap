@@ -1,3 +1,4 @@
+import type { Edge } from '../domain/index.js';
 import type { IEdgeRepository, INodeRepository } from '../domain/index.js';
 
 interface Deps {
@@ -35,28 +36,36 @@ export class GetNeighbourhood {
 
   async execute(nodeId: string, hops: number = 1): Promise<NeighbourhoodResult> {
     const allEdges = await this.deps.edgeRepo.findAll();
+    const adjacency = this.buildAdjacency(allEdges);
+    const visited = this.bfsHops(nodeId, hops, adjacency);
+    const edges = this.collectEdges(allEdges, visited);
+    const nodes = await this.resolveNodes(visited);
+    return { nodes, edges };
+  }
 
-    // Build bidirectional adjacency
-    const adjacency = new Map<string, Array<{ neighbor: string }>>();
-    for (const edge of allEdges) {
-      if (!adjacency.has(edge.source_id)) {
-        adjacency.set(edge.source_id, []);
+  private buildAdjacency(edges: Edge[]): Map<string, string[]> {
+    const adj = new Map<string, string[]>();
+    const ensure = (id: string) => {
+      if (!adj.has(id)) {
+        adj.set(id, []);
       }
-      if (!adjacency.has(edge.target_id)) {
-        adjacency.set(edge.target_id, []);
-      }
-      adjacency.get(edge.source_id)!.push({ neighbor: edge.target_id });
-      adjacency.get(edge.target_id)!.push({ neighbor: edge.source_id });
+    };
+    for (const edge of edges) {
+      ensure(edge.source_id);
+      ensure(edge.target_id);
+      adj.get(edge.source_id)?.push(edge.target_id);
+      adj.get(edge.target_id)?.push(edge.source_id);
     }
+    return adj;
+  }
 
-    // BFS to find all nodes within N hops
+  private bfsHops(nodeId: string, hops: number, adjacency: Map<string, string[]>): Set<string> {
     const visited = new Set<string>([nodeId]);
     let frontier = [nodeId];
-
     for (let hop = 0; hop < hops; hop++) {
       const nextFrontier: string[] = [];
       for (const current of frontier) {
-        for (const { neighbor } of adjacency.get(current) ?? []) {
+        for (const neighbor of adjacency.get(current) ?? []) {
           if (!visited.has(neighbor)) {
             visited.add(neighbor);
             nextFrontier.push(neighbor);
@@ -65,20 +74,16 @@ export class GetNeighbourhood {
       }
       frontier = nextFrontier;
     }
+    return visited;
+  }
 
-    // Collect edges between visited nodes
-    const nodeEdges: NeighbourEdge[] = [];
-    for (const edge of allEdges) {
-      if (visited.has(edge.source_id) && visited.has(edge.target_id)) {
-        nodeEdges.push({
-          source_id: edge.source_id,
-          target_id: edge.target_id,
-          type: edge.type,
-        });
-      }
-    }
+  private collectEdges(allEdges: Edge[], visited: Set<string>): NeighbourEdge[] {
+    return allEdges
+      .filter(e => visited.has(e.source_id) && visited.has(e.target_id))
+      .map(e => ({ source_id: e.source_id, target_id: e.target_id, type: e.type }));
+  }
 
-    // Resolve node info
+  private async resolveNodes(visited: Set<string>): Promise<NeighbourNode[]> {
     const nodes: NeighbourNode[] = [];
     for (const id of visited) {
       const node = await this.deps.nodeRepo.findById(id);
@@ -86,7 +91,6 @@ export class GetNeighbourhood {
         nodes.push({ id: node.id, name: node.name, type: node.type });
       }
     }
-
-    return { nodes, edges: nodeEdges };
+    return nodes;
   }
 }
