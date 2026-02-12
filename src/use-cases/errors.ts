@@ -33,3 +33,10 @@ export class NodeExistsError extends Error {
     this.name = 'NodeExistsError';
   }
 }
+
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}

@@ -1,4 +1,4 @@
-@wip @v1
+@v1
 Feature: Secure and Rate-Limited API
   As the roadmap application
   I want the REST API to be secured with API key authentication and rate limiting
