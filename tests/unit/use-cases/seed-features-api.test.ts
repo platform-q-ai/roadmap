@@ -13,14 +13,15 @@ function buildMockRepos(opts?: { nodeExists?: boolean; savedFeatures?: Feature[]
   const nodeRepo: Pick<INodeRepository, 'exists'> = {
     exists: vi.fn(async () => opts?.nodeExists ?? true),
   };
-  const featureRepo: Pick<IFeatureRepository, 'deleteAll' | 'save' | 'findAll'> = {
+  const featureRepo: Pick<IFeatureRepository, 'deleteAll' | 'saveMany'> = {
     deleteAll: vi.fn(async () => {
       saved.length = 0;
     }),
-    save: vi.fn(async (f: Feature) => {
-      saved.push(f);
+    saveMany: vi.fn(async (fs: Feature[]) => {
+      for (const f of fs) {
+        saved.push(f);
+      }
     }),
-    findAll: vi.fn(async () => [...saved]),
   };
   return {
     nodeRepo: nodeRepo as INodeRepository,

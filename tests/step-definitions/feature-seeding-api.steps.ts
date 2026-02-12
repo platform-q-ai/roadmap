@@ -279,6 +279,7 @@ async function startSeedExportServer(world: SeedExportWorld): Promise<void> {
     ensureDir: async (dir: string) => {
       world.createdDirs.add(dir);
     },
+    buildDir: (nodeId: string) => `components/${nodeId}/features`,
   });
   const adminRoutes = [...adminKeyRoutes, ...extraRoutes];
   const app = createApp(repos, {

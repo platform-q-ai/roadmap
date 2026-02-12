@@ -1,3 +1,5 @@
+const SCENARIO_RE = /^\s*Scenario(?:\s+Outline)?:/gm;
+
 export interface FeatureProps {
   id?: number | null;
   node_id: string;
@@ -60,9 +62,9 @@ export class Feature {
 
   /** Count Scenario/Scenario Outline lines in Gherkin content. */
   static countScenarios(content: string): number {
-    const scenarioPattern = /^\s*Scenario(?:\s+Outline)?:/gm;
+    SCENARIO_RE.lastIndex = 0;
     let count = 0;
-    while (scenarioPattern.exec(content)) {
+    while (SCENARIO_RE.exec(content)) {
       count++;
     }
     return count;

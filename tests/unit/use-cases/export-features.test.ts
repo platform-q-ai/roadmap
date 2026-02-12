@@ -46,10 +46,12 @@ describe('ExportFeatures use case', () => {
     } as unknown as IFeatureRepository;
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const uc = new ExportFeatures({
       featureRepo,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
     const result = await uc.execute();
     expect(result.exported).toBe(2);
@@ -72,10 +74,12 @@ describe('ExportFeatures use case', () => {
     } as unknown as IFeatureRepository;
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const uc = new ExportFeatures({
       featureRepo,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
     const result = await uc.execute('comp-a');
     expect(result.exported).toBe(1);
@@ -97,10 +101,12 @@ describe('ExportFeatures use case', () => {
     } as unknown as IFeatureRepository;
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const uc = new ExportFeatures({
       featureRepo,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
     await uc.execute();
     expect(ensureDirFn).toHaveBeenCalledWith('components/comp-a/features');
@@ -123,10 +129,12 @@ describe('ExportFeatures use case', () => {
     } as unknown as IFeatureRepository;
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const uc = new ExportFeatures({
       featureRepo,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
     await uc.execute();
     expect(writeFn).toHaveBeenCalledWith('components/comp-a/features', 'v1-test.feature', content);
@@ -140,13 +148,67 @@ describe('ExportFeatures use case', () => {
     } as unknown as IFeatureRepository;
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const uc = new ExportFeatures({
       featureRepo,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
     const result = await uc.execute();
     expect(result.exported).toBe(0);
     expect(writeFn).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid component parameter', async () => {
+    const { ExportFeatures } = await import('@use-cases/export-features.js');
+    const featureRepo = {
+      findAll: vi.fn(async () => []),
+      findByNode: vi.fn(async () => []),
+    } as unknown as IFeatureRepository;
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
+    const uc = new ExportFeatures({
+      featureRepo,
+      writeFeatureFile: vi.fn(async () => {}),
+      ensureDir: vi.fn(async () => {}),
+      buildDir,
+    });
+    await expect(uc.execute('INVALID COMP')).rejects.toThrow(/Invalid component/);
+  });
+
+  it('skips features with path-unsafe node_id or filename', async () => {
+    const { ExportFeatures } = await import('@use-cases/export-features.js');
+    const features = [
+      makeFeature({
+        node_id: '../evil',
+        version: 'v1',
+        filename: 'v1-test.feature',
+      }),
+      makeFeature({
+        node_id: 'comp-a',
+        version: 'v1',
+        filename: '../../etc/passwd',
+      }),
+      makeFeature({
+        node_id: 'comp-a',
+        version: 'v1',
+        filename: 'v1-safe.feature',
+      }),
+    ];
+    const featureRepo = {
+      findAll: vi.fn(async () => features),
+      findByNode: vi.fn(async () => []),
+    } as unknown as IFeatureRepository;
+    const writeFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
+    const uc = new ExportFeatures({
+      featureRepo,
+      writeFeatureFile: writeFn,
+      ensureDir: vi.fn(async () => {}),
+      buildDir,
+    });
+    const result = await uc.execute();
+    expect(result.exported).toBe(1);
+    expect(writeFn).toHaveBeenCalledTimes(1);
   });
 });

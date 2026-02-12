@@ -120,7 +120,7 @@ describe('SeedFeatures', () => {
     await uc.execute([{ nodeId: 'comp', filename: 'mvp-a.feature', content: 'Feature: A' }]);
 
     expect(wasDeleteAllCalled()).toBe(true);
-    expect(featureRepo.deleteAll).toHaveBeenCalledBefore(featureRepo.save);
+    expect(featureRepo.deleteAll).toHaveBeenCalledBefore(featureRepo.saveMany);
   });
 
   it('extracts title from Gherkin Feature line', async () => {

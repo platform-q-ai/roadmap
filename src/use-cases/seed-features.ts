@@ -28,35 +28,45 @@ export class SeedFeatures {
     this.nodeRepo = nodeRepo;
   }
 
-  async execute(featureFiles: FeatureFileInput[]): Promise<{ seeded: number; skipped: number }> {
+  async execute(
+    featureFiles: FeatureFileInput[]
+  ): Promise<{ seeded: number; skipped: number; features: Feature[] }> {
     await this.featureRepo.deleteAll();
 
-    let seeded = 0;
+    // Batch-check node existence to avoid N+1 queries
+    const uniqueNodeIds = [...new Set(featureFiles.map(f => f.nodeId))];
+    const validNodeIds = new Set<string>();
+    for (const id of uniqueNodeIds) {
+      if (await this.nodeRepo.exists(id)) {
+        validNodeIds.add(id);
+      }
+    }
+
+    const batch: Feature[] = [];
     let skipped = 0;
 
     for (const { nodeId, filename, content } of featureFiles) {
-      const exists = await this.nodeRepo.exists(nodeId);
-      if (!exists) {
+      if (!validNodeIds.has(nodeId)) {
         skipped++;
         continue;
       }
 
-      const version = Feature.versionFromFilename(filename);
-      const title = Feature.titleFromContent(content, filename);
-
-      const feature = new Feature({
-        node_id: nodeId,
-        version,
-        filename,
-        title,
-        content,
-        step_count: Feature.countSteps(content),
-      });
-
-      await this.featureRepo.save(feature);
-      seeded++;
+      batch.push(
+        new Feature({
+          node_id: nodeId,
+          version: Feature.versionFromFilename(filename),
+          filename,
+          title: Feature.titleFromContent(content, filename),
+          content,
+          step_count: Feature.countSteps(content),
+        })
+      );
     }
 
-    return { seeded, skipped };
+    if (batch.length > 0) {
+      await this.featureRepo.saveMany(batch);
+    }
+
+    return { seeded: batch.length, skipped, features: batch };
   }
 }

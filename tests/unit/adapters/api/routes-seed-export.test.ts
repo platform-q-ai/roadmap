@@ -146,12 +146,14 @@ describe('Admin Routes — seed and export', () => {
     ]);
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const routes = buildSeedExportRoutes({
       featureRepo: repos.featureRepo,
       nodeRepo: repos.nodeRepo,
       scanFeatureFiles: scanFn,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
 
     const app = createApp(repos, { adminRoutes: routes });
@@ -187,12 +189,14 @@ describe('Admin Routes — seed and export', () => {
     const scanFn = vi.fn(async () => []);
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const routes = buildSeedExportRoutes({
       featureRepo: repos.featureRepo,
       nodeRepo: repos.nodeRepo,
       scanFeatureFiles: scanFn,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
 
     const app = createApp(repos, { adminRoutes: routes });
@@ -242,12 +246,14 @@ describe('Admin Routes — seed and export', () => {
     const scanFn = vi.fn(async () => []);
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const routes = buildSeedExportRoutes({
       featureRepo: repos.featureRepo,
       nodeRepo: repos.nodeRepo,
       scanFeatureFiles: scanFn,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
 
     const app = createApp(repos, { adminRoutes: routes });
@@ -286,12 +292,14 @@ describe('Admin Routes — seed and export', () => {
     ]);
     const writeFn = vi.fn(async () => {});
     const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
     const routes = buildSeedExportRoutes({
       featureRepo: repos.featureRepo,
       nodeRepo: repos.nodeRepo,
       scanFeatureFiles: scanFn,
       writeFeatureFile: writeFn,
       ensureDir: ensureDirFn,
+      buildDir,
     });
 
     const app = createApp(repos, { adminRoutes: routes });
@@ -307,6 +315,115 @@ describe('Admin Routes — seed and export', () => {
       expect(totals.v1).toBeDefined();
       expect(totals.mvp.total_steps).toBeGreaterThan(0);
       expect(totals.mvp.total_scenarios).toBeGreaterThan(0);
+    } finally {
+      await new Promise<void>(resolve => {
+        server.close(() => resolve());
+        server.closeAllConnections();
+      });
+    }
+  });
+
+  it('POST /api/admin/seed-features returns 500 on internal error', async () => {
+    const { buildSeedExportRoutes } = await import('@adapters/api/routes-seed-export.js');
+    const data = seedData();
+    const repos = buildTestRepos(data);
+    const scanFn = vi.fn(async () => {
+      throw new Error('disk failure');
+    });
+    const writeFn = vi.fn(async () => {});
+    const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
+    const routes = buildSeedExportRoutes({
+      featureRepo: repos.featureRepo,
+      nodeRepo: repos.nodeRepo,
+      scanFeatureFiles: scanFn,
+      writeFeatureFile: writeFn,
+      ensureDir: ensureDirFn,
+      buildDir,
+    });
+
+    const app = createApp(repos, { adminRoutes: routes });
+    const server = app.listen(0);
+    try {
+      const res = await request(server, 'POST', '/api/admin/seed-features');
+      expect(res.status).toBe(500);
+      const body = res.body as Record<string, unknown>;
+      expect(body.code).toBe('INTERNAL_ERROR');
+    } finally {
+      await new Promise<void>(resolve => {
+        server.close(() => resolve());
+        server.closeAllConnections();
+      });
+    }
+  });
+
+  it('POST /api/admin/export-features returns 400 for invalid component', async () => {
+    const { buildSeedExportRoutes } = await import('@adapters/api/routes-seed-export.js');
+    const data = seedData();
+    const repos = buildTestRepos(data);
+    const scanFn = vi.fn(async () => []);
+    const writeFn = vi.fn(async () => {});
+    const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
+    const routes = buildSeedExportRoutes({
+      featureRepo: repos.featureRepo,
+      nodeRepo: repos.nodeRepo,
+      scanFeatureFiles: scanFn,
+      writeFeatureFile: writeFn,
+      ensureDir: ensureDirFn,
+      buildDir,
+    });
+
+    const app = createApp(repos, { adminRoutes: routes });
+    const server = app.listen(0);
+    try {
+      const res = await request(server, 'POST', '/api/admin/export-features?component=INVALID');
+      expect(res.status).toBe(400);
+      const body = res.body as Record<string, unknown>;
+      expect(body.code).toBe('VALIDATION_ERROR');
+    } finally {
+      await new Promise<void>(resolve => {
+        server.close(() => resolve());
+        server.closeAllConnections();
+      });
+    }
+  });
+
+  it('POST /api/admin/export-features returns 500 on internal error', async () => {
+    const { buildSeedExportRoutes } = await import('@adapters/api/routes-seed-export.js');
+    const data = seedData();
+    const repos = buildTestRepos(data);
+    const scanFn = vi.fn(async () => []);
+    const writeFn = vi.fn(async () => {
+      throw new Error('write failure');
+    });
+    const ensureDirFn = vi.fn(async () => {});
+    const buildDir = (nodeId: string) => `components/${nodeId}/features`;
+    data.features.push(
+      new Feature({
+        node_id: 'comp-a',
+        version: 'v1',
+        filename: 'v1-test.feature',
+        title: 'Test',
+        content: 'Feature: Test\n  Scenario: S\n    Given a step',
+      })
+    );
+    const routes = buildSeedExportRoutes({
+      featureRepo: repos.featureRepo,
+      nodeRepo: repos.nodeRepo,
+      scanFeatureFiles: scanFn,
+      writeFeatureFile: writeFn,
+      ensureDir: ensureDirFn,
+      buildDir,
+    });
+
+    const app = createApp(repos, { adminRoutes: routes });
+    const server = app.listen(0);
+    try {
+      const res = await request(server, 'POST', '/api/admin/export-features');
+      expect(res.status).toBe(500);
+      const body = res.body as Record<string, unknown>;
+      expect(body.code).toBe('INTERNAL_ERROR');
     } finally {
       await new Promise<void>(resolve => {
         server.close(() => resolve());
