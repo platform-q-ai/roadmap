@@ -168,7 +168,7 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `GET` | `/api/components/:id/features` | List features for a component | `200` | `404` |
 | `GET` | `/api/components/:id/versions/:ver/features` | List features for a specific version (with totals) | `200` | `404` |
 | `GET` | `/api/components/:id/versions/:ver/features/:filename` | Get single feature (JSON or `text/plain` via Accept header) | `200` | `404` |
-| `PUT` | `/api/components/:id/versions/:ver/features/:filename` | Upload/replace a feature file with explicit version (raw Gherkin body) | `200` | `400` `404` |
+| `PUT` | `/api/components/:id/versions/:ver/features/:filename` | Upload/replace a feature file with Gherkin validation (raw Gherkin body) | `200` | `400` `404` |
 | `PUT` | `/api/components/:id/features/:filename` | **Deprecated** — returns 400 directing to version-scoped URL | `—` | `400` |
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a feature file | `204` | `404` |
 | `DELETE` | `/api/components/:id/versions/:ver/features/:filename` | Delete a single feature by version and filename | `204` | `404` |
@@ -217,7 +217,7 @@ curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/versions/mvp
   --data-binary @components/worker/features/mvp-task-execution.feature
 ```
 
-The response includes `filename`, `version`, `title`, `node_id`, `step_count`, `scenario_count`, `given_count`, `when_count`, and `then_count`. The version must be `mvp`, `v1`, `v2`, etc. The old URL pattern (`PUT /api/components/:id/features/:filename`) now returns `400` directing callers to the version-scoped URL.
+The request body must be valid Gherkin text. The endpoint validates: filename must end with `.feature` and be kebab-case; content must not be empty; content must contain a `Feature:` line, at least one `Scenario:`, and at least one step (`Given`/`When`/`Then`); syntax errors are detected with line numbers. All validation failures return `400` with a descriptive error message. The response includes `filename`, `version`, `title`, `node_id`, `step_count`, `scenario_count`, `given_count`, `when_count`, and `then_count`. The version must be `mvp`, `v1`, `v2`, etc. The old URL pattern (`PUT /api/components/:id/features/:filename`) now returns `400` directing callers to the version-scoped URL.
 
 ### Example: List features by version
 

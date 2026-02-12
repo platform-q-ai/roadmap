@@ -472,7 +472,7 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /a
 | `GET` | `/api/components/:id/features` | List features for a component | `200 [...]` | `404` component not found |
 | `GET` | `/api/components/:id/versions/:ver/features` | List features for a specific version (with totals) | `200 { features, totals }` | `404` component not found |
 | `GET` | `/api/components/:id/versions/:ver/features/:filename` | Get single feature (JSON or `text/plain` via Accept header) | `200` | `404` not found |
-| `PUT` | `/api/components/:id/versions/:ver/features/:filename` | Upload/replace a feature file with explicit version (body = raw Gherkin text) | `200` | `400` invalid version, `404` component not found |
+| `PUT` | `/api/components/:id/versions/:ver/features/:filename` | Upload/replace a feature file with Gherkin validation (body = raw Gherkin text) | `200` | `400` invalid filename/content/Gherkin, `404` component not found |
 | `PUT` | `/api/components/:id/features/:filename` | **Deprecated** — returns 400 directing to version-scoped URL | `—` | `400` version is required |
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a single feature file | `204` | `404` not found |
 | `DELETE` | `/api/components/:id/versions/:ver/features/:filename` | Delete a single feature by version and filename | `204` | `404` not found |
