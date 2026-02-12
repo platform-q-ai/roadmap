@@ -3,9 +3,8 @@ import { strict as assert } from 'node:assert';
 import { Given, Then, When } from '@cucumber/cucumber';
 
 import { parseSeedEntries, seedApiKeys } from '../../src/adapters/api/index.js';
-import type { ApiKeyProps, ApiKeyScope } from '../../src/domain/entities/api-key.js';
-import { ApiKey } from '../../src/domain/entities/api-key.js';
-import type { IApiKeyRepository } from '../../src/domain/index.js';
+import type { ApiKeyProps, ApiKeyScope, IApiKeyRepository } from '../../src/domain/index.js';
+import { ApiKey } from '../../src/domain/index.js';
 import { GenerateApiKey, ValidateApiKey } from '../../src/use-cases/index.js';
 
 /**
