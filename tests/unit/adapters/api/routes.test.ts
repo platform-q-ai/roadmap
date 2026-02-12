@@ -95,6 +95,7 @@ function buildTestRepos(data: WorldData) {
     deleteByNodeAndVersionAndFilename: vi.fn(async () => false),
     deleteByNodeAndVersion: vi.fn(async () => 0),
     getStepCountSummary: vi.fn(async () => ({ totalSteps: 0, featureCount: 0 })),
+    search: async () => [],
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

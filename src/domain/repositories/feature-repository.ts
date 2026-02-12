@@ -26,4 +26,5 @@ export interface IFeatureRepository {
     filename: string
   ): Promise<boolean>;
   deleteByNodeAndVersion(nodeId: string, version: string): Promise<number>;
+  search(query: string, version?: string): Promise<Feature[]>;
 }

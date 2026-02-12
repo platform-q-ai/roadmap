@@ -111,4 +111,26 @@ export class SqliteFeatureRepository implements IFeatureRepository {
       .run(nodeId, version);
     return result.changes;
   }
+
+  async search(query: string, version?: string): Promise<Feature[]> {
+    const pattern = `%${query.toLowerCase()}%`;
+    if (version) {
+      const rows = this.db
+        .prepare(
+          `SELECT * FROM features
+           WHERE LOWER(content) LIKE ? AND version = ?
+           ORDER BY node_id, filename`
+        )
+        .all(pattern, version);
+      return rows.map(r => new Feature(r as ConstructorParameters<typeof Feature>[0]));
+    }
+    const rows = this.db
+      .prepare(
+        `SELECT * FROM features
+         WHERE LOWER(content) LIKE ?
+         ORDER BY node_id, filename`
+      )
+      .all(pattern);
+    return rows.map(r => new Feature(r as ConstructorParameters<typeof Feature>[0]));
+  }
 }

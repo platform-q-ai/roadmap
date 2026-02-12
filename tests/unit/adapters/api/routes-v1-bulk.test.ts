@@ -105,6 +105,7 @@ function buildTestRepos(data: WorldData) {
       return before - data.features.length;
     }),
     getStepCountSummary: vi.fn(async () => ({ totalSteps: 0, featureCount: 0 })),
+    search: async () => [],
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

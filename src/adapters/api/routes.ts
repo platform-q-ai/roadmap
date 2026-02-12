@@ -25,6 +25,7 @@ import {
 } from './routes-bulk.js';
 import { buildFeatureDeletionRoutes } from './routes-feature-deletion.js';
 import { buildFeatureRetrievalRoutes } from './routes-feature-retrieval.js';
+import { buildFeatureSearchRoutes } from './routes-feature-search.js';
 import type { ApiDeps, Route } from './routes-shared.js';
 import {
   BodyTooLargeError,
@@ -605,6 +606,7 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       handler: async (req, res, m) =>
         handleUpdateVersion(deps, req, res, { nodeId: m[1], version: m[2] }),
     },
+    ...buildFeatureSearchRoutes(deps),
     {
       method: 'POST',
       pattern: /^\/api\/features\/batch$/,

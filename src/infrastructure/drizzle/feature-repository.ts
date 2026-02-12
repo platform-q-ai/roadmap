@@ -1,4 +1,4 @@
-import { and, count, eq, sql } from 'drizzle-orm';
+import { and, count, eq, like, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 
 import type { IFeatureRepository, StepCountSummary } from '../../domain/index.js';
@@ -146,5 +146,20 @@ export class DrizzleFeatureRepository implements IFeatureRepository {
       .where(and(eq(featuresTable.node_id, nodeId), eq(featuresTable.version, version)))
       .run();
     return result.changes;
+  }
+
+  async search(query: string, version?: string): Promise<Feature[]> {
+    const pattern = `%${query.toLowerCase()}%`;
+    const contentMatch = like(sql`LOWER(${featuresTable.content})`, pattern);
+    const condition = version
+      ? and(contentMatch, eq(featuresTable.version, version))
+      : contentMatch;
+    const rows = this.db
+      .select()
+      .from(featuresTable)
+      .where(condition)
+      .orderBy(featuresTable.node_id, featuresTable.filename)
+      .all();
+    return rows.map(r => new Feature(r as ConstructorParameters<typeof Feature>[0]));
   }
 }

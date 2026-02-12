@@ -130,6 +130,16 @@ function buildApiRepos(world: ApiWorld) {
         featureCount: matching.length,
       };
     },
+    search: async (query: string, version?: string) => {
+      const lower = query.toLowerCase();
+      return world.features.filter(f => {
+        const match = (f.content ?? '').toLowerCase().includes(lower);
+        if (version) {
+          return match && f.version === version;
+        }
+        return match;
+      });
+    },
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }
