@@ -22,6 +22,13 @@ function buildFeatureRepo(world: World): IFeatureRepository {
     findByNode: async (nid: string) => world.features.filter(f => f.node_id === nid),
     findByNodeAndVersion: async (nid: string, ver: string) =>
       world.features.filter(f => f.node_id === nid && f.version === ver),
+    getStepCountSummary: async (nid: string, ver: string) => {
+      const matching = world.features.filter(f => f.node_id === nid && f.version === ver);
+      return {
+        totalSteps: matching.reduce((sum, f) => sum + f.step_count, 0),
+        featureCount: matching.length,
+      };
+    },
     save: async (feature: Feature) => {
       world.features.push(feature);
     },

@@ -13,7 +13,7 @@ interface Deps {
  * GetStepTotals use case.
  *
  * Aggregates step counts across all features for a given component and version.
- * Returns the total number of steps and the number of features.
+ * Delegates to a SQL aggregation query for efficiency.
  */
 export class GetStepTotals {
   private readonly featureRepo: IFeatureRepository;
@@ -23,13 +23,6 @@ export class GetStepTotals {
   }
 
   async execute(nodeId: string, version: string): Promise<StepTotalsResult> {
-    const features = await this.featureRepo.findByNodeAndVersion(nodeId, version);
-
-    const totalSteps = features.reduce((sum, f) => sum + f.step_count, 0);
-
-    return {
-      totalSteps,
-      featureCount: features.length,
-    };
+    return this.featureRepo.getStepCountSummary(nodeId, version);
   }
 }

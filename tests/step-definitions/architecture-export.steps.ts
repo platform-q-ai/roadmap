@@ -60,6 +60,7 @@ function buildRepos(world: World) {
     deleteAll: async () => {},
     deleteByNode: async () => {},
     deleteByNodeAndFilename: async () => false,
+    getStepCountSummary: async () => ({ totalSteps: 0, featureCount: 0 }),
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

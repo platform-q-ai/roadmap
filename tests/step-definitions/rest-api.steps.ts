@@ -86,6 +86,13 @@ function buildApiRepos(world: ApiWorld) {
       world.features = world.features.filter(f => !(f.node_id === nid && f.filename === filename));
       return world.features.length < before;
     },
+    getStepCountSummary: async (nid: string, ver: string) => {
+      const matching = world.features.filter(f => f.node_id === nid && f.version === ver);
+      return {
+        totalSteps: matching.reduce((sum, f) => sum + f.step_count, 0),
+        featureCount: matching.length,
+      };
+    },
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

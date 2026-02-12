@@ -65,6 +65,7 @@ export const featuresTable = sqliteTable('features', {
   filename: text('filename').notNull(),
   title: text('title').notNull(),
   content: text('content'),
+  step_count: integer('step_count').default(0),
   updated_at: text('updated_at'),
 });
 

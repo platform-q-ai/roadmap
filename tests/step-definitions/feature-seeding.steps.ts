@@ -33,6 +33,13 @@ function buildRepos(world: World) {
     findByNode: async (nid: string) => world.savedFeatures.filter(f => f.node_id === nid),
     findByNodeAndVersion: async (nid: string, ver: string) =>
       world.savedFeatures.filter(f => f.node_id === nid && f.version === ver),
+    getStepCountSummary: async (nid: string, ver: string) => {
+      const matched = world.savedFeatures.filter(f => f.node_id === nid && f.version === ver);
+      return {
+        totalSteps: matched.reduce((sum, f) => sum + f.step_count, 0),
+        featureCount: matched.length,
+      };
+    },
     save: async (feature: Feature) => {
       world.savedFeatures.push(feature);
     },

@@ -60,6 +60,13 @@ export function buildRepos(world: InMemoryWorld, overrides?: RepoOverrides) {
     findByNode: async (nid: string) => world.features.filter(f => f.node_id === nid),
     findByNodeAndVersion: async (nid: string, ver: string) =>
       world.features.filter(f => f.node_id === nid && f.version === ver),
+    getStepCountSummary: async (nid: string, ver: string) => {
+      const matched = world.features.filter(f => f.node_id === nid && f.version === ver);
+      return {
+        totalSteps: matched.reduce((sum, f) => sum + f.step_count, 0),
+        featureCount: matched.length,
+      };
+    },
     save: overrides?.featureSave ?? (async () => {}),
     deleteAll: overrides?.featureDeleteAll ?? (async () => {}),
     deleteByNode: async () => {},

@@ -14,6 +14,13 @@ function createMockFeatureRepo(features: Feature[] = []): IFeatureRepository {
       .mockImplementation(async (nid: string, ver: string) =>
         features.filter(f => f.node_id === nid && f.version === ver)
       ),
+    getStepCountSummary: vi.fn().mockImplementation(async (nid: string, ver: string) => {
+      const matched = features.filter(f => f.node_id === nid && f.version === ver);
+      return {
+        totalSteps: matched.reduce((sum, f) => sum + f.step_count, 0),
+        featureCount: matched.length,
+      };
+    }),
     save: vi.fn(),
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),
@@ -153,12 +160,12 @@ describe('GetStepTotals', () => {
     expect(result.featureCount).toBe(2);
   });
 
-  it('calls findByNodeAndVersion on the feature repository', async () => {
+  it('calls getStepCountSummary on the feature repository', async () => {
     const repo = createMockFeatureRepo([]);
     const useCase = new GetStepTotals({ featureRepo: repo });
 
     await useCase.execute('comp-1', 'v1');
 
-    expect(repo.findByNodeAndVersion).toHaveBeenCalledWith('comp-1', 'v1');
+    expect(repo.getStepCountSummary).toHaveBeenCalledWith('comp-1', 'v1');
   });
 });
