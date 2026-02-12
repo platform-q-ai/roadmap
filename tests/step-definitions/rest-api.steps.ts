@@ -108,6 +108,18 @@ function buildApiRepos(world: ApiWorld) {
       world.features = world.features.filter(f => !(f.node_id === nid && f.filename === filename));
       return world.features.length < before;
     },
+    deleteByNodeAndVersionAndFilename: async (nid: string, ver: string, fname: string) => {
+      const before = world.features.length;
+      world.features = world.features.filter(
+        f => !(f.node_id === nid && f.version === ver && f.filename === fname)
+      );
+      return world.features.length < before;
+    },
+    deleteByNodeAndVersion: async (nid: string, ver: string) => {
+      const before = world.features.length;
+      world.features = world.features.filter(f => !(f.node_id === nid && f.version === ver));
+      return before - world.features.length;
+    },
     getStepCountSummary: async (nid: string, ver: string) => {
       const matching = world.features.filter(f => f.node_id === nid && f.version === ver);
       return {

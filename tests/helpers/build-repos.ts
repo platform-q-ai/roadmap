@@ -79,6 +79,18 @@ export function buildRepos(world: InMemoryWorld, overrides?: RepoOverrides) {
     deleteAll: overrides?.featureDeleteAll ?? (async () => {}),
     deleteByNode: async () => {},
     deleteByNodeAndFilename: async () => false,
+    deleteByNodeAndVersionAndFilename: async (nid: string, ver: string, fname: string) => {
+      const before = world.features.length;
+      world.features = world.features.filter(
+        f => !(f.node_id === nid && f.version === ver && f.filename === fname)
+      );
+      return world.features.length < before;
+    },
+    deleteByNodeAndVersion: async (nid: string, ver: string) => {
+      const before = world.features.length;
+      world.features = world.features.filter(f => !(f.node_id === nid && f.version === ver));
+      return before - world.features.length;
+    },
   };
   return { nodeRepo, edgeRepo, versionRepo, featureRepo };
 }

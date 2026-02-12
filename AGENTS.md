@@ -45,6 +45,7 @@ src/
 │   ├── create-edge.ts          # Create edge with validation (type, self-ref, duplicates)
 │   ├── delete-edge.ts          # Delete edge by ID with existence check
 │   ├── batch-upload-features.ts # Batch upload features (single + cross-component)
+│   ├── delete-feature-version-scoped.ts # Version-scoped feature deletion (single, version, all)
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations
@@ -467,6 +468,9 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 | `GET` | `/api/components/:id/features` | List features for a component | `200 [...]` | `404` component not found |
 | `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (body = raw Gherkin text) | `200` | `404` component not found |
 | `DELETE` | `/api/components/:id/features/:filename` | Delete a single feature file | `204` | `404` not found |
+| `DELETE` | `/api/components/:id/versions/:ver/features/:filename` | Delete a single feature by version and filename | `204` | `404` not found |
+| `DELETE` | `/api/components/:id/versions/:ver/features` | Delete all features for a specific version | `204` | `404` component not found |
+| `DELETE` | `/api/components/:id/features` | Delete all features for a component (all versions) | `204` | `404` component not found |
 | `GET` | `/api/components/:id/edges` | Get inbound and outbound edges | `200 { inbound, outbound }` | `404` component not found |
 | `GET` | `/api/components/:id/dependencies` | Get DEPENDS_ON edges (dependencies + dependents) | `200 { dependencies, dependents }` | `404` component not found |
 | `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` invalid type/self-ref/missing nodes, `409` duplicate |
@@ -599,6 +603,15 @@ curl -X PUT https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp
 
 # Delete a feature file
 curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/worker/features/mvp-exec.feature
+
+# Delete a single feature by version and filename
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features/v1-test.feature
+
+# Delete all features for a specific version
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/worker/versions/v1/features
+
+# Delete all features for a component (all versions)
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/worker/features
 
 # Get edges
 curl https://roadmap-5vvp.onrender.com/api/components/worker/edges

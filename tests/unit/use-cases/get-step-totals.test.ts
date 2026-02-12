@@ -26,6 +26,8 @@ function createMockFeatureRepo(features: Feature[] = []): IFeatureRepository {
     deleteAll: vi.fn(),
     deleteByNode: vi.fn(),
     deleteByNodeAndFilename: vi.fn(),
+    deleteByNodeAndVersionAndFilename: vi.fn(),
+    deleteByNodeAndVersion: vi.fn(),
   };
 }
 

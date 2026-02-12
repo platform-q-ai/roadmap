@@ -98,4 +98,30 @@ export class DrizzleFeatureRepository implements IFeatureRepository {
       .run();
     return result.changes > 0;
   }
+
+  async deleteByNodeAndVersionAndFilename(
+    nodeId: string,
+    version: string,
+    filename: string
+  ): Promise<boolean> {
+    const result = this.db
+      .delete(featuresTable)
+      .where(
+        and(
+          eq(featuresTable.node_id, nodeId),
+          eq(featuresTable.version, version),
+          eq(featuresTable.filename, filename)
+        )
+      )
+      .run();
+    return result.changes > 0;
+  }
+
+  async deleteByNodeAndVersion(nodeId: string, version: string): Promise<number> {
+    const result = this.db
+      .delete(featuresTable)
+      .where(and(eq(featuresTable.node_id, nodeId), eq(featuresTable.version, version)))
+      .run();
+    return result.changes;
+  }
 }

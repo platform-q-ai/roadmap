@@ -54,6 +54,8 @@ function buildRepos(world: World) {
     },
     deleteByNode: async () => {},
     deleteByNodeAndFilename: async () => false,
+    deleteByNodeAndVersionAndFilename: async () => false,
+    deleteByNodeAndVersion: async () => 0,
   };
   return { nodeRepo, featureRepo };
 }

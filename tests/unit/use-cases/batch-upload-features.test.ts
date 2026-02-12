@@ -32,6 +32,8 @@ function buildDeps(
     deleteAll: vi.fn(async () => {}),
     deleteByNode: vi.fn(async () => {}),
     deleteByNodeAndFilename: vi.fn(async () => false),
+    deleteByNodeAndVersionAndFilename: vi.fn(async () => false),
+    deleteByNodeAndVersion: vi.fn(async () => 0),
   };
   return { nodeRepo, featureRepo };
 }
