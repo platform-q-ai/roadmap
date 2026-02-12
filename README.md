@@ -154,7 +154,7 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `GET` | `/api/architecture` | Full architecture graph (layers, nodes, edges, stats) | `200` | -- |
 | `GET` | `/api/components` | List all non-layer nodes | `200` | -- |
 | `GET` | `/api/components/:id` | Component with versions and features | `200` | `404` |
-| `POST` | `/api/components` | Create a new component | `201` | `400` `409` |
+| `POST` | `/api/components` | Create a new component (with validation) | `201` | `400` `409` |
 | `DELETE` | `/api/components/:id` | Delete component + versions, features, edges | `204` | `404` |
 | `GET` | `/api/components/:id/features` | List features for a component | `200` | `404` |
 | `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (raw Gherkin body) | `200` | `404` |
@@ -167,10 +167,12 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 ```bash
 curl -X POST https://roadmap-5vvp.onrender.com/api/components \
   -H "Content-Type: application/json" \
-  -d '{"id":"my-svc","name":"My Service","type":"component","layer":"supervisor-layer"}'
+  -d '{"id":"my-svc","name":"My Service","type":"component","layer":"supervisor-layer","color":"#3498DB","icon":"server","sort_order":10}'
 ```
 
 Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
+
+The request body requires `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, and `layer` (must reference an existing layer node). Optional fields: `description`, `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized. The `201` response returns the full node object with all fields.
 
 ### Example: Upload a feature file
 
@@ -232,7 +234,7 @@ Via the API:
 ```bash
 curl -X POST https://roadmap-5vvp.onrender.com/api/components \
   -H "Content-Type: application/json" \
-  -d '{"id":"my-svc","name":"My Service","type":"component","layer":"supervisor-layer","description":"Optional","tags":["optional"]}'
+  -d '{"id":"my-svc","name":"My Service","type":"component","layer":"supervisor-layer","description":"Optional","tags":["optional"],"color":"#3498DB","icon":"server","sort_order":5}'
 ```
 
 See [AGENTS.md](AGENTS.md) for detailed instructions and schema reference.

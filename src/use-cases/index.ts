@@ -32,9 +32,9 @@ export { UploadFeature } from './upload-feature.js';
 export type { ValidateResult } from './validate-api-key.js';
 export { ValidateApiKey } from './validate-api-key.js';
 
-// Re-export domain repository interfaces for adapter-layer consumption.
+// Re-export domain types, interfaces, and constants for adapter-layer consumption.
 // Adapters cannot import domain directly (boundary rule), so use-cases
-// re-exports these interfaces to enable typed dependency injection.
+// re-exports these to enable typed dependency injection and validation.
 export type {
   ApiKeyScope,
   IApiKeyRepository,
@@ -45,3 +45,8 @@ export type {
   NodeType,
   VersionStatus,
 } from '../domain/index.js';
+export { Node } from '../domain/index.js';
+
+import { Node as _Node } from '../domain/index.js';
+/** Canonical list of valid node types, sourced from the domain entity. */
+export const VALID_NODE_TYPES: readonly string[] = _Node.TYPES;

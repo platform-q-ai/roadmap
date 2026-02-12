@@ -3,13 +3,20 @@ import { Node, Version } from '@domain/index.js';
 import { CreateComponent } from '@use-cases/index.js';
 import { describe, expect, it, vi } from 'vitest';
 
-function createMockRepos(existingNodeIds: string[] = []) {
+function createMockRepos(existingNodeIds: string[] = [], layerIds: string[] = []) {
   const savedNodes: Node[] = [];
   const savedVersions: Version[] = [];
+  const defaultLayers = ['supervisor-layer', 'sup-layer', 'observability-dashboard'];
+  const knownLayers = [...defaultLayers, ...layerIds];
 
   const nodeRepo: INodeRepository = {
     findAll: vi.fn(),
-    findById: vi.fn(),
+    findById: vi.fn().mockImplementation(async (id: string) => {
+      if (knownLayers.includes(id)) {
+        return new Node({ id, name: id, type: 'layer' });
+      }
+      return null;
+    }),
     findByType: vi.fn(),
     findByLayer: vi.fn(),
     exists: vi.fn().mockImplementation(async (id: string) => existingNodeIds.includes(id)),
@@ -174,5 +181,38 @@ describe('CreateComponent', () => {
         layer: 'supervisor-layer',
       })
     ).rejects.toThrow('Invalid node type');
+  });
+
+  it('saves color, icon, and sort_order when provided', async () => {
+    const { nodeRepo, edgeRepo, versionRepo, savedNodes } = createMockRepos();
+    const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
+
+    await uc.execute({
+      id: 'styled',
+      name: 'Styled Component',
+      type: 'component',
+      layer: 'supervisor-layer',
+      color: '#FF0000',
+      icon: 'database',
+      sort_order: 10,
+    });
+
+    expect(savedNodes[0].color).toBe('#FF0000');
+    expect(savedNodes[0].icon).toBe('database');
+    expect(savedNodes[0].sort_order).toBe(10);
+  });
+
+  it('throws when layer does not exist', async () => {
+    const { nodeRepo, edgeRepo, versionRepo } = createMockRepos();
+    const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
+
+    await expect(
+      uc.execute({
+        id: 'orphan',
+        name: 'Orphan',
+        type: 'component',
+        layer: 'nonexistent-layer',
+      })
+    ).rejects.toThrow(/layer/i);
   });
 });

@@ -6,7 +6,7 @@ import type {
 } from '../domain/index.js';
 import { Edge, Node, Version } from '../domain/index.js';
 
-import { NodeExistsError, NodeTypeError } from './errors.js';
+import { NodeExistsError, NodeTypeError, ValidationError } from './errors.js';
 
 export interface CreateComponentInput {
   id: string;
@@ -15,6 +15,9 @@ export interface CreateComponentInput {
   layer: string;
   description?: string;
   tags?: string[];
+  color?: string;
+  icon?: string;
+  sort_order?: number;
 }
 
 interface Deps {
@@ -40,10 +43,15 @@ export class CreateComponent {
     this.versionRepo = versionRepo;
   }
 
-  async execute(input: CreateComponentInput): Promise<void> {
+  async execute(input: CreateComponentInput): Promise<Node> {
     const validTypes = Node.TYPES;
     if (!validTypes.includes(input.type)) {
       throw new NodeTypeError(input.type);
+    }
+
+    const layerNode = await this.nodeRepo.findById(input.layer);
+    if (!layerNode) {
+      throw new ValidationError(`Invalid layer: ${input.layer} does not exist`);
     }
 
     const exists = await this.nodeRepo.exists(input.id);
@@ -58,6 +66,9 @@ export class CreateComponent {
       layer: input.layer,
       description: input.description ?? null,
       tags: input.tags ?? [],
+      color: input.color ?? null,
+      icon: input.icon ?? null,
+      sort_order: input.sort_order ?? 0,
     });
 
     await this.nodeRepo.save(node);
@@ -79,5 +90,7 @@ export class CreateComponent {
       });
       await this.versionRepo.save(version);
     }
+
+    return node;
   }
 }

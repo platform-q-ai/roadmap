@@ -19,6 +19,7 @@ import {
   GetArchitecture,
   UpdateVersion,
   UploadFeature,
+  VALID_NODE_TYPES,
 } from '../../use-cases/index.js';
 
 export interface ApiDeps {
@@ -114,15 +115,6 @@ function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-const VALID_NODE_TYPES: readonly string[] = [
-  'layer',
-  'component',
-  'store',
-  'external',
-  'phase',
-  'app',
-];
-
 /**
  * Strip HTML tags from a string to prevent XSS / injection.
  */
@@ -135,27 +127,54 @@ interface ParseResult {
   error?: string;
 }
 
-function parseCreateInput(body: Record<string, unknown>): ParseResult {
-  const { id, name, type, layer, description, tags } = body;
-  if (!id || !name || !type || !layer) {
-    return { input: null, error: 'Missing or invalid fields: id, name, type, layer' };
+const MAX_ID_LENGTH = 64;
+
+function validateRequiredFields(
+  body: Record<string, unknown>
+): { idStr: string; nameStr: string; typeStr: string; layer: string } | string {
+  const { id, name, type, layer } = body;
+  if (!id || !type || !layer) {
+    return 'Missing or invalid fields: id, name, type, layer';
+  }
+  const nameStr = name !== undefined && name !== null ? String(name) : '';
+  if (!nameStr) {
+    return 'Invalid name: name must not be empty';
   }
   const idStr = String(id);
+  if (idStr.length > MAX_ID_LENGTH) {
+    return `Invalid id: must be ${MAX_ID_LENGTH} characters or fewer (got ${idStr.length})`;
+  }
   if (!KEBAB_CASE_RE.test(idStr)) {
-    return { input: null, error: `Invalid id format: must be kebab-case (got "${idStr}")` };
+    const safeId = stripHtml(idStr).slice(0, MAX_ID_LENGTH);
+    return `Invalid id format: must be kebab-case (got "${safeId}")`;
   }
-  const typeStr = String(type);
+  const typeStr = stripHtml(String(type));
   if (!VALID_NODE_TYPES.includes(typeStr)) {
-    return { input: null, error: `Invalid node type: ${typeStr}` };
+    return `Invalid node type: ${typeStr}`;
   }
+  return { idStr, nameStr, typeStr, layer: stripHtml(String(layer)) };
+}
+
+function parseCreateInput(body: Record<string, unknown>): ParseResult {
+  const validated = validateRequiredFields(body);
+  if (typeof validated === 'string') {
+    return { input: null, error: validated };
+  }
+  const { description, tags, color, icon, sort_order } = body;
   return {
     input: {
-      id: idStr,
-      name: stripHtml(String(name)),
-      type: typeStr as NodeType,
-      layer: String(layer),
+      id: validated.idStr,
+      name: stripHtml(validated.nameStr),
+      type: validated.typeStr as NodeType,
+      layer: validated.layer,
       description: description ? stripHtml(String(description)) : undefined,
       tags: Array.isArray(tags) ? tags.map(t => stripHtml(String(t))) : undefined,
+      color: color ? stripHtml(String(color)) : undefined,
+      icon: icon ? stripHtml(String(icon)) : undefined,
+      sort_order:
+        sort_order !== undefined && Number.isFinite(Number(sort_order))
+          ? Number(sort_order)
+          : undefined,
     },
   };
 }
@@ -234,8 +253,8 @@ async function handleCreateComponent(deps: ApiDeps, req: IncomingMessage, res: S
     versionRepo: deps.versionRepo,
   });
   try {
-    await uc.execute(input);
-    json(res, 201, { id: input.id, name: input.name, type: input.type, layer: input.layer });
+    const node = await uc.execute(input);
+    json(res, 201, node.toJSON());
   } catch (err) {
     const msg = errorMessage(err);
     json(res, errorStatus(msg), { error: msg }, req);

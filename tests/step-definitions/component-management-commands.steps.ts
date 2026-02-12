@@ -33,6 +33,12 @@ interface World {
   [key: string]: unknown;
 }
 
+function ensureLayerExists(world: World, layerId: string): void {
+  if (!world.nodes.some(n => n.id === layerId)) {
+    world.nodes.push(new Node({ id: layerId, name: layerId, type: 'layer' }));
+  }
+}
+
 function initWorld(world: World) {
   if (!world.nodes) {
     world.nodes = [];
@@ -165,6 +171,7 @@ When(
   'I create a component with id {string} name {string} type {string} and layer {string}',
   async function (this: World, id: string, name: string, type: string, layer: string) {
     initWorld(this);
+    ensureLayerExists(this, layer);
     const repos = buildTrackingRepos(this);
     const useCase = new CreateComponent({
       nodeRepo: repos.nodeRepo,
@@ -191,6 +198,7 @@ When(
     tags: string
   ) {
     initWorld(this);
+    ensureLayerExists(this, layer);
     const repos = buildTrackingRepos(this);
     const useCase = new CreateComponent({
       nodeRepo: repos.nodeRepo,
