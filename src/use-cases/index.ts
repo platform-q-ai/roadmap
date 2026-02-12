@@ -36,7 +36,16 @@ export type {
   ProgressionTree,
 } from './get-architecture.js';
 export { GetArchitecture } from './get-architecture.js';
+export { GetComponentContext } from './get-component-context.js';
+export { GetComponentsByStatus } from './get-components-by-status.js';
+export { GetDependencyTree } from './get-dependency-tree.js';
+export { GetDependents } from './get-dependents.js';
 export { GetFeatureVersionScoped } from './get-feature-version-scoped.js';
+export { GetImplementationOrder } from './get-implementation-order.js';
+export { GetLayerOverview } from './get-layer-overview.js';
+export { GetNeighbourhood } from './get-neighbourhood.js';
+export { GetNextImplementable } from './get-next-implementable.js';
+export { GetShortestPath } from './get-shortest-path.js';
 export type { StepTotalsResult } from './get-step-totals.js';
 export { GetStepTotals } from './get-step-totals.js';
 export { ListApiKeys } from './list-api-keys.js';

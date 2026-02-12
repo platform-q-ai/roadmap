@@ -408,7 +408,7 @@ describe('API Routes', () => {
   });
 
   describe('GET /api/components/:id/dependencies', () => {
-    it('returns dependencies and dependents', async () => {
+    it('returns dependency tree', async () => {
       const data = seedData();
       const compB = new Node({ id: 'comp-b', name: 'B', type: 'component', layer: 'sup-layer' });
       data.nodes.push(compB);
@@ -421,7 +421,7 @@ describe('API Routes', () => {
         expect(res.status).toBe(200);
         const body = res.body as Record<string, unknown>;
         expect(body).toHaveProperty('dependencies');
-        expect(body).toHaveProperty('dependents');
+        expect(Array.isArray(body.dependencies)).toBe(true);
       });
     });
 

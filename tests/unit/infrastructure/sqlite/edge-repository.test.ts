@@ -87,4 +87,40 @@ describe('SqliteEdgeRepository', () => {
     const afterDelete = await edgeRepo.findAll();
     expect(afterDelete).toHaveLength(0);
   });
+
+  it('findById returns the edge when it exists', async () => {
+    await edgeRepo.save(new Edge({ source_id: 'comp-a', target_id: 'comp-b', type: 'DEPENDS_ON' }));
+    const all = await edgeRepo.findAll();
+    const id = all[0].id!;
+
+    const found = await edgeRepo.findById(id);
+    expect(found).not.toBeNull();
+    expect(found!.source_id).toBe('comp-a');
+    expect(found!.target_id).toBe('comp-b');
+    expect(found!.type).toBe('DEPENDS_ON');
+  });
+
+  it('findById returns null when edge does not exist', async () => {
+    const result = await edgeRepo.findById(99999);
+    expect(result).toBeNull();
+  });
+
+  it('existsBySrcTgtType returns true for existing combination', async () => {
+    await edgeRepo.save(new Edge({ source_id: 'comp-a', target_id: 'comp-b', type: 'DEPENDS_ON' }));
+
+    const exists = await edgeRepo.existsBySrcTgtType('comp-a', 'comp-b', 'DEPENDS_ON');
+    expect(exists).toBe(true);
+  });
+
+  it('existsBySrcTgtType returns false when no match', async () => {
+    const exists = await edgeRepo.existsBySrcTgtType('comp-a', 'comp-b', 'DEPENDS_ON');
+    expect(exists).toBe(false);
+  });
+
+  it('delete is idempotent for non-existent id', async () => {
+    // Should not throw
+    await edgeRepo.delete(99999);
+    const all = await edgeRepo.findAll();
+    expect(all).toHaveLength(0);
+  });
 });

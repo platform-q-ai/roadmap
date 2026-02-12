@@ -26,6 +26,7 @@ import {
 import { buildFeatureDeletionRoutes } from './routes-feature-deletion.js';
 import { buildFeatureRetrievalRoutes } from './routes-feature-retrieval.js';
 import { buildFeatureSearchRoutes } from './routes-feature-search.js';
+import { buildGraphTraversalRoutes } from './routes-graph-traversal.js';
 import type { ApiDeps, Route } from './routes-shared.js';
 import {
   BodyTooLargeError,
@@ -337,24 +338,6 @@ async function handleGetEdges(
   });
 }
 
-async function handleGetDependencies(
-  deps: ApiDeps,
-  req: IncomingMessage,
-  res: ServerResponse,
-  id: string
-) {
-  const node = await deps.nodeRepo.findById(id);
-  if (!node) {
-    json(res, 404, { error: `Component not found: ${id}` }, req);
-    return;
-  }
-  const outbound = await deps.edgeRepo.findBySource(id);
-  const inbound = await deps.edgeRepo.findByTarget(id);
-  const dependencies = outbound.filter(e => e.type === 'DEPENDS_ON').map(e => e.toJSON());
-  const dependents = inbound.filter(e => e.type === 'DEPENDS_ON').map(e => e.toJSON());
-  json(res, 200, { dependencies, dependents });
-}
-
 async function handleUpdateVersion(
   deps: ApiDeps,
   req: IncomingMessage,
@@ -547,11 +530,6 @@ function edgeRoutes(deps: ApiDeps): Route[] {
       pattern: /^\/api\/components\/([^/]+)\/edges$/,
       handler: async (req, res, m) => handleGetEdges(deps, req, res, m[1]),
     },
-    {
-      method: 'GET',
-      pattern: /^\/api\/components\/([^/]+)\/dependencies$/,
-      handler: async (req, res, m) => handleGetDependencies(deps, req, res, m[1]),
-    },
   ];
 }
 
@@ -632,6 +610,7 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       handler: async (req, res) => handleBulkDeleteComponents(deps, req, res),
     },
     ...edgeRoutes(deps),
+    ...buildGraphTraversalRoutes(deps),
     {
       method: 'GET',
       pattern: /^\/api\/components$/,

@@ -83,12 +83,21 @@ roadmap/
 │   │   ├── get-feature-version-scoped.ts
 │   │   ├── seed-features-api.ts
 │   │   ├── export-features.ts
+│   │   ├── get-dependency-tree.ts
+│   │   ├── get-dependents.ts
+│   │   ├── get-component-context.ts
+│   │   ├── get-implementation-order.ts
+│   │   ├── get-components-by-status.ts
+│   │   ├── get-next-implementable.ts
+│   │   ├── get-shortest-path.ts
+│   │   ├── get-neighbourhood.ts
+│   │   ├── get-layer-overview.ts
 │   │   └── errors.ts
 │   ├── infrastructure/         # Concrete implementations
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (28 endpoints + static files)
+│       ├── api/                # REST API server (37 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -175,7 +184,15 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `DELETE` | `/api/components/:id/versions/:ver/features` | Delete all features for a specific version | `204` | `404` |
 | `DELETE` | `/api/components/:id/features` | Delete all features for a component (all versions) | `204` | `404` |
 | `GET` | `/api/components/:id/edges` | Inbound and outbound edges | `200` | `404` |
-| `GET` | `/api/components/:id/dependencies` | DEPENDS_ON edges (dependencies + dependents) | `200` | `404` |
+| `GET` | `/api/components/:id/dependencies` | Recursive DEPENDS_ON tree (optional `?depth=N`, default 1, max 10) | `200` | `404` |
+| `GET` | `/api/components/:id/dependents` | Reverse DEPENDS_ON lookup | `200` | `404` |
+| `GET` | `/api/components/:id/context` | Rich component context (versions, features, deps, dependents, layer, siblings, progress) | `200` | `404` |
+| `GET` | `/api/components/:id/neighbourhood` | N-hop subgraph (optional `?hops=N`, default 1, max 5) | `200` | `404` |
+| `GET` | `/api/graph/implementation-order` | Topological sort by DEPENDS_ON edges | `200` | `409` |
+| `GET` | `/api/graph/components-by-status` | Classify components by step coverage (optional `?version=`) | `200` | -- |
+| `GET` | `/api/graph/next-implementable` | Components ready to implement (all deps complete, optional `?version=`) | `200` | -- |
+| `GET` | `/api/graph/path` | BFS shortest path (`?from=X&to=Y` required) | `200` | `400` |
+| `GET` | `/api/graph/layer-overview` | Layer summaries with component counts and progress | `200` | -- |
 | `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` `409` |
 | `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200` | `400` |
 | `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` |
