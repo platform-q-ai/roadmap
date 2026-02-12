@@ -464,8 +464,10 @@ async function handleUpdateVersion(
 
 const BULK_MAX_ITEMS = 100;
 
-interface BulkComponentError {
-  id: string;
+interface BulkError {
+  id?: string;
+  source_id?: string;
+  target_id?: string;
   status: number;
   error: string;
 }
@@ -542,7 +544,7 @@ async function handleBulkCreateComponents(
   });
 
   let created = 0;
-  const errors: BulkComponentError[] = [];
+  const errors: BulkError[] = [];
 
   for (const item of items as Array<Record<string, unknown>>) {
     const { input, error } = parseCreateInput(item);
@@ -563,6 +565,28 @@ async function handleBulkCreateComponents(
   json(res, bulkCreateStatus(created, errors.length), { created, errors }, req);
 }
 
+interface ParsedEdgeInput {
+  sourceId: string;
+  targetId: string;
+  edgeType: string;
+  label: string | null;
+}
+
+function parseEdgeItem(item: Record<string, unknown>): ParsedEdgeInput | string {
+  const sourceId = typeof item.source_id === 'string' ? stripHtml(item.source_id) : '';
+  const targetId = typeof item.target_id === 'string' ? stripHtml(item.target_id) : '';
+  const edgeType = typeof item.type === 'string' ? stripHtml(item.type) : '';
+  const label = typeof item.label === 'string' ? stripHtml(item.label) : null;
+
+  if (!sourceId || !targetId || !edgeType) {
+    return 'Missing required fields: source_id, target_id, type';
+  }
+  if (!Edge.TYPES.includes(edgeType as Edge['type'])) {
+    return `Invalid edge type: ${edgeType}`;
+  }
+  return { sourceId, targetId, edgeType, label };
+}
+
 async function handleBulkCreateEdges(deps: ApiDeps, req: IncomingMessage, res: ServerResponse) {
   const body = await readJsonBody(req, res);
   if (!body) {
@@ -574,23 +598,50 @@ async function handleBulkCreateEdges(deps: ApiDeps, req: IncomingMessage, res: S
   }
 
   let created = 0;
-  for (const item of items as Array<Record<string, unknown>>) {
-    const sourceId = typeof item.source_id === 'string' ? stripHtml(item.source_id) : '';
-    const targetId = typeof item.target_id === 'string' ? stripHtml(item.target_id) : '';
-    const edgeType = typeof item.type === 'string' ? stripHtml(item.type) : '';
-    const label = typeof item.label === 'string' ? stripHtml(item.label) : null;
+  const errors: BulkError[] = [];
 
-    const edge = new Edge({
-      source_id: sourceId,
-      target_id: targetId,
-      type: edgeType as Edge['type'],
-      label,
-    });
-    await deps.edgeRepo.save(edge);
-    created++;
+  for (const item of items as Array<Record<string, unknown>>) {
+    const parsed = parseEdgeItem(item);
+    if (typeof parsed === 'string') {
+      errors.push({
+        source_id: String(item.source_id ?? ''),
+        target_id: String(item.target_id ?? ''),
+        status: 400,
+        error: parsed,
+      });
+      continue;
+    }
+    const srcExists = await deps.nodeRepo.exists(parsed.sourceId);
+    const tgtExists = await deps.nodeRepo.exists(parsed.targetId);
+    if (!srcExists || !tgtExists) {
+      errors.push({
+        source_id: parsed.sourceId,
+        target_id: parsed.targetId,
+        status: 404,
+        error: 'Referenced node not found',
+      });
+      continue;
+    }
+    try {
+      const edge = new Edge({
+        source_id: parsed.sourceId,
+        target_id: parsed.targetId,
+        type: parsed.edgeType as Edge['type'],
+        label: parsed.label,
+      });
+      await deps.edgeRepo.save(edge);
+      created++;
+    } catch (err) {
+      errors.push({
+        source_id: parsed.sourceId,
+        target_id: parsed.targetId,
+        status: 400,
+        error: errorMessage(err),
+      });
+    }
   }
 
-  json(res, 201, { created }, req);
+  json(res, bulkCreateStatus(created, errors.length), { created, errors }, req);
 }
 
 async function handleBulkDeleteComponents(
@@ -609,16 +660,20 @@ async function handleBulkDeleteComponents(
 
   const uc = new DeleteComponent(deps);
   let deleted = 0;
+  const errors: BulkError[] = [];
   for (const id of items as string[]) {
     try {
       await uc.execute(String(id));
       deleted++;
-    } catch {
-      // Skip components that don't exist or fail to delete
+    } catch (err) {
+      const msg = errorMessage(err);
+      if (!msg.includes('not found') && !msg.includes('Not found')) {
+        errors.push({ id: String(id), status: errorStatus(msg), error: msg });
+      }
     }
   }
 
-  json(res, 200, { deleted }, req);
+  json(res, 200, { deleted, errors }, req);
 }
 
 // ─── Route table ────────────────────────────────────────────────────
