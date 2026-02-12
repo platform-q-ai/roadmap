@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 /**
  * Unit tests for the ValidateApiKey use case.
  *
- * Module doesn't exist yet (Phase 5) — dynamic import ensures RED.
+ * Uses real ApiKey entity instances so the use case can call
+ * instance methods like isExpired().
  */
 
 function createMockApiKeyRepo() {
@@ -18,8 +19,9 @@ function createMockApiKeyRepo() {
   };
 }
 
-function makeStoredKey(overrides: Record<string, unknown> = {}) {
-  return {
+async function makeStoredKey(overrides: Record<string, unknown> = {}) {
+  const { ApiKey } = await import('../../../src/domain/entities/api-key.js');
+  return new ApiKey({
     id: 1,
     name: 'test-bot',
     key_hash: 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
@@ -30,7 +32,7 @@ function makeStoredKey(overrides: Record<string, unknown> = {}) {
     last_used_at: null,
     is_active: true,
     ...overrides,
-  };
+  });
 }
 
 describe('ValidateApiKey', () => {
@@ -41,7 +43,7 @@ describe('ValidateApiKey', () => {
     const plaintext = 'rmap_deadbeefdeadbeefdeadbeefdeadbeef';
     const hash = hashKey(plaintext, salt);
 
-    repo.findAll.mockResolvedValue([makeStoredKey({ key_hash: hash, salt })]);
+    repo.findAll.mockResolvedValue([await makeStoredKey({ key_hash: hash, salt })]);
 
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     const result = await uc.execute(plaintext);
@@ -53,7 +55,7 @@ describe('ValidateApiKey', () => {
   it('returns null for an invalid plaintext key', async () => {
     const { ValidateApiKey } = await import('../../../src/use-cases/validate-api-key.js');
     const repo = createMockApiKeyRepo();
-    repo.findAll.mockResolvedValue([makeStoredKey()]);
+    repo.findAll.mockResolvedValue([await makeStoredKey()]);
 
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     const result = await uc.execute('rmap_invalidinvalidinvalidinvalid');
@@ -69,7 +71,7 @@ describe('ValidateApiKey', () => {
     const hash = hashKey(plaintext, salt);
 
     repo.findAll.mockResolvedValue([
-      makeStoredKey({ key_hash: hash, salt, expires_at: '2020-01-01T00:00:00Z' }),
+      await makeStoredKey({ key_hash: hash, salt, expires_at: '2020-01-01T00:00:00Z' }),
     ]);
 
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
@@ -85,7 +87,9 @@ describe('ValidateApiKey', () => {
     const plaintext = 'rmap_deadbeefdeadbeefdeadbeefdeadbeef';
     const hash = hashKey(plaintext, salt);
 
-    repo.findAll.mockResolvedValue([makeStoredKey({ key_hash: hash, salt, is_active: false })]);
+    repo.findAll.mockResolvedValue([
+      await makeStoredKey({ key_hash: hash, salt, is_active: false }),
+    ]);
 
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     const result = await uc.execute(plaintext);
@@ -100,7 +104,7 @@ describe('ValidateApiKey', () => {
     const plaintext = 'rmap_deadbeefdeadbeefdeadbeefdeadbeef';
     const hash = hashKey(plaintext, salt);
 
-    repo.findAll.mockResolvedValue([makeStoredKey({ id: 42, key_hash: hash, salt })]);
+    repo.findAll.mockResolvedValue([await makeStoredKey({ id: 42, key_hash: hash, salt })]);
 
     const uc = new ValidateApiKey({ apiKeyRepo: repo });
     await uc.execute(plaintext);

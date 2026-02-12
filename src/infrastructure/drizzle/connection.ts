@@ -59,12 +59,25 @@ export function applySchema(db: BetterSQLite3Database): void {
     updated_at TEXT DEFAULT (datetime('now'))
   )`);
 
+  db.run(sql`CREATE TABLE IF NOT EXISTS api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    key_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    scopes TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT,
+    last_used_at TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1
+  )`);
+
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_source ON edges(source_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_target ON edges(target_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_type ON edges(type)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_versions_node ON node_versions(node_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_features_node ON features(node_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_features_version ON features(node_id, version)`);
+  db.run(sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_api_keys_name ON api_keys(name)`);
 }
 
 /**

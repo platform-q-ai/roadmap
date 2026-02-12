@@ -18,8 +18,9 @@ function createMockApiKeyRepo() {
   };
 }
 
-function makeStoredKey(overrides: Record<string, unknown> = {}) {
-  return {
+async function makeStoredKey(overrides: Record<string, unknown> = {}) {
+  const { ApiKey } = await import('../../../src/domain/entities/api-key.js');
+  return new ApiKey({
     id: 1,
     name: 'test-bot',
     key_hash: 'abc123',
@@ -30,7 +31,7 @@ function makeStoredKey(overrides: Record<string, unknown> = {}) {
     last_used_at: null,
     is_active: true,
     ...overrides,
-  };
+  });
 }
 
 describe('ListApiKeys', () => {
@@ -38,8 +39,8 @@ describe('ListApiKeys', () => {
     const { ListApiKeys } = await import('../../../src/use-cases/list-api-keys.js');
     const repo = createMockApiKeyRepo();
     repo.findAll.mockResolvedValue([
-      makeStoredKey({ id: 1, name: 'key-a' }),
-      makeStoredKey({ id: 2, name: 'key-b' }),
+      await makeStoredKey({ id: 1, name: 'key-a' }),
+      await makeStoredKey({ id: 2, name: 'key-b' }),
     ]);
 
     const uc = new ListApiKeys({ apiKeyRepo: repo });
@@ -64,7 +65,7 @@ describe('ListApiKeys', () => {
   it('does not expose key_hash or salt in returned records', async () => {
     const { ListApiKeys } = await import('../../../src/use-cases/list-api-keys.js');
     const repo = createMockApiKeyRepo();
-    repo.findAll.mockResolvedValue([makeStoredKey()]);
+    repo.findAll.mockResolvedValue([await makeStoredKey()]);
 
     const uc = new ListApiKeys({ apiKeyRepo: repo });
     const result = await uc.execute();
