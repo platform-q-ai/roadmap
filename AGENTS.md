@@ -41,6 +41,7 @@ src/
 │   ├── export-architecture.ts  # Get architecture + write JSON
 │   ├── get-step-totals.ts      # Aggregate step counts per component/version
 │   ├── seed-features.ts        # Parse + insert feature files
+│   ├── update-component.ts     # Partial update (merge-patch) with version recalc
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations
@@ -458,6 +459,7 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /f
 | `GET` | `/api/components` | List all non-layer nodes | `200 [...]` | — |
 | `GET` | `/api/components/:id` | Get component with versions and features | `200` | `404` not found |
 | `POST` | `/api/components` | Create a new component (with validation) | `201` | `400` invalid, `409` duplicate |
+| `PATCH` | `/api/components/:id` | Partial update (merge-patch semantics) | `200` | `400` invalid, `404` not found, `413` body too large |
 | `DELETE` | `/api/components/:id` | Delete component + versions, features, edges | `204` | `404` not found |
 | `GET` | `/api/components/:id/features` | List features for a component | `200 [...]` | `404` component not found |
 | `PUT` | `/api/components/:id/features/:filename` | Upload/replace a feature file (body = raw Gherkin text) | `200` | `404` component not found |
@@ -488,6 +490,20 @@ Required: `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, `layer` (
 
 Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
 
+### PATCH /api/components/:id body
+
+```json
+{
+  "name": "Updated Name",
+  "description": "Updated description",
+  "tags": ["new", "tags"],
+  "sort_order": 99,
+  "current_version": "0.7.5"
+}
+```
+
+All fields are optional. Only supplied fields are changed; unmentioned fields are preserved (merge-patch semantics). `name` must be non-empty if provided. `tags` is capped at 50 entries. `current_version` must be a valid semver string (`MAJOR.MINOR` or `MAJOR.MINOR.PATCH`). When `current_version` changes, all phase version records are automatically recalculated. All string inputs are HTML-sanitized. Returns the full updated node object in the `200` response.
+
 ### curl examples
 
 ```bash
@@ -501,6 +517,11 @@ curl https://roadmap-5vvp.onrender.com/api/components/worker
 curl -X POST https://roadmap-5vvp.onrender.com/api/components \
   -H "Content-Type: application/json" \
   -d '{"id":"my-svc","name":"My Service","type":"component","layer":"supervisor-layer"}'
+
+# Partially update a component
+curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/my-svc \
+  -H "Content-Type: application/merge-patch+json" \
+  -d '{"name":"Renamed","description":"Updated description","tags":["new-tag"]}'
 
 # Delete a component
 curl -X DELETE https://roadmap-5vvp.onrender.com/api/components/my-svc
