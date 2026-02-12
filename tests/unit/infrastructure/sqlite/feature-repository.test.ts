@@ -160,6 +160,40 @@ describe('SqliteFeatureRepository', () => {
     expect(results[0].version).toBe('v1');
   });
 
+  it('escapes LIKE wildcards in search query', async () => {
+    await featureRepo.save(
+      new Feature({
+        node_id: 'comp-1',
+        version: 'v1',
+        filename: 'wild.feature',
+        title: 'Wild',
+        content: 'Feature: Wild\n  Scenario: S\n    Given 100% coverage',
+      })
+    );
+    const withWildcard = await featureRepo.search('100%');
+    expect(withWildcard).toHaveLength(1);
+    const noMatch = await featureRepo.search('100_');
+    expect(noMatch).toHaveLength(0);
+  });
+
+  it('respects limit parameter in search', async () => {
+    for (let i = 0; i < 5; i++) {
+      await featureRepo.save(
+        new Feature({
+          node_id: 'comp-1',
+          version: 'v1',
+          filename: `f${i}.feature`,
+          title: `F${i}`,
+          content: `Feature: F${i}\n  Scenario: S\n    Given repeated keyword`,
+        })
+      );
+    }
+    const limited = await featureRepo.search('repeated', undefined, 3);
+    expect(limited).toHaveLength(3);
+    const all = await featureRepo.search('repeated');
+    expect(all).toHaveLength(5);
+  });
+
   it('deletes features by node', async () => {
     await featureRepo.save(
       new Feature({ node_id: 'comp-1', version: 'mvp', filename: 'a.feature', title: 'A' })

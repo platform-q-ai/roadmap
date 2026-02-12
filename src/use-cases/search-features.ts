@@ -17,14 +17,14 @@ export interface SearchResult {
 
 const SNIPPET_RADIUS = 50;
 
-function extractSnippet(content: string, query: string): string {
+function extractSnippet(content: string, lowerQuery: string): string {
   const lower = content.toLowerCase();
-  const idx = lower.indexOf(query.toLowerCase());
+  const idx = lower.indexOf(lowerQuery);
   if (idx === -1) {
     return content.slice(0, SNIPPET_RADIUS * 2).trim();
   }
   const start = Math.max(0, idx - SNIPPET_RADIUS);
-  const end = Math.min(content.length, idx + query.length + SNIPPET_RADIUS);
+  const end = Math.min(content.length, idx + lowerQuery.length + SNIPPET_RADIUS);
   const prefix = start > 0 ? '...' : '';
   const suffix = end < content.length ? '...' : '';
   return `${prefix}${content.slice(start, end).trim()}${suffix}`;
@@ -44,19 +44,20 @@ export class SearchFeatures {
     this.featureRepo = featureRepo;
   }
 
-  async execute(query: string, version?: string): Promise<SearchResult[]> {
+  async execute(query: string, version?: string, limit?: number): Promise<SearchResult[]> {
     const trimmed = query.trim();
     if (!trimmed) {
       throw new ValidationError('Search query must not be empty');
     }
-    const features = await this.featureRepo.search(trimmed, version);
+    const features = await this.featureRepo.search(trimmed, version, limit);
+    const lowerQuery = trimmed.toLowerCase();
     return features.map(f => ({
       node_id: f.node_id,
       filename: f.filename,
       version: f.version,
       title: f.title,
       step_count: f.step_count,
-      snippet: extractSnippet(f.content ?? '', trimmed),
+      snippet: extractSnippet(f.content ?? '', lowerQuery),
     }));
   }
 }

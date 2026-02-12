@@ -61,7 +61,7 @@ function buildTestRepos(data: WorldData) {
         data.features.find(f => f.node_id === nid && f.version === ver && f.filename === fname) ??
         null
     ),
-    search: vi.fn(async (query: string, version?: string) => {
+    search: vi.fn(async (query: string, version?: string, _limit?: number) => {
       const lower = query.toLowerCase();
       return data.features.filter(f => {
         const match = (f.content ?? '').toLowerCase().includes(lower);
@@ -248,6 +248,17 @@ describe('API Routes — feature search', () => {
       expect(result).toHaveProperty('title');
       expect(result).toHaveProperty('step_count');
       expect(result).toHaveProperty('snippet');
+    });
+  });
+
+  it('returns 400 when query exceeds max length', async () => {
+    const repos = buildTestRepos(seedData());
+    const longQuery = 'a'.repeat(201);
+    await withServer(repos, async server => {
+      const res = await request(server, 'GET', `/api/features/search?q=${longQuery}`);
+      expect(res.status).toBe(400);
+      const body = res.body as Record<string, unknown>;
+      expect(body.error).toContain('too long');
     });
   });
 

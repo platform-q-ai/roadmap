@@ -94,7 +94,7 @@ export function buildRepos(world: InMemoryWorld, overrides?: RepoOverrides) {
       world.features = world.features.filter(f => !(f.node_id === nid && f.version === ver));
       return before - world.features.length;
     },
-    search: async (query: string, version?: string) => {
+    search: async (query: string, version?: string, _limit?: number) => {
       const lower = query.toLowerCase();
       return world.features.filter(f => {
         const match = (f.content ?? '').toLowerCase().includes(lower);

@@ -20,7 +20,7 @@ function makeMockFeature(overrides: {
 
 function buildMockRepo(features: Feature[]) {
   const featureRepo: Pick<IFeatureRepository, 'search'> = {
-    search: vi.fn(async (query: string, version?: string) => {
+    search: vi.fn(async (query: string, version?: string, _limit?: number) => {
       const lower = query.toLowerCase();
       return features.filter(f => {
         const match = (f.content ?? '').toLowerCase().includes(lower);

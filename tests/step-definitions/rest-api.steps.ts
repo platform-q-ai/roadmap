@@ -130,7 +130,7 @@ function buildApiRepos(world: ApiWorld) {
         featureCount: matching.length,
       };
     },
-    search: async (query: string, version?: string) => {
+    search: async (query: string, version?: string, _limit?: number) => {
       const lower = query.toLowerCase();
       return world.features.filter(f => {
         const match = (f.content ?? '').toLowerCase().includes(lower);
