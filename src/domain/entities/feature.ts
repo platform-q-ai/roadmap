@@ -58,6 +58,16 @@ export class Feature {
     return count;
   }
 
+  /** Count Scenario/Scenario Outline lines in Gherkin content. */
+  static countScenarios(content: string): number {
+    const scenarioPattern = /^\s*Scenario(?:\s+Outline)?:/gm;
+    let count = 0;
+    while (scenarioPattern.exec(content)) {
+      count++;
+    }
+    return count;
+  }
+
   /** Check whether content contains a valid Feature: line. */
   static hasValidGherkin(content: string): boolean {
     return /^Feature:\s*\S/m.test(content);

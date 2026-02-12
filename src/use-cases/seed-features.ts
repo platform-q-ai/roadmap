@@ -50,6 +50,7 @@ export class SeedFeatures {
         filename,
         title,
         content,
+        step_count: Feature.countSteps(content),
       });
 
       await this.featureRepo.save(feature);

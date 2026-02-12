@@ -1,4 +1,5 @@
-import type { Feature, IFeatureRepository, INodeRepository } from '../domain/index.js';
+import type { IFeatureRepository, INodeRepository } from '../domain/index.js';
+import { Feature } from '../domain/index.js';
 
 import { FeatureNotFoundError, NodeNotFoundError } from './errors.js';
 
@@ -24,16 +25,8 @@ interface ListResult {
   };
 }
 
-// Pre-compiled regexes (avoids recompilation per call)
-const SCENARIO_RE = /^\s*Scenario(?:\s+Outline)?:/gm;
+// Pre-compiled regex (avoids recompilation per call)
 const STEP_LINE_RE = /^\s*(Given|When|Then|And|But)\s+/gm;
-
-function countScenarios(content: string | null): number {
-  if (!content) {
-    return 0;
-  }
-  return (content.match(SCENARIO_RE) ?? []).length;
-}
 
 /**
  * Stateful step keyword counter.
@@ -67,7 +60,7 @@ function countStepsByKeyword(content: string | null): {
 }
 
 function enrichFeature(f: Feature): EnrichedFeature {
-  return { ...f.toJSON(), scenario_count: countScenarios(f.content) };
+  return { ...f.toJSON(), scenario_count: Feature.countScenarios(f.content ?? '') };
 }
 
 function computeTotals(features: Feature[]): ListResult['totals'] {
@@ -77,7 +70,7 @@ function computeTotals(features: Feature[]): ListResult['totals'] {
   let whenSteps = 0;
   let thenSteps = 0;
   for (const f of features) {
-    scenarios += countScenarios(f.content);
+    scenarios += Feature.countScenarios(f.content ?? '');
     steps += f.step_count;
     const counts = countStepsByKeyword(f.content);
     givenSteps += counts.given;

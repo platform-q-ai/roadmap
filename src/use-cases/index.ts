@@ -25,6 +25,8 @@ export {
   ValidationError,
 } from './errors.js';
 export { ExportArchitecture } from './export-architecture.js';
+export type { ExportFeaturesResult } from './export-features.js';
+export { ExportFeatures } from './export-features.js';
 export type { GenerateApiKeyInput, GenerateApiKeyResult } from './generate-api-key.js';
 export { GenerateApiKey, hashKey } from './generate-api-key.js';
 export type {
@@ -43,6 +45,8 @@ export type { SearchResult } from './search-features.js';
 export { SearchFeatures } from './search-features.js';
 export type { FeatureFileInput } from './seed-features.js';
 export { SeedFeatures } from './seed-features.js';
+export type { SeedFeaturesApiResult } from './seed-features-api.js';
+export { SeedFeaturesApi } from './seed-features-api.js';
 export type { UpdateComponentInput } from './update-component.js';
 export { UpdateComponent } from './update-component.js';
 export type { UpdateVersionInput, UpdateVersionResult } from './update-version.js';
