@@ -416,6 +416,8 @@ npm run pre-commit       # Full pre-commit pipeline
 | `tsconfig.json` | TypeScript config | Rarely |
 | `vitest.config.ts` | Vitest config | Rarely |
 | `scripts/check-code-quality.sh` | Code quality gate | Yes -- add new checks |
+| `Dockerfile` | Production Docker image (TypeScript compile only, no DB build) | Yes -- deployment changes |
+| `render.yaml` | Render deployment blueprint (persistent disk, DB_PATH) | Yes -- deployment config |
 
 ## How to Add a New Component
 

@@ -415,11 +415,11 @@ GitHub Actions runs the same pipeline on every PR targeting `master`, plus a che
 
 ## Deployment
 
-The application is deployed on Render as a Docker-based web service. On every push to `master`, Render automatically builds the Docker image (Node 22, SQLite3) and deploys the API server, which also serves the static web view.
+The application is deployed on Render as a Docker-based web service. On every push to `master`, Render automatically builds the Docker image (Node 22) and deploys the API server, which also serves the static web view.
 
 **Live URL:** https://roadmap-5vvp.onrender.com
 
-The Render blueprint (`render.yaml`) defines the service configuration. The `Dockerfile` builds the full application including the SQLite database, TypeScript compilation, and static assets. The production server uses `node dist/adapters/api/start.js`.
+The Render blueprint (`render.yaml`) defines the service configuration including a 1 GB persistent disk mounted at `/data`. The `Dockerfile` compiles TypeScript only (`npm run build:ts`) — it does not rebuild the database or seed features at build time. The database is created and managed at runtime via the API (API-first persistence). The `DB_PATH` environment variable points to `/data/architecture.db` so that data survives redeployments. The production server uses `node dist/adapters/api/start.js`.
 
 ## Tech Stack
 
