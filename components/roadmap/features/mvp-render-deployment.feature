@@ -11,12 +11,6 @@ Feature: Render Deployment
     Then the render response status is 200
     And the render response content type contains "text/html"
 
-  Scenario: API server serves data.json from web directory
-    Given the API server is running with static file serving
-    When I request the path "/data.json"
-    Then the render response status is 200
-    And the render response content type contains "application/json"
-
   Scenario: API routes still work alongside static serving
     Given the API server is running with static file serving
     When I request the path "/api/health"
@@ -57,5 +51,5 @@ Feature: Render Deployment
 
   Scenario: Static file responses include CORS headers
     Given the API server is running with static file serving
-    When I request the path "/data.json"
+    When I request the path "/"
     Then the render response includes CORS headers

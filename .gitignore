@@ -7,3 +7,5 @@ reports/
 .env.*
 .opencode/
 opencode.json
+db/architecture.db
+web/data.json

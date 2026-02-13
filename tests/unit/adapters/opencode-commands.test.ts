@@ -24,7 +24,7 @@ const REMOVED_COMMANDS = [
   'feature-delete.md',
 ];
 
-const CLI_ADAPTERS = ['component-create.ts', 'component-delete.ts', 'export.ts'];
+const CLI_ADAPTERS = ['component-create.ts', 'component-delete.ts'];
 
 const RENDER_API_BASE_URL = 'https://roadmap-5vvp.onrender.com';
 
@@ -219,11 +219,6 @@ describe('CLI adapter scripts', () => {
     it('component-delete.ts imports DeleteComponent use case', () => {
       const content = readFileSync(join(CLI_DIR, 'component-delete.ts'), 'utf-8');
       expect(content).toContain('DeleteComponent');
-    });
-
-    it('export.ts imports ExportArchitecture use case', () => {
-      const content = readFileSync(join(CLI_DIR, 'export.ts'), 'utf-8');
-      expect(content).toContain('ExportArchitecture');
     });
   });
 });

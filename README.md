@@ -26,7 +26,7 @@ The runtime is an autonomous AI agent system built around two LLM-powered instan
 
 ## Quick Start
 
-Prerequisites: `sqlite3` CLI and Node.js (>=18).
+Prerequisites: Node.js (>=18).
 
 ```bash
 git clone https://github.com/platform-q-ai/roadmap.git
@@ -35,7 +35,7 @@ npm install
 npm run build
 ```
 
-This compiles TypeScript, rebuilds the database, seeds feature files, and exports `web/data.json`. The web view fetches live data from the API at runtime, so `data.json` is only used for offline/legacy access.
+This compiles TypeScript. The database is created and managed at runtime by the API server — there is no build-time seed process. The web view fetches live data from the `/api/architecture` endpoint.
 
 ### Serve the web view (static)
 
@@ -60,8 +60,7 @@ The codebase follows Clean Architecture. Dependencies point inward: adapters -> 
 roadmap/
 ├── schema.sql                  # SQLite graph schema (4 tables, 6 indexes)
 ├── seed.sql                    # All component data, edges, and version content
-├── db/
-│   └── architecture.db         # Built SQLite database (generated)
+├── db/                         # Runtime database directory (gitignored)
 ├── src/
 │   ├── domain/                 # Entities + repository interfaces (zero deps)
 │   │   ├── entities/           # Node, Edge, Version, Feature
@@ -102,7 +101,7 @@ roadmap/
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
 │       ├── api/                # REST API server (40 endpoints + static files)
-│       └── cli/                # CLI commands (export, seed-features, component CRUD)
+│       └── cli/                # CLI commands (component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
 │   ├── supervisor/features/
@@ -114,8 +113,7 @@ roadmap/
 │   ├── unit/                   # Vitest unit tests (90% coverage threshold)
 │   └── step-definitions/       # Cucumber step implementations
 ├── web/
-│   ├── index.html              # Interactive web view (single file, Cytoscape.js)
-│   └── data.json               # Exported data (generated)
+│   └── index.html              # Interactive web view (single file, Cytoscape.js)
 ├── scripts/
 │   └── check-code-quality.sh   # 12-check code quality gate
 ├── Dockerfile                  # Production Docker image
@@ -137,16 +135,12 @@ Everything lives in four SQLite tables:
 ### Data Flow
 
 ```
-seed.sql + schema.sql  ->  sqlite3  ->  architecture.db
-                                              |
-components/**/features/*.feature  ->  seed-features  ->  architecture.db
-                                                               |
-                                             API server  ->  /api/architecture  ->  web view
-                                                               |
-                                                         export  ->  data.json (legacy/offline)
+API server  ->  architecture.db (created at runtime via DB_PATH)
+                       |
+                 /api/architecture  ->  web view
 ```
 
-The REST API reads from and writes to `architecture.db` directly using Drizzle ORM. The web view fetches live data from the `/api/architecture` endpoint (public, no authentication required).
+The REST API creates and manages `architecture.db` at runtime using Drizzle ORM. There is no build-time seed process — the API is the sole source of truth. The web view fetches live data from the `/api/architecture` endpoint (public, no authentication required).
 
 ### Clean Architecture
 
@@ -357,37 +351,18 @@ The `POST /api/layers` endpoint requires `id` (kebab-case, max 64 chars) and `na
 
 ## Common Tasks
 
-### Update a component's progress
-
-```bash
-sqlite3 db/architecture.db "UPDATE node_versions SET progress = 40, status = 'in-progress' WHERE node_id = 'supervisor' AND version = 'mvp';"
-npm run export
-```
-
 ### Add a new feature file
 
-1. Create the file: `components/supervisor/features/mvp-health-api.feature`
-2. Prefix the filename with the version: `mvp-`, `v1-`, or `v2-`
-3. Run: `npm run seed:features && npm run export`
-
-Or use the API:
+Upload via the API:
 
 ```bash
 curl -X PUT https://roadmap-5vvp.onrender.com/api/components/supervisor/versions/mvp/features/mvp-health-api.feature \
   --data-binary @components/supervisor/features/mvp-health-api.feature
 ```
 
+Optionally keep a local copy in `components/<id>/features/` for reference.
+
 ### Add a new component
-
-Via `seed.sql` (full control):
-
-1. Add the node in `seed.sql` (NODES section)
-2. Add containment and relationship edges (EDGES section)
-3. Add version content for MVP / v1 / v2 (NODE VERSIONS section)
-4. Create `components/<id>/features/` directory
-5. Run: `npm run build`
-
-Via the API:
 
 ```bash
 curl -X POST https://roadmap-5vvp.onrender.com/api/components \
@@ -440,12 +415,8 @@ The Render blueprint (`render.yaml`) defines the service configuration including
 
 ```bash
 npm install              # Install dependencies
-npm run build            # TypeScript compile + rebuild data
+npm run build            # TypeScript compile (alias for build:ts)
 npm run build:ts         # TypeScript compile only
-npm run build:data       # Rebuild database + seed features + export JSON
-npm run build:db         # Rebuild database only (sqlite3 CLI)
-npm run seed:features    # Re-seed feature files from components/
-npm run export           # Re-export web/data.json from database
 npm run start            # Start production API server
 npm run serve            # Serve static web view on port 8080
 npm run serve:api        # Start API server in development (tsx)

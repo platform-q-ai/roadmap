@@ -1,15 +1,11 @@
 {
   "name": "roadmap",
-  "version": "1.14.1",
+  "version": "1.15.0",
   "type": "module",
   "description": "Living documentation for the Open Autonomous Runtime architecture",
   "scripts": {
-    "build:db": "mkdir -p db && sqlite3 db/architecture.db < schema.sql && sqlite3 db/architecture.db < seed.sql",
-    "seed:features": "tsx src/adapters/cli/seed-features.ts",
-    "export": "tsx src/adapters/cli/export.ts",
-    "build:data": "npm run build:db && npm run seed:features && npm run export",
     "build:ts": "tsc && tsc-alias",
-    "build": "npm run build:ts && npm run build:data",
+    "build": "npm run build:ts",
     "start": "node dist/adapters/api/start.js",
     "serve": "python3 -m http.server 8080 --directory web",
     "serve:api": "tsx src/adapters/api/start.ts",

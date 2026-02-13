@@ -23,13 +23,6 @@ describe('Package version sync: seed.sql', () => {
   });
 });
 
-describe('Package version sync: CLI export adapter', () => {
-  it('export.ts reads version from package.json', () => {
-    const content = readFileSync(join(ROOT, 'src', 'adapters', 'cli', 'export.ts'), 'utf-8');
-    expect(content).toContain('package.json');
-  });
-});
-
 describe('Package version sync: API adapter', () => {
   it('start.ts reads version from package.json', () => {
     const content = readFileSync(join(ROOT, 'src', 'adapters', 'api', 'start.ts'), 'utf-8');
