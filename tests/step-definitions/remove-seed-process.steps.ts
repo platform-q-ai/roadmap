@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
@@ -10,6 +11,8 @@ interface World {
   dockerfileContent: string;
 }
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..', '..');
 
 Given('the project root directory', function (this: World) {
