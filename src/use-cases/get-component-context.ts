@@ -45,32 +45,66 @@ export class GetComponentContext {
   }
 
   async execute(nodeId: string): Promise<ComponentContext> {
-    const [allNodes, versions, features, outEdges, inEdges] = await Promise.all([
-      this.deps.nodeRepo.findAll(),
+    const [node, versions, features, outEdges, inEdges] = await Promise.all([
+      this.deps.nodeRepo.findById(nodeId),
       this.deps.versionRepo.findByNode(nodeId),
       this.deps.featureRepo.findByNode(nodeId),
       this.deps.edgeRepo.findBySource(nodeId),
       this.deps.edgeRepo.findByTarget(nodeId),
     ]);
 
-    const nodeMap = new Map(allNodes.map(n => [n.id, n]));
-    const node = nodeMap.get(nodeId);
     if (!node) {
       throw new NodeNotFoundError(nodeId);
     }
 
+    const relatedIds = this.collectRelatedIds(outEdges, inEdges, node);
+    const relatedNodes = await this.resolveNodes(relatedIds);
+
     const stepSummaries = this.buildStepSummaries(features, versions);
+    const siblings = node.layer ? await this.deps.nodeRepo.findByLayer(node.layer) : [];
 
     return {
       component: this.toComponentInfo(node),
       versions: this.enrichVersions(versions, stepSummaries),
       features: this.groupFeatures(features),
-      dependencies: this.resolveEdgeTargets(outEdges, nodeMap),
-      dependents: this.resolveEdgeSources(inEdges, nodeMap),
-      layer: this.resolveLayer(node, nodeMap),
-      siblings: this.resolveSiblings(node, allNodes),
+      dependencies: this.resolveEdgeTargets(outEdges, relatedNodes),
+      dependents: this.resolveEdgeSources(inEdges, relatedNodes),
+      layer: this.resolveLayer(node, relatedNodes),
+      siblings: siblings
+        .filter(n => n.id !== nodeId)
+        .map(n => ({ id: n.id, name: n.name, type: n.type })),
       progress: this.buildProgress(versions, stepSummaries),
     };
+  }
+
+  private collectRelatedIds(outEdges: Edge[], inEdges: Edge[], node: Node): Set<string> {
+    const ids = new Set<string>();
+    for (const e of outEdges) {
+      if (e.type === 'DEPENDS_ON') {
+        ids.add(e.target_id);
+      }
+    }
+    for (const e of inEdges) {
+      if (e.type === 'DEPENDS_ON') {
+        ids.add(e.source_id);
+      }
+    }
+    if (node.layer) {
+      ids.add(node.layer);
+    }
+    return ids;
+  }
+
+  private async resolveNodes(ids: Set<string>): Promise<Map<string, Node>> {
+    const map = new Map<string, Node>();
+    const lookups = [...ids].map(async id => {
+      const n = await this.deps.nodeRepo.findById(id);
+      if (n) {
+        map.set(id, n);
+      }
+    });
+    await Promise.all(lookups);
+    return map;
   }
 
   private buildStepSummaries(
@@ -114,15 +148,6 @@ export class GetComponentContext {
     }
     const layerNode = nodeMap.get(node.layer);
     return layerNode ? { id: layerNode.id, name: layerNode.name, type: layerNode.type } : null;
-  }
-
-  private resolveSiblings(node: Node, allNodes: Node[]): NodeRef[] {
-    if (!node.layer) {
-      return [];
-    }
-    return allNodes
-      .filter(n => n.layer === node.layer && n.id !== node.id)
-      .map(n => ({ id: n.id, name: n.name, type: n.type }));
   }
 
   private toComponentInfo(node: Node): Record<string, unknown> {

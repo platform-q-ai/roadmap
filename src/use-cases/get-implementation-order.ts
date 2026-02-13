@@ -23,8 +23,10 @@ export class GetImplementationOrder {
   }
 
   async execute(): Promise<OrderResult> {
-    const allNodes = await this.deps.nodeRepo.findAll();
-    const allEdges = await this.deps.edgeRepo.findAll();
+    const [allNodes, allEdges] = await Promise.all([
+      this.deps.nodeRepo.findAll(),
+      this.deps.edgeRepo.findAll(),
+    ]);
     const components = allNodes.filter(n => n.type !== 'layer');
     const componentIds = new Set(components.map(n => n.id));
 
