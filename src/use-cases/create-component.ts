@@ -50,7 +50,7 @@ export class CreateComponent {
       id: input.id,
       name: input.name,
       type: input.type,
-      layer: input.layer ?? null,
+      layer: this.hasLayer(input) ? input.layer : null,
       description: input.description ?? null,
       tags: input.tags ?? [],
       color: input.color ?? null,
@@ -59,17 +59,20 @@ export class CreateComponent {
     });
 
     await this.nodeRepo.save(node);
-    await this.createContainsEdge(input);
-    await this.createDefaultVersions(input.id);
+    await Promise.all([this.createContainsEdge(input), this.createDefaultVersions(input.id)]);
 
     return node;
+  }
+
+  private hasLayer(input: CreateComponentInput): input is CreateComponentInput & { layer: string } {
+    return typeof input.layer === 'string' && input.layer.length > 0;
   }
 
   private async validate(input: CreateComponentInput): Promise<void> {
     if (!Node.TYPES.includes(input.type)) {
       throw new NodeTypeError(input.type);
     }
-    if (input.layer) {
+    if (this.hasLayer(input)) {
       const layerNode = await this.nodeRepo.findById(input.layer);
       if (!layerNode) {
         throw new ValidationError(`Invalid layer: ${input.layer} does not exist`);
@@ -82,7 +85,7 @@ export class CreateComponent {
   }
 
   private async createContainsEdge(input: CreateComponentInput): Promise<void> {
-    if (!input.layer) {
+    if (!this.hasLayer(input)) {
       return;
     }
     const containsEdge = new Edge({
