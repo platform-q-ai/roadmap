@@ -32,6 +32,11 @@ describe('API-first persistence infrastructure', () => {
       expect(dockerfile).not.toContain('apt-get install');
       expect(dockerfile).not.toContain('sqlite3');
     });
+
+    it('should create db/ directory owned by node for fallback path', () => {
+      expect(dockerfile).toContain('mkdir -p db');
+      expect(dockerfile).toContain('chown -R node:node db/');
+    });
   });
 
   describe('render.yaml', () => {
