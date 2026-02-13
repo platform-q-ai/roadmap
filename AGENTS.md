@@ -16,9 +16,9 @@ This file tells you how to work with this repository. Read it before making chan
 
 ## What This Repo Is
 
-Living documentation for the Open Autonomous Runtime. The source of truth is a SQLite database (`db/architecture.db`) built from `schema.sql` + `seed.sql`. The web view (`web/index.html`) is a read-only page that fetches live data from the `/api/architecture` endpoint (no authentication required).
+Living documentation for the Open Autonomous Runtime. The source of truth is a SQLite database (`db/architecture.db`) managed at runtime via the REST API. The web view (`web/index.html`) is a read-only page that fetches live data from the `/api/architecture` endpoint (no authentication required).
 
-**Do not edit `db/architecture.db` or `web/data.json` directly.** They are generated files. Edit `seed.sql` for data changes, `schema.sql` for schema changes, `web/index.html` for UI changes.
+**Do not edit `db/architecture.db` directly.** It is created and managed at runtime by the API server. Edit `schema.sql` or `seed.sql` only as reference material, `web/index.html` for UI changes.
 
 ## Architecture Overview
 
@@ -72,22 +72,18 @@ src/
 │       ├── version-repository.ts
 │       ├── feature-repository.ts
 │       └── index.ts            # Barrel export
-└── adapters/                   # Entry points (CLI, future API/MCP)
+└── adapters/                   # Entry points (CLI, API)
     └── cli/
-        ├── export.ts           # DB -> web/data.json
-        └── seed-features.ts    # Scan .feature files into DB
+        ├── component-create.ts # Create component via CLI
+        └── component-delete.ts # Delete component via CLI
 ```
 
 Data flow:
 
 ```
-seed.sql + schema.sql  -->  sqlite3  -->  architecture.db
-                                               |
-components/**/features/*.feature  -->  seed-features  -->  architecture.db
-                                                                |
-                                              API server  -->  /api/architecture  -->  web view
-                                                                |
-                                                          export  -->  data.json (legacy/offline)
+API server  -->  architecture.db (created at runtime via DB_PATH)
+                       |
+                 /api/architecture  -->  web view
 ```
 
 ## Clean Architecture Rules
@@ -135,13 +131,12 @@ import { SqliteNodeRepository } from '../../infrastructure/sqlite/node-repositor
 Use cases receive dependencies via constructor. Adapters wire everything:
 
 ```typescript
-// src/adapters/cli/export.ts — adapter wires deps
-const exportArchitecture = new ExportArchitecture({
-  nodeRepo: new SqliteNodeRepository(db),
-  edgeRepo: new SqliteEdgeRepository(db),
-  versionRepo: new SqliteVersionRepository(db),
-  featureRepo: new SqliteFeatureRepository(db),
-  writeJson,
+// src/adapters/api/start.ts — adapter wires deps
+const getArchitecture = new GetArchitecture({
+  nodeRepo: new DrizzleNodeRepository(db),
+  edgeRepo: new DrizzleEdgeRepository(db),
+  versionRepo: new DrizzleVersionRepository(db),
+  featureRepo: new DrizzleFeatureRepository(db),
 });
 ```
 
@@ -372,13 +367,11 @@ chore(deps): update better-sqlite3 to v12
 
 ```bash
 npm install              # Install dependencies
-npm run build            # TypeScript compile + rebuild data
+npm run build            # TypeScript compile (alias for build:ts)
 npm run build:ts         # TypeScript compile only
-npm run build:data       # Rebuild database + seed features + export JSON
-npm run build:db         # Rebuild database only
-npm run seed:features    # Re-seed feature files only
-npm run export           # Re-export JSON only
+npm run start            # Start production API server
 npm run serve            # Serve web view locally on port 8080
+npm run serve:api        # Start API server in development (tsx)
 
 npm test                 # Unit + feature tests
 npm run test:unit        # Vitest unit tests
@@ -401,16 +394,15 @@ npm run pre-commit       # Full pre-commit pipeline
 
 | File | Role | Edit? |
 |------|------|-------|
-| `schema.sql` | Database schema (4 tables) | Yes -- structural changes |
-| `seed.sql` | All component data, edges, version content | Yes -- primary data file |
-| `db/architecture.db` | Built SQLite database | No -- generated |
+| `schema.sql` | Database schema reference (4 tables) | Yes -- structural changes |
+| `seed.sql` | Reference data for API seeding scripts | Yes -- reference data |
 | `src/domain/entities/*.ts` | Domain entities (Node, Edge, Version, Feature) | Yes -- data model changes |
 | `src/domain/repositories/*.ts` | Repository interfaces (contracts) | Yes -- new queries |
 | `src/use-cases/*.ts` | Business logic | Yes -- new operations |
 | `src/infrastructure/sqlite/*.ts` | SQLite implementations | Yes -- query changes |
-| `src/adapters/cli/*.ts` | CLI entry points | Yes -- CLI changes |
+| `src/adapters/cli/*.ts` | CLI entry points (component CRUD) | Yes -- CLI changes |
+| `src/adapters/api/*.ts` | REST API server | Yes -- API changes |
 | `web/index.html` | Interactive web view (single file) | Yes -- UI changes |
-| `web/data.json` | JSON data consumed by web view | No -- generated |
 | `components/*/features/*.feature` | Gherkin feature files per component | Yes -- add/edit specs |
 | `eslint.config.js` | ESLint + boundary rules | Yes -- rule changes |
 | `tsconfig.json` | TypeScript config | Rarely |
@@ -421,13 +413,10 @@ npm run pre-commit       # Full pre-commit pipeline
 
 ## How to Add a New Component
 
-1. Add the node in `seed.sql` (NODES section)
-2. Add containment edge (EDGES section)
-3. Add relationship edges to other components
-4. Add version content for MVP / v1 / v2 (NODE VERSIONS section)
-5. Create `components/<id>/features/` directory
-6. Write Gherkin feature files: `mvp-*.feature`, `v1-*.feature`, `v2-*.feature`
-7. Run `npm run build:data`
+1. Create the component via the API: `POST /api/components`
+2. Create edges via the API: `POST /api/edges`
+3. Upload feature files via the API: `PUT /api/components/:id/versions/:ver/features/:filename`
+4. Optionally create `components/<id>/features/` directory with Gherkin files for local reference
 
 ## How to Add a New Adapter
 
