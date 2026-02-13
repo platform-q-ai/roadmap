@@ -85,13 +85,16 @@ function extractApiKey(req: http.IncomingMessage): string | undefined {
   return undefined;
 }
 
+/** Read-only endpoints that do not require authentication. */
+const PUBLIC_ENDPOINTS = new Set(['/api/health', '/api/architecture']);
+
 /**
  * Create an auth middleware function.
  *
  * Returns `true` if the request is allowed to proceed,
  * `false` if the middleware has already sent an error response.
  *
- * The health endpoint (/api/health) is exempt from authentication.
+ * Public endpoints (health and architecture) are exempt from authentication.
  */
 export function createAuthMiddleware(deps: AuthMiddlewareDeps) {
   return async function authMiddleware(
@@ -101,7 +104,7 @@ export function createAuthMiddleware(deps: AuthMiddlewareDeps) {
     const url = req.url ?? '/';
     const method = req.method ?? 'GET';
 
-    if (url === '/api/health' || url === '/api/architecture') {
+    if (PUBLIC_ENDPOINTS.has(url)) {
       return true;
     }
 
