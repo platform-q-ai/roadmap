@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs';
+import { accessSync, constants, existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 import Database from 'better-sqlite3';
@@ -85,11 +85,47 @@ export function applySchema(db: BetterSQLite3Database): void {
 }
 
 /**
+ * Ensure the parent directory for the database file exists and is writable.
+ * Handles three scenarios:
+ *   1. Directory exists and is writable → no-op
+ *   2. Directory does not exist → create recursively
+ *   3. Directory cannot be created (EACCES) → throw with actionable message
+ */
+function ensureDbDirectory(dbPath: string): void {
+  const dir = dirname(dbPath);
+
+  if (existsSync(dir)) {
+    try {
+      accessSync(dir, constants.W_OK);
+      return;
+    } catch {
+      throw new Error(
+        `Database directory "${dir}" exists but is not writable by the current user. ` +
+          `Set DB_PATH to a writable location (e.g. DB_PATH=/data/architecture.db) ` +
+          `or fix permissions on "${dir}".`
+      );
+    }
+  }
+
+  try {
+    mkdirSync(dir, { recursive: true });
+  } catch (err: unknown) {
+    const code =
+      err instanceof Error && 'code' in err ? (err as NodeJS.ErrnoException).code : 'UNKNOWN';
+    throw new Error(
+      `Cannot create database directory "${dir}" (${code}). ` +
+        `Set DB_PATH to a writable location (e.g. DB_PATH=/data/architecture.db) ` +
+        `or ensure the parent directory is writable.`
+    );
+  }
+}
+
+/**
  * Create a Drizzle ORM connection backed by better-sqlite3.
  * Enables WAL mode + foreign keys and applies schema.
  */
 export function createDrizzleConnection(dbPath: string): BetterSQLite3Database {
-  mkdirSync(dirname(dbPath), { recursive: true });
+  ensureDbDirectory(dbPath);
   const sqlite = new Database(dbPath);
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');

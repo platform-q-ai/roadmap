@@ -1,10 +1,10 @@
-import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { createDrizzleConnection } from '../../../src/infrastructure/drizzle/connection.js';
+import { createDrizzleConnection } from '../../../src/infrastructure/drizzle/index.js';
 
 const ROOT = join(__dirname, '..', '..', '..');
 
@@ -31,6 +31,11 @@ describe('API-first persistence infrastructure', () => {
     it('should not install sqlite3 CLI (no longer needed for build)', () => {
       expect(dockerfile).not.toContain('apt-get install');
       expect(dockerfile).not.toContain('sqlite3');
+    });
+
+    it('should create db/ directory owned by node for fallback path', () => {
+      expect(dockerfile).toContain('mkdir -p db');
+      expect(dockerfile).toContain('chown node:node db');
     });
   });
 
@@ -66,19 +71,73 @@ describe('API-first persistence infrastructure', () => {
     });
   });
 
-  describe('createDrizzleConnection directory creation', () => {
-    it('should create parent directories if they do not exist', () => {
-      const testDir = join(tmpdir(), `roadmap-test-${Date.now()}`);
-      const dbPath = join(testDir, 'sub', 'architecture.db');
-      try {
-        const db = createDrizzleConnection(dbPath);
-        expect(db).toBeDefined();
-        expect(existsSync(dbPath)).toBe(true);
-      } finally {
-        if (existsSync(testDir)) {
-          rmSync(testDir, { recursive: true, force: true });
+  describe('createDrizzleConnection directory handling', () => {
+    const testDirs: string[] = [];
+
+    function makeTempDir(): string {
+      const dir = join(
+        tmpdir(),
+        `roadmap-test-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      );
+      testDirs.push(dir);
+      return dir;
+    }
+
+    afterEach(() => {
+      for (const dir of testDirs) {
+        if (existsSync(dir)) {
+          // Restore write permissions before cleanup so rmSync works
+          try {
+            chmodSync(dir, 0o755);
+          } catch {
+            /* best-effort */
+          }
+          rmSync(dir, { recursive: true, force: true });
         }
       }
+      testDirs.length = 0;
+    });
+
+    it('should create parent directories if they do not exist', () => {
+      const testDir = makeTempDir();
+      const dbPath = join(testDir, 'sub', 'architecture.db');
+      const db = createDrizzleConnection(dbPath);
+      expect(db).toBeDefined();
+      expect(existsSync(dbPath)).toBe(true);
+    });
+
+    it('should succeed when the directory already exists and is writable', () => {
+      const testDir = makeTempDir();
+      mkdirSync(testDir, { recursive: true });
+      const dbPath = join(testDir, 'architecture.db');
+      const db = createDrizzleConnection(dbPath);
+      expect(db).toBeDefined();
+      expect(existsSync(dbPath)).toBe(true);
+    });
+
+    it('should throw with actionable message when directory exists but is not writable', () => {
+      const testDir = makeTempDir();
+      mkdirSync(testDir, { recursive: true });
+      chmodSync(testDir, 0o444); // read-only
+
+      const dbPath = join(testDir, 'architecture.db');
+      expect(() => createDrizzleConnection(dbPath)).toThrowError(
+        /not writable by the current user/
+      );
+      expect(() => createDrizzleConnection(dbPath)).toThrowError(/DB_PATH/);
+    });
+
+    it('should throw with actionable message when parent directory cannot be created', () => {
+      const testDir = makeTempDir();
+      mkdirSync(testDir, { recursive: true });
+      chmodSync(testDir, 0o444); // read-only parent
+
+      // Attempt to create a subdirectory inside a read-only directory
+      const dbPath = join(testDir, 'sub', 'architecture.db');
+      expect(() => createDrizzleConnection(dbPath)).toThrowError(
+        /Cannot create database directory/
+      );
+      expect(() => createDrizzleConnection(dbPath)).toThrowError(/DB_PATH/);
     });
   });
 });
