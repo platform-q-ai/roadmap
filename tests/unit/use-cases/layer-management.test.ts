@@ -1,5 +1,5 @@
-import type { IEdgeRepository, INodeRepository, IVersionRepository } from '@domain/index.js';
-import { Edge, Node, Version } from '@domain/index.js';
+import type { IEdgeRepository, INodeRepository } from '@domain/index.js';
+import { Edge, Node } from '@domain/index.js';
 import { CreateLayer, GetLayer, ListLayers, MoveComponent } from '@use-cases/index.js';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -43,16 +43,6 @@ function mockEdgeRepo(edges: Edge[]): IEdgeRepository {
     ),
     save: vi.fn(async (edge: Edge) => edge),
     delete: vi.fn(),
-  };
-}
-
-function mockVersionRepo(): IVersionRepository {
-  return {
-    findAll: vi.fn(async () => []),
-    findByNode: vi.fn(async () => []),
-    findByNodeAndVersion: vi.fn(async () => null),
-    save: vi.fn(),
-    deleteByNode: vi.fn(),
   };
 }
 
