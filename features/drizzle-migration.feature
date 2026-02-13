@@ -88,7 +88,7 @@ Feature: Drizzle ORM Migration
     And the version "mvp" for "roadmap" should have progress 80
     And the version "mvp" for "roadmap" should have status "in-progress"
 
-  Scenario: Build script does not delete the database
-    Given the package.json build scripts
-    Then the build:db script should not contain "rm -f"
-    And the build:db script should not contain "rm db/"
+  Scenario: Build script does not include database rebuild
+    Given the project root directory
+    When I read the package.json scripts
+    Then there should be no "build:db" script

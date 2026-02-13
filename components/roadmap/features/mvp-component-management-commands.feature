@@ -98,4 +98,3 @@ Feature: Component Management Commands
     Given the project source directory
     Then a CLI adapter "component-create.ts" exists in src/adapters/cli
     And a CLI adapter "component-delete.ts" exists in src/adapters/cli
-    And a CLI adapter "export.ts" exists in src/adapters/cli

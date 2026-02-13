@@ -62,11 +62,7 @@ Feature: Sync roadmap current_version from package.json
       Given the project source directory
       Then the roadmap node in seed.sql should not have a hardcoded current_version
 
-  Rule: CLI and API adapters read from package.json
-
-    Scenario: Export adapter reads version from package.json
-      Given the project source directory
-      Then the file "src/adapters/cli/export.ts" contains "package.json"
+  Rule: API adapter reads from package.json
 
     Scenario: API adapter reads version from package.json
       Given the project source directory
