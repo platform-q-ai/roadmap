@@ -6,47 +6,25 @@ import { describe, expect, it } from 'vitest';
 const ROOT = join(import.meta.dirname, '..', '..', '..');
 const html = readFileSync(join(ROOT, 'web', 'index.html'), 'utf-8');
 
-describe('Progression tree design update — hexagonal nodes', () => {
-  it('should use hexagon shape for cytoscape nodes', () => {
-    // The node style should declare shape: 'hexagon'
-    expect(html).toMatch(/'shape'\s*:\s*'hexagon'/);
+describe('Progression tree design update — circular skill icons', () => {
+  it('should use circle shape for cytoscape nodes', () => {
+    // The node style should declare shape: 'circle'
+    expect(html).toMatch(/'shape'\s*:\s*'circle'/);
   });
 
-  it('should NOT use roundrectangle shape for cytoscape nodes', () => {
-    // roundrectangle should not appear in the node shape style
-    expect(html).not.toMatch(/'shape'\s*:\s*'roundrectangle'/);
-  });
-
-  it('should have node width of at least 120px for hexagonal display', () => {
-    const widthMatch = html.match(/'width'\s*:\s*(\d+)/);
-    expect(widthMatch).not.toBeNull();
-    const width = parseInt(widthMatch![1], 10);
-    expect(width).toBeGreaterThanOrEqual(120);
-  });
-
-  it('should have node height of at least 120px for hexagonal display', () => {
-    const heightMatch = html.match(/'height'\s*:\s*(\d+)/);
-    expect(heightMatch).not.toBeNull();
-    const height = parseInt(heightMatch![1], 10);
-    expect(height).toBeGreaterThanOrEqual(120);
+  it('should NOT use hexagon shape for cytoscape nodes anymore', () => {
+    // hexagon should no longer be the primary shape
+    expect(html).not.toMatch(/'shape'\s*:\s*'hexagon'/);
   });
 });
 
-describe('Progression tree design update — zoom removal', () => {
-  it('should have userZoomingEnabled set to false', () => {
-    expect(html).toMatch(/userZoomingEnabled\s*:\s*false/);
+describe('Progression tree design update — navigation controls', () => {
+  it('should have userZoomingEnabled set to true', () => {
+    expect(html).toMatch(/userZoomingEnabled\s*:\s*true/);
   });
 
-  it('should NOT have userZoomingEnabled set to true', () => {
-    expect(html).not.toMatch(/userZoomingEnabled\s*:\s*true/);
-  });
-
-  it('should have userPanningEnabled set to false', () => {
-    expect(html).toMatch(/userPanningEnabled\s*:\s*false/);
-  });
-
-  it('should NOT have userPanningEnabled set to true', () => {
-    expect(html).not.toMatch(/userPanningEnabled\s*:\s*true/);
+  it('should have userPanningEnabled set to true', () => {
+    expect(html).toMatch(/userPanningEnabled\s*:\s*true/);
   });
 });
 

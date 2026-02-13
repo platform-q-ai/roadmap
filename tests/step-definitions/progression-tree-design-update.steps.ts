@@ -68,21 +68,27 @@ Then(
 
 // ─── Zoom removal ──────────────────────────────────────────
 
-Then('userZoomingEnabled should be false in the cytoscape config', function (this: World) {
-  const html = this.html || readWebView();
-  const pattern = /userZoomingEnabled\s*:\s*(true|false)/;
-  const match = html.match(pattern);
-  assert.ok(match, 'userZoomingEnabled should be present in cytoscape config');
-  assert.equal(match[1], 'false', 'userZoomingEnabled should be false');
-});
+Then(
+  'userZoomingEnabled should be {word} in the cytoscape config',
+  function (this: World, expected: string) {
+    const html = this.html || readWebView();
+    const pattern = /userZoomingEnabled\s*:\s*(true|false)/;
+    const match = html.match(pattern);
+    assert.ok(match, 'userZoomingEnabled should be present in cytoscape config');
+    assert.equal(match[1], expected, `userZoomingEnabled should be ${expected}`);
+  }
+);
 
-Then('userPanningEnabled should be false in the cytoscape config', function (this: World) {
-  const html = this.html || readWebView();
-  const pattern = /userPanningEnabled\s*:\s*(true|false)/;
-  const match = html.match(pattern);
-  assert.ok(match, 'userPanningEnabled should be present in cytoscape config');
-  assert.equal(match[1], 'false', 'userPanningEnabled should be false');
-});
+Then(
+  'userPanningEnabled should be {word} in the cytoscape config',
+  function (this: World, expected: string) {
+    const html = this.html || readWebView();
+    const pattern = /userPanningEnabled\s*:\s*(true|false)/;
+    const match = html.match(pattern);
+    assert.ok(match, 'userPanningEnabled should be present in cytoscape config');
+    assert.equal(match[1], expected, `userPanningEnabled should be ${expected}`);
+  }
+);
 
 // ─── Full-width fit ────────────────────────────────────────
 
