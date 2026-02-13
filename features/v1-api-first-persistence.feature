@@ -12,7 +12,7 @@ Feature: API-First Persistence
   Scenario: API mutations survive server restart
     Given the API server is running with a persistent database
     And the database is empty
-    When I create a component "new-svc" with name "New Service" via the API
+    When I create a component "new-svc" with name "New Service"
     And the server restarts
     Then the component "new-svc" exists with name "New Service"
 

@@ -51,19 +51,15 @@ describe('API-first persistence infrastructure', () => {
     });
   });
 
-  describe('server DB_PATH resolution', () => {
-    it('should use DB_PATH from environment when set', () => {
-      const envPath = '/data/architecture.db';
-      const defaultPath = '/app/db/architecture.db';
-      const resolved = envPath ?? defaultPath;
-      expect(resolved).toBe('/data/architecture.db');
+  describe('server DB_PATH resolution (start.ts)', () => {
+    const startTs = readFileSync(join(ROOT, 'src', 'adapters', 'api', 'start.ts'), 'utf-8');
+
+    it('should read DB_PATH from process.env', () => {
+      expect(startTs).toContain('process.env.DB_PATH');
     });
 
-    it('should fall back to default when DB_PATH is not set', () => {
-      const envPath = undefined;
-      const defaultPath = '/app/db/architecture.db';
-      const resolved = envPath ?? defaultPath;
-      expect(resolved).toBe('/app/db/architecture.db');
+    it('should use nullish coalescing to fall back to a default path', () => {
+      expect(startTs).toMatch(/process\.env\.DB_PATH\s*\?\?/);
     });
   });
 });

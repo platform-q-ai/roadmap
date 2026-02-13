@@ -10,6 +10,7 @@ import type {
   IEdgeRepository,
   IFeatureRepository,
   INodeRepository,
+  IVersionRepository,
 } from '../../src/domain/index.js';
 import { Edge, Node } from '../../src/domain/index.js';
 
@@ -73,7 +74,7 @@ function buildEdgeRepo(world: PersistenceWorld): IEdgeRepository {
   };
 }
 
-function buildStubVersionRepo() {
+function buildStubVersionRepo(): IVersionRepository {
   return {
     findAll: async () => [],
     findByNode: async () => [],
@@ -186,7 +187,7 @@ When('the server restarts and applies schema', async function (this: Persistence
 });
 
 When(
-  'I create a component {string} with name {string} via the API',
+  'I create a component {string} with name {string}',
   function (this: PersistenceWorld, id: string, name: string) {
     if (!this.nodes) {
       this.nodes = [];
