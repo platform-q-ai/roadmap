@@ -40,6 +40,7 @@ import {
   readBody,
   stripHtml,
 } from './routes-shared.js';
+import { buildVersionRoutes } from './routes-version-management.js';
 
 export type { ApiDeps, Route } from './routes-shared.js';
 export type { RequestWithId } from './routes-shared.js';
@@ -657,6 +658,7 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
       pattern: /^\/api\/components\/([^/]+)$/,
       handler: async (req, res, m) => handleDeleteComponent(deps, req, res, m[1]),
     },
+    ...buildVersionRoutes(deps),
     {
       method: 'PUT',
       pattern: /^\/api\/components\/([^/]+)\/versions\/([^/]+)$/,

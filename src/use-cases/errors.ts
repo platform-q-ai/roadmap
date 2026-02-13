@@ -48,6 +48,13 @@ export class EdgeExistsError extends Error {
   }
 }
 
+export class VersionNotFoundError extends Error {
+  constructor(nodeId: string, version: string) {
+    super(`Version not found: ${version} for component ${nodeId}`);
+    this.name = 'VersionNotFoundError';
+  }
+}
+
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);

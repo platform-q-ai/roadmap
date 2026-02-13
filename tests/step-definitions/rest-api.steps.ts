@@ -125,9 +125,14 @@ function buildApiRepos(world: ApiWorld) {
     },
     getStepCountSummary: async (nid: string, ver: string) => {
       const matching = world.features.filter(f => f.node_id === nid && f.version === ver);
+      const totalSteps = matching.reduce((sum, f) => sum + f.step_count, 0);
+      const passingKey = `passing_steps:${nid}:${ver}`;
+      const passingSteps =
+        typeof world[passingKey] === 'number' ? (world[passingKey] as number) : undefined;
       return {
-        totalSteps: matching.reduce((sum, f) => sum + f.step_count, 0),
+        totalSteps,
         featureCount: matching.length,
+        ...(passingSteps !== undefined ? { passingSteps } : {}),
       };
     },
     search: async (query: string, version?: string, _limit?: number) => {
