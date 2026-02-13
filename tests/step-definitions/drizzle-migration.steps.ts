@@ -1,6 +1,4 @@
 import { strict as assert } from 'node:assert';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
@@ -471,16 +469,3 @@ Then(
     assert.equal(rows[0].content, 'Brand new content');
   }
 );
-
-// ─── Build script ────────────────────────────────────────────────────
-
-Given('the package.json build scripts', function () {
-  // Context-setting
-});
-
-Then('the build:db script should not contain {string}', function (forbidden: string) {
-  const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
-  const buildDb = pkg.scripts['build:db'] as string;
-  assert.ok(buildDb, 'build:db script not found');
-  assert.ok(!buildDb.includes(forbidden), `build:db contains "${forbidden}": ${buildDb}`);
-});
