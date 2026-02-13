@@ -33,11 +33,11 @@ Then('the Dockerfile has a FROM instruction with a Node.js image', function () {
   );
 });
 
-Then('the Dockerfile installs sqlite3 via apt-get', function () {
+Then('the Dockerfile does not install sqlite3 via apt-get', function () {
   const content = readFileSync(join(process.cwd(), 'Dockerfile'), 'utf-8');
   assert.ok(
-    content.includes('apt-get') && content.includes('sqlite3'),
-    'Dockerfile must install sqlite3 via apt-get'
+    !content.includes('apt-get') && !content.includes('sqlite3'),
+    'Dockerfile must not install sqlite3 via apt-get (API-first persistence)'
   );
 });
 

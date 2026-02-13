@@ -10,7 +10,6 @@ import type {
   IEdgeRepository,
   IFeatureRepository,
   INodeRepository,
-  IVersionRepository,
 } from '../../src/domain/index.js';
 import { Edge, Node } from '../../src/domain/index.js';
 
@@ -113,8 +112,12 @@ async function startPersistServer(world: PersistenceWorld): Promise<void> {
     });
     world.persistServer = null;
   }
-  if (!world.nodes) world.nodes = [];
-  if (!world.edges) world.edges = [];
+  if (!world.nodes) {
+    world.nodes = [];
+  }
+  if (!world.edges) {
+    world.edges = [];
+  }
 
   const app = createApp({
     nodeRepo: buildNodeRepo(world),
@@ -147,7 +150,9 @@ Given(
 Given(
   'the database contains a component {string} with name {string}',
   function (this: PersistenceWorld, id: string, name: string) {
-    if (!this.nodes) this.nodes = [];
+    if (!this.nodes) {
+      this.nodes = [];
+    }
     this.nodes.push(new Node({ id, name, type: 'component', layer: null, tags: '[]' }));
   }
 );
@@ -183,7 +188,9 @@ When('the server restarts and applies schema', async function (this: Persistence
 When(
   'I create a component {string} with name {string} via the API',
   function (this: PersistenceWorld, id: string, name: string) {
-    if (!this.nodes) this.nodes = [];
+    if (!this.nodes) {
+      this.nodes = [];
+    }
     this.nodes.push(new Node({ id, name, type: 'component', layer: null, tags: '[]' }));
   }
 );
@@ -217,18 +224,15 @@ Then(
   }
 );
 
-Then('the Dockerfile build step is {string}', function (_this: PersistenceWorld, expected: string) {
+Then('the Dockerfile build step is {string}', function (this: PersistenceWorld, expected: string) {
   const dockerfile = readFileSync(join(process.cwd(), 'Dockerfile'), 'utf-8');
   assert.ok(dockerfile.includes(`RUN ${expected}`), `Dockerfile should contain "RUN ${expected}"`);
 });
 
-Then(
-  'the Dockerfile does not execute {string}',
-  function (_this: PersistenceWorld, script: string) {
-    const dockerfile = readFileSync(join(process.cwd(), 'Dockerfile'), 'utf-8');
-    assert.ok(!dockerfile.includes(script), `Dockerfile should not contain "${script}"`);
-  }
-);
+Then('the Dockerfile does not execute {string}', function (this: PersistenceWorld, script: string) {
+  const dockerfile = readFileSync(join(process.cwd(), 'Dockerfile'), 'utf-8');
+  assert.ok(!dockerfile.includes(script), `Dockerfile should not contain "${script}"`);
+});
 
 Then('it includes a persistent disk mounted at \\/data', function () {
   const raw = readFileSync(join(process.cwd(), 'render.yaml'), 'utf-8');
