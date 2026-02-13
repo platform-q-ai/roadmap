@@ -9,6 +9,7 @@ import {
   DeleteFeature,
   Edge,
   GetArchitecture,
+  MoveComponent,
   UpdateComponent,
   UpdateVersion,
   UploadFeature,
@@ -27,6 +28,7 @@ import { buildFeatureDeletionRoutes } from './routes-feature-deletion.js';
 import { buildFeatureRetrievalRoutes } from './routes-feature-retrieval.js';
 import { buildFeatureSearchRoutes } from './routes-feature-search.js';
 import { buildGraphTraversalRoutes } from './routes-graph-traversal.js';
+import { buildLayerRoutes } from './routes-layer-management.js';
 import type { ApiDeps, Route } from './routes-shared.js';
 import {
   BodyTooLargeError,
@@ -197,18 +199,23 @@ async function handleUpdateComponent(
     json(res, 400, { error: 'Invalid JSON body' }, req);
     return;
   }
+  const layerTarget = body.layer !== undefined ? stripHtml(String(body.layer)) : undefined;
   const { input, error } = parsePatchInput(body);
-  if (!input) {
+  if (!input && !layerTarget) {
     json(res, 400, { error: error ?? 'No updatable fields provided' }, req);
     return;
   }
-  const uc = new UpdateComponent({
-    nodeRepo: deps.nodeRepo,
-    versionRepo: deps.versionRepo,
-  });
   try {
-    const node = await uc.execute(id, input);
-    json(res, 200, node.toJSON());
+    let node;
+    if (input) {
+      const uc = new UpdateComponent({ nodeRepo: deps.nodeRepo, versionRepo: deps.versionRepo });
+      node = await uc.execute(id, input);
+    }
+    if (layerTarget) {
+      const mc = new MoveComponent({ nodeRepo: deps.nodeRepo, edgeRepo: deps.edgeRepo });
+      node = await mc.execute(id, layerTarget);
+    }
+    json(res, 200, node!.toJSON());
   } catch (err) {
     const msg = errorMessage(err);
     json(res, errorStatus(msg), { error: msg }, req);
@@ -611,6 +618,7 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
     },
     ...edgeRoutes(deps),
     ...buildGraphTraversalRoutes(deps),
+    ...buildLayerRoutes(deps),
     {
       method: 'GET',
       pattern: /^\/api\/components$/,
