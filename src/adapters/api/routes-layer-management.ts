@@ -28,6 +28,21 @@ interface CreateLayerBody {
   sort_order?: number;
 }
 
+function applyOptionalFields(input: CreateLayerBody, body: Record<string, unknown>): void {
+  if (body.color) {
+    input.color = stripHtml(String(body.color));
+  }
+  if (body.icon) {
+    input.icon = stripHtml(String(body.icon));
+  }
+  if (body.description) {
+    input.description = stripHtml(String(body.description));
+  }
+  if (body.sort_order !== undefined && Number.isFinite(Number(body.sort_order))) {
+    input.sort_order = Number(body.sort_order);
+  }
+}
+
 function parseCreateLayerBody(body: Record<string, unknown>): {
   input: CreateLayerBody | null;
   error?: string;
@@ -49,18 +64,7 @@ function parseCreateLayerBody(body: Record<string, unknown>): {
   }
 
   const input: CreateLayerBody = { id: idStr, name: nameStr };
-  if (body.color) {
-    input.color = stripHtml(String(body.color));
-  }
-  if (body.icon) {
-    input.icon = stripHtml(String(body.icon));
-  }
-  if (body.description) {
-    input.description = stripHtml(String(body.description));
-  }
-  if (body.sort_order !== undefined && Number.isFinite(Number(body.sort_order))) {
-    input.sort_order = Number(body.sort_order);
-  }
+  applyOptionalFields(input, body);
   return { input };
 }
 

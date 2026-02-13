@@ -178,6 +178,24 @@ async function handleDeleteComponent(
   }
 }
 
+async function applyPatchAndMove(
+  deps: ApiDeps,
+  id: string,
+  input: UpdateComponentInput | null,
+  layerTarget: string | undefined
+): Promise<Node> {
+  let node: Node | undefined;
+  if (input) {
+    const uc = new UpdateComponent({ nodeRepo: deps.nodeRepo, versionRepo: deps.versionRepo });
+    node = await uc.execute(id, input);
+  }
+  if (layerTarget) {
+    const mc = new MoveComponent({ nodeRepo: deps.nodeRepo, edgeRepo: deps.edgeRepo });
+    node = await mc.execute(id, layerTarget);
+  }
+  return node as Node;
+}
+
 async function handleUpdateComponent(
   deps: ApiDeps,
   req: IncomingMessage,
@@ -206,16 +224,8 @@ async function handleUpdateComponent(
     return;
   }
   try {
-    let node;
-    if (input) {
-      const uc = new UpdateComponent({ nodeRepo: deps.nodeRepo, versionRepo: deps.versionRepo });
-      node = await uc.execute(id, input);
-    }
-    if (layerTarget) {
-      const mc = new MoveComponent({ nodeRepo: deps.nodeRepo, edgeRepo: deps.edgeRepo });
-      node = await mc.execute(id, layerTarget);
-    }
-    json(res, 200, node!.toJSON());
+    const node = await applyPatchAndMove(deps, id, input, layerTarget);
+    json(res, 200, node.toJSON());
   } catch (err) {
     const msg = errorMessage(err);
     json(res, errorStatus(msg), { error: msg }, req);
