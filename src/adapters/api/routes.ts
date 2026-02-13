@@ -193,7 +193,10 @@ async function applyPatchAndMove(
     const mc = new MoveComponent({ nodeRepo: deps.nodeRepo, edgeRepo: deps.edgeRepo });
     node = await mc.execute(id, layerTarget);
   }
-  return node as Node;
+  if (!node) {
+    throw new Error('No update or move operation was performed');
+  }
+  return node;
 }
 
 async function handleUpdateComponent(

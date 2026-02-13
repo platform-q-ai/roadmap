@@ -1,9 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+import type { CreateLayerInput } from '../../use-cases/index.js';
 import { CreateLayer, GetLayer, ListLayers } from '../../use-cases/index.js';
 
 import type { ApiDeps, Route } from './routes-shared.js';
 import {
+  BodyTooLargeError,
   errorMessage,
   errorStatus,
   json,
@@ -12,23 +14,23 @@ import {
   stripHtml,
 } from './routes-shared.js';
 
-// ─── Constants ──────────────────────────────────────────────────────
-
-const KEBAB_CASE_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
-const MAX_ID_LENGTH = 64;
-
 // ─── Input parsing ──────────────────────────────────────────────────
 
-interface CreateLayerBody {
-  id: string;
-  name: string;
-  color?: string;
-  icon?: string;
-  description?: string;
-  sort_order?: number;
-}
+function parseCreateLayerBody(body: Record<string, unknown>): {
+  input: CreateLayerInput | null;
+  error?: string;
+} {
+  const { id, name } = body;
+  if (!id) {
+    return { input: null, error: 'Missing required field: id' };
+  }
+  const idStr = stripHtml(String(id));
+  const nameStr = name !== undefined && name !== null ? stripHtml(String(name)) : '';
+  if (!nameStr) {
+    return { input: null, error: 'Invalid name: name must not be empty' };
+  }
 
-function applyOptionalFields(input: CreateLayerBody, body: Record<string, unknown>): void {
+  const input: CreateLayerInput = { id: idStr, name: nameStr };
   if (body.color) {
     input.color = stripHtml(String(body.color));
   }
@@ -41,30 +43,6 @@ function applyOptionalFields(input: CreateLayerBody, body: Record<string, unknow
   if (body.sort_order !== undefined && Number.isFinite(Number(body.sort_order))) {
     input.sort_order = Number(body.sort_order);
   }
-}
-
-function parseCreateLayerBody(body: Record<string, unknown>): {
-  input: CreateLayerBody | null;
-  error?: string;
-} {
-  const { id, name } = body;
-  if (!id) {
-    return { input: null, error: 'Missing required field: id' };
-  }
-  const idStr = stripHtml(String(id));
-  if (idStr.length > MAX_ID_LENGTH) {
-    return { input: null, error: `Invalid id: must be ${MAX_ID_LENGTH} characters or fewer` };
-  }
-  if (!KEBAB_CASE_RE.test(idStr)) {
-    return { input: null, error: `Invalid id format: must be kebab-case` };
-  }
-  const nameStr = name !== undefined && name !== null ? stripHtml(String(name)) : '';
-  if (!nameStr) {
-    return { input: null, error: 'Invalid name: name must not be empty' };
-  }
-
-  const input: CreateLayerBody = { id: idStr, name: nameStr };
-  applyOptionalFields(input, body);
   return { input };
 }
 
@@ -112,7 +90,16 @@ function createLayerRoute(deps: ApiDeps): Route {
     method: 'POST',
     pattern: /^\/api\/layers$/,
     handler: async (req: IncomingMessage, res: ServerResponse) => {
-      const raw = await readBody(req);
+      let raw: string;
+      try {
+        raw = await readBody(req);
+      } catch (err) {
+        if (err instanceof BodyTooLargeError) {
+          json(res, 413, { error: 'Request body too large' }, req);
+          return;
+        }
+        throw err;
+      }
       const body = parseJsonBody(raw);
       if (!body) {
         json(res, 400, { error: 'Invalid JSON body' }, req);
