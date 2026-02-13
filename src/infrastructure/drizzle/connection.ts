@@ -1,3 +1,6 @@
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
+
 import Database from 'better-sqlite3';
 import { sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -86,6 +89,7 @@ export function applySchema(db: BetterSQLite3Database): void {
  * Enables WAL mode + foreign keys and applies schema.
  */
 export function createDrizzleConnection(dbPath: string): BetterSQLite3Database {
+  mkdirSync(dirname(dbPath), { recursive: true });
   const sqlite = new Database(dbPath);
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');

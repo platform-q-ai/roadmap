@@ -1,7 +1,10 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+
+import { createDrizzleConnection } from '../../../src/infrastructure/drizzle/connection.js';
 
 const ROOT = join(__dirname, '..', '..', '..');
 
@@ -60,6 +63,22 @@ describe('API-first persistence infrastructure', () => {
 
     it('should use nullish coalescing to fall back to a default path', () => {
       expect(startTs).toMatch(/process\.env\.DB_PATH\s*\?\?/);
+    });
+  });
+
+  describe('createDrizzleConnection directory creation', () => {
+    it('should create parent directories if they do not exist', () => {
+      const testDir = join(tmpdir(), `roadmap-test-${Date.now()}`);
+      const dbPath = join(testDir, 'sub', 'architecture.db');
+      try {
+        const db = createDrizzleConnection(dbPath);
+        expect(db).toBeDefined();
+        expect(existsSync(dbPath)).toBe(true);
+      } finally {
+        if (existsSync(testDir)) {
+          rmSync(testDir, { recursive: true, force: true });
+        }
+      }
     });
   });
 });
