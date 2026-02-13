@@ -59,6 +59,10 @@ src/
 │   ├── get-shortest-path.ts    # BFS shortest path between nodes
 │   ├── get-neighbourhood.ts    # N-hop subgraph extraction
 │   ├── get-layer-overview.ts   # Layer summaries with progress
+│   ├── list-layers.ts          # List all layer nodes
+│   ├── get-layer.ts            # Get layer with children
+│   ├── create-layer.ts         # Create a new layer node
+│   ├── move-component.ts       # Move component between layers (re-wire CONTAINS edge)
 │   └── index.ts                # Layer barrel export
 ├── infrastructure/             # Concrete implementations
 │   └── sqlite/                 # better-sqlite3 repository implementations
@@ -497,6 +501,9 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /a
 | `GET` | `/api/graph/next-implementable` | Components ready to implement (all deps complete, optional `?version=`, default `mvp`) | `200 [...]` | — |
 | `GET` | `/api/graph/path` | BFS shortest path between two nodes (`?from=X&to=Y` required) | `200 { path, edges }` | `400` missing params |
 | `GET` | `/api/graph/layer-overview` | Layer summaries with component counts and progress | `200 [...]` | — |
+| `GET` | `/api/layers` | List all layer nodes | `200 [...]` | — |
+| `GET` | `/api/layers/:id` | Get layer with its children | `200` | `404` not found |
+| `POST` | `/api/layers` | Create a new layer (with validation) | `201` | `400` invalid, `409` duplicate |
 | `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` invalid type/self-ref/missing nodes, `409` duplicate |
 | `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200 [...]` | `400` invalid type filter |
 | `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` not found |
@@ -537,11 +544,12 @@ Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
   "description": "Updated description",
   "tags": ["new", "tags"],
   "sort_order": 99,
-  "current_version": "0.7.5"
+  "current_version": "0.7.5",
+  "layer": "new-layer"
 }
 ```
 
-All fields are optional. Only supplied fields are changed; unmentioned fields are preserved (merge-patch semantics). `name` must be non-empty if provided. `tags` is capped at 50 entries. `current_version` must be a valid semver string (`MAJOR.MINOR` or `MAJOR.MINOR.PATCH`). When `current_version` changes, all phase version records are automatically recalculated. All string inputs are HTML-sanitized. Returns the full updated node object in the `200` response.
+All fields are optional. Only supplied fields are changed; unmentioned fields are preserved (merge-patch semantics). `name` must be non-empty if provided. `tags` is capped at 50 entries. `current_version` must be a valid semver string (`MAJOR.MINOR` or `MAJOR.MINOR.PATCH`). When `current_version` changes, all phase version records are automatically recalculated. `layer` must reference an existing layer node; when changed, the component is moved to the new layer and the CONTAINS edge is re-wired automatically. All string inputs are HTML-sanitized. Returns the full updated node object in the `200` response.
 
 ### POST /api/edges body
 
@@ -682,6 +690,22 @@ curl "https://roadmap-5vvp.onrender.com/api/graph/path?from=worker&to=supervisor
 
 # Get layer overview (summaries with progress)
 curl https://roadmap-5vvp.onrender.com/api/graph/layer-overview
+
+# List all layers
+curl https://roadmap-5vvp.onrender.com/api/layers
+
+# Get a layer with its children
+curl https://roadmap-5vvp.onrender.com/api/layers/supervisor-layer
+
+# Create a new layer
+curl -X POST https://roadmap-5vvp.onrender.com/api/layers \
+  -H "Content-Type: application/json" \
+  -d '{"id":"new-layer","name":"New Layer","color":"#E74C3C","icon":"layers"}'
+
+# Move a component to a different layer
+curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/my-svc \
+  -H "Content-Type: application/merge-patch+json" \
+  -d '{"layer":"new-layer"}'
 
 # Full architecture export
 curl https://roadmap-5vvp.onrender.com/api/architecture

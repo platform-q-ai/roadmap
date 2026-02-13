@@ -23,20 +23,18 @@ export class GetDependents {
   }
 
   async execute(nodeId: string): Promise<DependentInfo[]> {
-    const [inEdges, allNodes] = await Promise.all([
-      this.deps.edgeRepo.findByTarget(nodeId),
-      this.deps.nodeRepo.findAll(),
-    ]);
-    const nodeMap = new Map(allNodes.map(n => [n.id, n]));
+    const inEdges = await this.deps.edgeRepo.findByTarget(nodeId);
     const depEdges = inEdges.filter(e => e.type === 'DEPENDS_ON');
 
-    const result: DependentInfo[] = [];
-    for (const edge of depEdges) {
-      const node = nodeMap.get(edge.source_id);
-      if (node) {
-        result.push({ id: node.id, name: node.name, type: node.type });
+    const lookups = depEdges.map(async (edge): Promise<DependentInfo | null> => {
+      const node = await this.deps.nodeRepo.findById(edge.source_id);
+      if (!node) {
+        return null;
       }
-    }
-    return result;
+      return { id: node.id, name: node.name, type: node.type };
+    });
+
+    const resolved = await Promise.all(lookups);
+    return resolved.filter((info): info is DependentInfo => info !== null);
   }
 }
