@@ -101,7 +101,7 @@ export function createAuthMiddleware(deps: AuthMiddlewareDeps) {
     const url = req.url ?? '/';
     const method = req.method ?? 'GET';
 
-    if (url === '/api/health') {
+    if (url === '/api/health' || url === '/api/architecture') {
       return true;
     }
 
