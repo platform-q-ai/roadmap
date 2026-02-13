@@ -4,18 +4,14 @@ import http from 'node:http';
 import { Then, When } from '@cucumber/cucumber';
 
 import { createApp, createAuthMiddleware } from '../../src/adapters/api/index.js';
-import { ApiKey } from '../../src/domain/entities/api-key.js';
-import { Edge } from '../../src/domain/entities/edge.js';
-import { Feature } from '../../src/domain/entities/feature.js';
-import { Node } from '../../src/domain/entities/node.js';
-import { Version } from '../../src/domain/entities/version.js';
 import type {
+  IApiKeyRepository,
   IEdgeRepository,
   IFeatureRepository,
   INodeRepository,
   IVersionRepository,
 } from '../../src/domain/index.js';
-import type { IApiKeyRepository } from '../../src/domain/index.js';
+import { ApiKey, Edge, Feature, Node, Version } from '../../src/domain/index.js';
 import { hashKey, ValidateApiKey } from '../../src/use-cases/index.js';
 
 interface LiveApiWorld {
@@ -31,8 +27,8 @@ interface LiveApiWorld {
   [key: string]: unknown;
 }
 
-function buildRepos(world: LiveApiWorld) {
-  const nodeRepo: INodeRepository = {
+function buildNodeRepo(world: LiveApiWorld): INodeRepository {
+  return {
     findAll: async () => world.nodes,
     findById: async (id: string) => world.nodes.find(n => n.id === id) ?? null,
     findByType: async (type: string) => world.nodes.filter(n => n.type === type),
@@ -46,7 +42,10 @@ function buildRepos(world: LiveApiWorld) {
       world.nodes = world.nodes.filter(n => n.id !== id);
     },
   };
-  const edgeRepo: IEdgeRepository = {
+}
+
+function buildEdgeRepo(world: LiveApiWorld): IEdgeRepository {
+  return {
     findAll: async () => world.edges,
     findById: async (id: number) => world.edges.find(e => e.id === id) ?? null,
     findBySource: async (sid: string) => world.edges.filter(e => e.source_id === sid),
@@ -55,7 +54,7 @@ function buildRepos(world: LiveApiWorld) {
     findRelationships: async () => world.edges.filter(e => !e.isContainment()),
     existsBySrcTgtType: async (src: string, tgt: string, type: string) =>
       world.edges.some(e => e.source_id === src && e.target_id === tgt && e.type === type),
-    save: async (edge: Edge) => {
+    save: async (edge: Edge): Promise<Edge> => {
       const nextId = world.edges.length > 0 ? Math.max(...world.edges.map(e => e.id ?? 0)) + 1 : 1;
       const withId = new Edge({
         id: edge.id ?? nextId,
@@ -68,11 +67,14 @@ function buildRepos(world: LiveApiWorld) {
       world.edges.push(withId);
       return withId;
     },
-    delete: async (id: number) => {
+    delete: async (id: number): Promise<void> => {
       world.edges = world.edges.filter(e => e.id !== id);
     },
-  } as IEdgeRepository;
-  const versionRepo: IVersionRepository = {
+  };
+}
+
+function buildVersionRepo(world: LiveApiWorld): IVersionRepository {
+  return {
     findAll: async () => world.versions,
     findByNode: async (nid: string) => world.versions.filter(v => v.node_id === nid),
     findByNodeAndVersion: async (nid: string, ver: string) =>
@@ -87,7 +89,10 @@ function buildRepos(world: LiveApiWorld) {
       world.versions = world.versions.filter(v => v.node_id !== nid);
     },
   };
-  const featureRepo: IFeatureRepository = {
+}
+
+function buildFeatureRepo(world: LiveApiWorld): IFeatureRepository {
+  return {
     findAll: async () => world.features,
     findByNode: async (nid: string) => world.features.filter(f => f.node_id === nid),
     findByNodeAndVersion: async (nid: string, ver: string) =>
@@ -142,7 +147,15 @@ function buildRepos(world: LiveApiWorld) {
       });
     },
   };
-  return { nodeRepo, edgeRepo, versionRepo, featureRepo };
+}
+
+function buildRepos(world: LiveApiWorld) {
+  return {
+    nodeRepo: buildNodeRepo(world),
+    edgeRepo: buildEdgeRepo(world),
+    versionRepo: buildVersionRepo(world),
+    featureRepo: buildFeatureRepo(world),
+  };
 }
 
 function httpRequest(
@@ -256,11 +269,12 @@ async function ensureAuthServer(world: LiveApiWorld): Promise<void> {
 
   const app = createApp(repos, { authMiddleware });
   await new Promise<void>(resolve => {
-    world.server = app.listen(0, () => {
-      const addr = world.server!.address();
+    const server = app.listen(0, () => {
+      const addr = server.address();
       if (typeof addr === 'object' && addr !== null) {
         world.baseUrl = `http://127.0.0.1:${addr.port}`;
       }
+      world.server = server;
       resolve();
     });
   });

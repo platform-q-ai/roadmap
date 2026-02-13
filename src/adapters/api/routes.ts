@@ -59,6 +59,7 @@ async function handleGetArchitecture(
 ) {
   const uc = new GetArchitecture(deps);
   const data = await uc.execute({ packageVersion });
+  res.setHeader('Cache-Control', 'public, max-age=30');
   json(res, 200, data);
 }
 

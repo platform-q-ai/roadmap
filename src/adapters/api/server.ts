@@ -257,12 +257,16 @@ function handleRateLimit(rateLimiter: RateLimiter | undefined, ctx: RequestConte
   return checkRateLimit(rateLimiter, ctx);
 }
 
+/** Public read-only endpoints that share a dedicated rate-limit bucket. */
+const PUBLIC_RATE_LIMIT_PATHS = new Set(['/api/health', '/api/architecture']);
+
 function checkRateLimit(rateLimiter: RateLimiter, ctx: RequestContext): boolean {
   const authReq = ctx.req as AuthenticatedRequest;
   const keyName = authReq.apiKey?.name ?? '__anonymous__';
+  const pathname = ctx.url.split('?')[0];
 
-  if (ctx.url === '/api/health') {
-    const result = rateLimiter.check('__health__');
+  if (PUBLIC_RATE_LIMIT_PATHS.has(pathname)) {
+    const result = rateLimiter.check('__public__');
     setRateLimitHeaders(ctx.res, result);
     return true;
   }

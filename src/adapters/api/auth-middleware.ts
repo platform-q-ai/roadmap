@@ -101,7 +101,8 @@ export function createAuthMiddleware(deps: AuthMiddlewareDeps) {
     req: http.IncomingMessage,
     res: http.ServerResponse
   ): Promise<boolean> {
-    const url = req.url ?? '/';
+    const rawUrl = req.url ?? '/';
+    const url = rawUrl.split('?')[0];
     const method = req.method ?? 'GET';
 
     if (PUBLIC_ENDPOINTS.has(url)) {

@@ -836,6 +836,7 @@ document.addEventListener('keydown', function(e) {
 async function init() {
   try {
     const resp = await fetch('/api/architecture');
+    if (!resp.ok) throw new Error(`API returned ${resp.status}`);
     DATA = await resp.json();
     render();
     renderProgressionTree();
