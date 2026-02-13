@@ -835,13 +835,14 @@ document.addEventListener('keydown', function(e) {
 // ─── Load Data ───────────────────────────────────────────
 async function init() {
   try {
-    const resp = await fetch('data.json');
+    const resp = await fetch('/api/architecture');
+    if (!resp.ok) throw new Error(`API returned ${resp.status}`);
     DATA = await resp.json();
     render();
     renderProgressionTree();
   } catch (e) {
     document.getElementById('architecture').innerHTML =
-      '<p style="color:var(--red);text-align:center;margin-top:40px;">Failed to load data.json — run: node scripts/export.js</p>';
+      '<p style="color:var(--red);text-align:center;margin-top:40px;">Failed to load architecture data from API</p>';
   }
 }
 

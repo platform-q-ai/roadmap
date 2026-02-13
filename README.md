@@ -35,7 +35,7 @@ npm install
 npm run build
 ```
 
-This compiles TypeScript, rebuilds the database, seeds feature files, and exports `web/data.json`.
+This compiles TypeScript, rebuilds the database, seeds feature files, and exports `web/data.json`. The web view fetches live data from the API at runtime, so `data.json` is only used for offline/legacy access.
 
 ### Serve the web view (static)
 
@@ -141,10 +141,12 @@ seed.sql + schema.sql  ->  sqlite3  ->  architecture.db
                                               |
 components/**/features/*.feature  ->  seed-features  ->  architecture.db
                                                                |
-                                                         export  ->  data.json  ->  web view
+                                             API server  ->  /api/architecture  ->  web view
+                                                               |
+                                                         export  ->  data.json (legacy/offline)
 ```
 
-The REST API also reads from and writes to `architecture.db` directly using Drizzle ORM.
+The REST API reads from and writes to `architecture.db` directly using Drizzle ORM. The web view fetches live data from the `/api/architecture` endpoint (public, no authentication required).
 
 ### Clean Architecture
 
@@ -158,7 +160,7 @@ Adapters (CLI, API, MCP)  ->  Use Cases  ->  Domain (entities + interfaces)
 
 ### Web View
 
-The interactive page renders the architecture as a layered diagram using Cytoscape.js with a dark theme. Each component box:
+The interactive page fetches live data from the `/api/architecture` endpoint and renders the architecture as a layered diagram using Cytoscape.js with a dark theme. Each component box:
 
 - Shows its description, progress badge, and tags when collapsed
 - Expands on click to reveal a version toggle strip (MVP / v1 / v2)
@@ -171,8 +173,8 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 
 | Method | Path | Description | Success | Errors |
 |--------|------|-------------|---------|--------|
-| `GET` | `/api/health` | Health check | `200` | -- |
-| `GET` | `/api/architecture` | Full architecture graph (layers, nodes, edges, stats) | `200` | -- |
+| `GET` | `/api/health` | Health check (public, no auth) | `200` | -- |
+| `GET` | `/api/architecture` | Full architecture graph (public, no auth, `Cache-Control: public, max-age=30`) | `200` | -- |
 | `GET` | `/api/components` | List all non-layer nodes | `200` | -- |
 | `GET` | `/api/components/:id` | Component with versions and features | `200` | `404` |
 | `POST` | `/api/components` | Create a new component (with validation) | `201` | `400` `409` |

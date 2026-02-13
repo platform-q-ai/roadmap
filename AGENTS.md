@@ -16,7 +16,7 @@ This file tells you how to work with this repository. Read it before making chan
 
 ## What This Repo Is
 
-Living documentation for the Open Autonomous Runtime. The source of truth is a SQLite database (`db/architecture.db`) built from `schema.sql` + `seed.sql`. The web view (`web/index.html`) is a read-only static page that reads from `web/data.json` (exported from the DB).
+Living documentation for the Open Autonomous Runtime. The source of truth is a SQLite database (`db/architecture.db`) built from `schema.sql` + `seed.sql`. The web view (`web/index.html`) is a read-only page that fetches live data from the `/api/architecture` endpoint (no authentication required).
 
 **Do not edit `db/architecture.db` or `web/data.json` directly.** They are generated files. Edit `seed.sql` for data changes, `schema.sql` for schema changes, `web/index.html` for UI changes.
 
@@ -85,7 +85,9 @@ seed.sql + schema.sql  -->  sqlite3  -->  architecture.db
                                                |
 components/**/features/*.feature  -->  seed-features  -->  architecture.db
                                                                 |
-                                                          export  -->  data.json  -->  web view
+                                              API server  -->  /api/architecture  -->  web view
+                                                                |
+                                                          export  -->  data.json (legacy/offline)
 ```
 
 ## Clean Architecture Rules
@@ -475,8 +477,8 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /a
 
 | Method | Path | Description | Success | Errors |
 |--------|------|-------------|---------|--------|
-| `GET` | `/api/health` | Health check | `200 { status: "ok" }` | — |
-| `GET` | `/api/architecture` | Full architecture graph (layers, nodes, edges, progression_tree, stats) | `200` | — |
+| `GET` | `/api/health` | Health check (public, no auth) | `200 { status: "ok" }` | — |
+| `GET` | `/api/architecture` | Full architecture graph (public, no auth, `Cache-Control: public, max-age=30`) | `200` | — |
 | `GET` | `/api/components` | List all non-layer nodes | `200 [...]` | — |
 | `GET` | `/api/components/:id` | Get component with versions and features | `200` | `404` not found |
 | `POST` | `/api/components` | Create a new component (with validation) | `201` | `400` invalid, `409` duplicate |
