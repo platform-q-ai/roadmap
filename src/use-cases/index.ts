@@ -13,6 +13,7 @@ export type { CreateEdgeInput } from './create-edge.js';
 export { CreateEdge } from './create-edge.js';
 export type { CreateLayerInput } from './create-layer.js';
 export { CreateLayer } from './create-layer.js';
+export { DeleteAllVersions } from './delete-all-versions.js';
 export { DeleteComponent } from './delete-component.js';
 export { DeleteEdge } from './delete-edge.js';
 export { DeleteFeature } from './delete-feature.js';
@@ -25,6 +26,7 @@ export {
   NodeNotFoundError,
   NodeTypeError,
   ValidationError,
+  VersionNotFoundError,
 } from './errors.js';
 export { ExportArchitecture } from './export-architecture.js';
 export type { ExportFeaturesResult } from './export-features.js';
@@ -51,8 +53,11 @@ export { GetNextImplementable } from './get-next-implementable.js';
 export { GetShortestPath } from './get-shortest-path.js';
 export type { StepTotalsResult } from './get-step-totals.js';
 export { GetStepTotals } from './get-step-totals.js';
+export { GetVersion } from './get-version.js';
 export { ListApiKeys } from './list-api-keys.js';
 export { ListLayers } from './list-layers.js';
+export type { VersionWithSteps } from './list-versions.js';
+export { ListVersions } from './list-versions.js';
 export { MoveComponent } from './move-component.js';
 export { RevokeApiKey } from './revoke-api-key.js';
 export type { SearchResult } from './search-features.js';

@@ -3,6 +3,7 @@ import type { Feature } from '../entities/index.js';
 export interface StepCountSummary {
   totalSteps: number;
   featureCount: number;
+  passingSteps?: number;
 }
 
 export interface IFeatureRepository {
