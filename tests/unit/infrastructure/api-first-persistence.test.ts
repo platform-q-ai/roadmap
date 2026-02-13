@@ -9,7 +9,7 @@ describe('API-first persistence infrastructure', () => {
   describe('Dockerfile', () => {
     const dockerfile = readFileSync(join(ROOT, 'Dockerfile'), 'utf-8');
 
-    it('should use build:ts instead of build as the RUN step', () => {
+    it('should run build:ts as the build step', () => {
       expect(dockerfile).toContain('npm run build:ts');
     });
 
@@ -53,7 +53,6 @@ describe('API-first persistence infrastructure', () => {
 
   describe('server DB_PATH resolution', () => {
     it('should use DB_PATH from environment when set', () => {
-      // This tests the pattern: process.env.DB_PATH ?? default
       const envPath = '/data/architecture.db';
       const defaultPath = '/app/db/architecture.db';
       const resolved = envPath ?? defaultPath;
