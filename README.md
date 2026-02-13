@@ -92,12 +92,16 @@ roadmap/
 │   │   ├── get-shortest-path.ts
 │   │   ├── get-neighbourhood.ts
 │   │   ├── get-layer-overview.ts
+│   │   ├── list-layers.ts
+│   │   ├── get-layer.ts
+│   │   ├── create-layer.ts
+│   │   ├── move-component.ts
 │   │   └── errors.ts
 │   ├── infrastructure/         # Concrete implementations
 │   │   ├── drizzle/            # Drizzle ORM repositories (primary)
 │   │   └── sqlite/             # Raw better-sqlite3 repositories (legacy)
 │   └── adapters/               # Entry points
-│       ├── api/                # REST API server (37 endpoints + static files)
+│       ├── api/                # REST API server (40 endpoints + static files)
 │       └── cli/                # CLI commands (export, seed-features, component CRUD)
 ├── components/                 # 50 component directories with Gherkin feature files
 │   ├── roadmap/features/       # 72 feature files (self-tracking)
@@ -193,6 +197,9 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `GET` | `/api/graph/next-implementable` | Components ready to implement (all deps complete, optional `?version=`) | `200` | -- |
 | `GET` | `/api/graph/path` | BFS shortest path (`?from=X&to=Y` required) | `200` | `400` |
 | `GET` | `/api/graph/layer-overview` | Layer summaries with component counts and progress | `200` | -- |
+| `GET` | `/api/layers` | List all layer nodes | `200` | -- |
+| `GET` | `/api/layers/:id` | Get layer with its children | `200` | `404` |
+| `POST` | `/api/layers` | Create a new layer (with validation) | `201` | `400` `409` |
 | `POST` | `/api/edges` | Create a new edge (with validation) | `201` | `400` `409` |
 | `GET` | `/api/edges` | List all edges (optional `?type=` filter, `?limit=`/`?offset=` pagination) | `200` | `400` |
 | `DELETE` | `/api/edges/:id` | Delete an edge by numeric ID | `204` | `404` |
@@ -225,7 +232,7 @@ curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/my-svc \
   -d '{"name":"Renamed Service","description":"Updated description","tags":["new-tag"]}'
 ```
 
-Updatable fields: `name` (non-empty string), `description` (string), `tags` (string array, max 50), `sort_order` (number), `current_version` (semver string, e.g. `"0.7.5"`). Only supplied fields are changed; unmentioned fields are preserved. When `current_version` changes, all phase version records are automatically recalculated. All string inputs are HTML-sanitized. The `200` response returns the full updated node object.
+Updatable fields: `name` (non-empty string), `description` (string), `tags` (string array, max 50), `sort_order` (number), `current_version` (semver string, e.g. `"0.7.5"`), `layer` (string, must reference an existing layer node). Only supplied fields are changed; unmentioned fields are preserved. When `current_version` changes, all phase version records are automatically recalculated. When `layer` changes, the component is moved to the new layer and the CONTAINS edge is re-wired. All string inputs are HTML-sanitized. The `200` response returns the full updated node object.
 
 ### Example: Upload a feature file (version-scoped)
 
@@ -307,6 +314,28 @@ curl -X POST "https://roadmap-5vvp.onrender.com/api/admin/export-features?compon
 ```
 
 The seed endpoint scans `components/**/features/*.feature` files, parses version from filename prefix (`mvp-`, `v1-`, `v2-`), and inserts them into the database. The response includes `seeded` count, `skipped` count, and `step_totals` per version. The export endpoint writes features from the database back to the filesystem. Both require an API key with `admin` scope.
+
+### Example: Layer management
+
+```bash
+# List all layers
+curl https://roadmap-5vvp.onrender.com/api/layers
+
+# Get a layer with its children
+curl https://roadmap-5vvp.onrender.com/api/layers/supervisor-layer
+
+# Create a new layer
+curl -X POST https://roadmap-5vvp.onrender.com/api/layers \
+  -H "Content-Type: application/json" \
+  -d '{"id":"new-layer","name":"New Layer","color":"#E74C3C","icon":"layers","description":"A new layer","sort_order":42}'
+
+# Move a component to a different layer
+curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/my-svc \
+  -H "Content-Type: application/merge-patch+json" \
+  -d '{"layer":"new-layer"}'
+```
+
+The `POST /api/layers` endpoint requires `id` (kebab-case, max 64 chars) and `name` (non-empty). Optional fields: `color`, `icon`, `description`, `sort_order`. The `type` is automatically set to `layer`. Duplicate IDs return `409`. The `GET /api/layers/:id` response includes a `children` array of components contained in that layer.
 
 ## Edge Types
 
