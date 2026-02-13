@@ -1,9 +1,10 @@
 import { strict as assert } from 'node:assert';
 import http from 'node:http';
 
-import { When, Then } from '@cucumber/cucumber';
+import { Then, When } from '@cucumber/cucumber';
 
 import { createApp, createAuthMiddleware } from '../../src/adapters/api/index.js';
+import { ApiKey } from '../../src/domain/entities/api-key.js';
 import { Edge } from '../../src/domain/entities/edge.js';
 import { Feature } from '../../src/domain/entities/feature.js';
 import { Node } from '../../src/domain/entities/node.js';
@@ -14,9 +15,8 @@ import type {
   INodeRepository,
   IVersionRepository,
 } from '../../src/domain/index.js';
-import { hashKey, ValidateApiKey } from '../../src/use-cases/index.js';
 import type { IApiKeyRepository } from '../../src/domain/index.js';
-import { ApiKey } from '../../src/domain/entities/api-key.js';
+import { hashKey, ValidateApiKey } from '../../src/use-cases/index.js';
 
 interface LiveApiWorld {
   nodes: Node[];
