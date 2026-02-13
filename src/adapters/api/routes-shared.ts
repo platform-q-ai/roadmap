@@ -135,10 +135,10 @@ export function stripHtml(input: string): string {
 
 function validateRequiredFields(
   body: Record<string, unknown>
-): { idStr: string; nameStr: string; typeStr: string; layer: string } | string {
+): { idStr: string; nameStr: string; typeStr: string; layer?: string } | string {
   const { id, name, type, layer } = body;
-  if (!id || !type || !layer) {
-    return 'Missing or invalid fields: id, name, type, layer';
+  if (!id || !type) {
+    return 'Missing or invalid fields: id, name, type';
   }
   const nameStr = name !== undefined && name !== null ? String(name) : '';
   if (!nameStr) {
@@ -156,7 +156,12 @@ function validateRequiredFields(
   if (!VALID_NODE_TYPES.includes(typeStr)) {
     return `Invalid node type: ${typeStr}`;
   }
-  return { idStr, nameStr, typeStr, layer: stripHtml(String(layer)) };
+  return {
+    idStr,
+    nameStr,
+    typeStr,
+    layer: layer ? stripHtml(String(layer)) : undefined,
+  };
 }
 
 export function parseCreateInput(body: Record<string, unknown>): ParseResult {

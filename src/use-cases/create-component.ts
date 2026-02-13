@@ -12,7 +12,7 @@ export interface CreateComponentInput {
   id: string;
   name: string;
   type: NodeType;
-  layer: string;
+  layer?: string;
   description?: string;
   tags?: string[];
   color?: string;
@@ -44,26 +44,13 @@ export class CreateComponent {
   }
 
   async execute(input: CreateComponentInput): Promise<Node> {
-    const validTypes = Node.TYPES;
-    if (!validTypes.includes(input.type)) {
-      throw new NodeTypeError(input.type);
-    }
-
-    const layerNode = await this.nodeRepo.findById(input.layer);
-    if (!layerNode) {
-      throw new ValidationError(`Invalid layer: ${input.layer} does not exist`);
-    }
-
-    const exists = await this.nodeRepo.exists(input.id);
-    if (exists) {
-      throw new NodeExistsError(input.id);
-    }
+    await this.validate(input);
 
     const node = new Node({
       id: input.id,
       name: input.name,
       type: input.type,
-      layer: input.layer,
+      layer: input.layer ?? null,
       description: input.description ?? null,
       tags: input.tags ?? [],
       color: input.color ?? null,
@@ -72,17 +59,44 @@ export class CreateComponent {
     });
 
     await this.nodeRepo.save(node);
+    await this.createContainsEdge(input);
+    await this.createDefaultVersions(input.id);
 
+    return node;
+  }
+
+  private async validate(input: CreateComponentInput): Promise<void> {
+    if (!Node.TYPES.includes(input.type)) {
+      throw new NodeTypeError(input.type);
+    }
+    if (input.layer) {
+      const layerNode = await this.nodeRepo.findById(input.layer);
+      if (!layerNode) {
+        throw new ValidationError(`Invalid layer: ${input.layer} does not exist`);
+      }
+    }
+    const exists = await this.nodeRepo.exists(input.id);
+    if (exists) {
+      throw new NodeExistsError(input.id);
+    }
+  }
+
+  private async createContainsEdge(input: CreateComponentInput): Promise<void> {
+    if (!input.layer) {
+      return;
+    }
     const containsEdge = new Edge({
       source_id: input.layer,
       target_id: input.id,
       type: 'CONTAINS',
     });
     await this.edgeRepo.save(containsEdge);
+  }
 
+  private async createDefaultVersions(nodeId: string): Promise<void> {
     for (const ver of Version.VERSIONS) {
       const version = new Version({
-        node_id: input.id,
+        node_id: nodeId,
         version: ver,
         content: '',
         progress: 0,
@@ -90,7 +104,5 @@ export class CreateComponent {
       });
       await this.versionRepo.save(version);
     }
-
-    return node;
   }
 }

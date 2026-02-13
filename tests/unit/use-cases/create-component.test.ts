@@ -217,4 +217,19 @@ describe('CreateComponent', () => {
       })
     ).rejects.toThrow(/layer/i);
   });
+
+  it('creates a component without a layer (standalone)', async () => {
+    const { nodeRepo, edgeRepo, versionRepo, savedNodes } = createMockRepos();
+    const uc = new CreateComponent({ nodeRepo, edgeRepo, versionRepo });
+
+    const result = await uc.execute({
+      id: 'standalone',
+      name: 'Standalone App',
+      type: 'app',
+    });
+
+    expect(result.id).toBe('standalone');
+    expect(savedNodes[0].layer).toBeNull();
+    expect(edgeRepo.save).not.toHaveBeenCalled();
+  });
 });
