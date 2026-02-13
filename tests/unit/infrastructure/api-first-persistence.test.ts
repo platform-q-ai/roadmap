@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createDrizzleConnection } from '../../../src/infrastructure/drizzle/connection.js';
+import { createDrizzleConnection } from '../../../src/infrastructure/drizzle/index.js';
 
 const ROOT = join(__dirname, '..', '..', '..');
 
