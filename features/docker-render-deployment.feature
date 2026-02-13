@@ -22,9 +22,9 @@ Feature: Docker-based Render Deployment
     Given the project source directory
     Then the Dockerfile has a FROM instruction with a Node.js image
 
-  Scenario: Dockerfile installs sqlite3 system package
+  Scenario: Dockerfile does not install sqlite3 (API-first persistence)
     Given the project source directory
-    Then the Dockerfile installs sqlite3 via apt-get
+    Then the Dockerfile does not install sqlite3 via apt-get
 
   Scenario: Dockerfile copies package files and installs dependencies
     Given the project source directory

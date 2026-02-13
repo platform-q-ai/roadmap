@@ -67,21 +67,11 @@ describe('Dockerfile', () => {
     });
   });
 
-  describe('sqlite3 installation', () => {
-    it('runs apt-get update', () => {
+  describe('no sqlite3 CLI needed (API-first persistence)', () => {
+    it('does not install sqlite3 via apt-get', () => {
       const content = readFileSync(dockerfilePath, 'utf-8');
-      expect(content).toContain('apt-get update');
-    });
-
-    it('installs sqlite3 package', () => {
-      const content = readFileSync(dockerfilePath, 'utf-8');
-      expect(content).toContain('apt-get');
-      expect(content).toContain('sqlite3');
-    });
-
-    it('cleans up apt cache to reduce image size', () => {
-      const content = readFileSync(dockerfilePath, 'utf-8');
-      expect(content).toContain('rm -rf /var/lib/apt/lists');
+      expect(content).not.toContain('apt-get');
+      expect(content).not.toContain('sqlite3');
     });
   });
 
@@ -116,9 +106,12 @@ describe('Dockerfile', () => {
       expect(npmCiIndex).toBeLessThan(copyAllIndex);
     });
 
-    it('runs npm run build', () => {
+    it('runs npm run build:ts (TypeScript only, no build:data)', () => {
       const content = readFileSync(dockerfilePath, 'utf-8');
-      expect(content).toContain('npm run build');
+      expect(content).toContain('npm run build:ts');
+      expect(content).not.toContain('npm run build:data');
+      expect(content).not.toContain('npm run build\n');
+      expect(content).not.toMatch(/npm run build[^:]/);
     });
   });
 
