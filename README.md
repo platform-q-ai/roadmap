@@ -1,6 +1,6 @@
 # Roadmap
 
-Living documentation for the **Open Autonomous Runtime** architecture. Every component in the system is a node in a SQLite graph database with versioned specs (MVP / v1 / v2), Gherkin feature files, and progress tracking. A REST API provides full CRUD access to components, features, and the architecture graph. A static web view renders the full architecture as an interactive diagram where every box can be expanded to explore documentation, build status, and BDD specs.
+Living documentation for the **Open Autonomous Runtime** architecture. Every component in the system is a node in a SQLite graph database with versioned specs (MVP / v1 / v2), Gherkin feature files, and progress tracking. A REST API provides full CRUD access to components, features, and the architecture graph. A static web view renders the full architecture as an immersive skill tree where every circular icon can be expanded to explore documentation, build status, and BDD specs.
 
 **Live:** [roadmap-5vvp.onrender.com](https://roadmap-5vvp.onrender.com)
 
@@ -154,7 +154,7 @@ Adapters (CLI, API, MCP)  ->  Use Cases  ->  Domain (entities + interfaces)
 
 ### Web View
 
-The interactive page fetches live data from the `/api/architecture` endpoint and renders the architecture as a layered diagram using Cytoscape.js with a dark theme. Each component box:
+The interactive page fetches live data from the `/api/architecture` endpoint and renders the architecture as an immersive skill tree using Cytoscape.js with a dark theme and navigation controls (zoom/pan). Each skill icon:
 
 - Shows its description, progress badge, and tags when collapsed
 - Expands on click to reveal a version toggle strip (MVP / v1 / v2)
