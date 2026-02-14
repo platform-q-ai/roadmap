@@ -16,7 +16,7 @@ Track all 8 phases via TodoWrite. Phases 1-7 commit with `git commit --no-verify
 
 **Phase 5: Implementation (GREEN)** — Minimal code to pass all tests. Clean Architecture order: Domain→Use Cases→Infrastructure→Adapters. Barrel imports, constructor injection. Checkpoint: `npm run test:unit && npm run test:features` — ALL pass. Commit.
 
-**Phase 6: GREEN verification** — Confirm all tests pass including pre-existing. Stop if regressions. If the feature touches `web/` or UI: start the server (`npm run serve`), use Playwright MCP to open `http://localhost:8080`, take a screenshot, and verify the change visually. No commit.
+**Phase 6: GREEN verification** — Confirm all tests pass including pre-existing. Stop if regressions. If the feature touches `web/` or UI: start the server (`npm run serve`), use Playwright MCP to open `http://localhost:8080`, take a screenshot, verify visually, then stop the server. No commit.
 
 **Phase 7: Refactor** — Clean up, remove duplication, keep tests green. Commit if changes made.
 

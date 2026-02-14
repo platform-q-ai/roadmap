@@ -241,6 +241,10 @@ Implement in order, respecting dependency rules:
 3. **Infrastructure**: Concrete implementations
 4. **Adapters**: Wire and expose
 
+### Visual Verification (web/UI features)
+
+After GREEN verification, if the feature touches `web/` or UI: start the server (`npm run serve`), use Playwright MCP to open `http://localhost:8080`, take a screenshot, verify visually, then stop the server.
+
 ### Step 5: Refactor
 
 - Remove duplication
