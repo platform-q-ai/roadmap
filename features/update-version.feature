@@ -1,7 +1,7 @@
 Feature: Update version descriptions via API
   As an LLM engineer using the roadmap API headlessly
   I want to update MVP, v1, and v2 version descriptions for components
-  So that I can programmatically maintain version documentation without editing seed.sql
+  So that I can programmatically maintain version documentation via the API
 
   Background:
     Given the API server is running

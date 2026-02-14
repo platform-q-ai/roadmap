@@ -59,7 +59,6 @@ The codebase follows Clean Architecture. Dependencies point inward: adapters -> 
 ```
 roadmap/
 ├── schema.sql                  # SQLite graph schema (4 tables, 6 indexes)
-├── seed.sql                    # All component data, edges, and version content
 ├── db/                         # Runtime database directory (gitignored)
 ├── src/
 │   ├── domain/                 # Entities + repository interfaces (zero deps)

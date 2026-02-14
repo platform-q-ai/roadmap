@@ -5,7 +5,7 @@ Feature: Sync roadmap current_version from package.json
 
   The roadmap node is the self-tracking component. Its current_version
   drives derived progress for all its version phases (MVP, v1, v2).
-  Instead of hardcoding the version in seed.sql, the system should
+  Instead of hardcoding the version in the database, the system should
   read it from package.json at assembly time.
 
   Rule: GetArchitecture accepts an optional package version
@@ -55,12 +55,6 @@ Feature: Sync roadmap current_version from package.json
       And the package version is null
       When I assemble the architecture with the package version
       Then the enriched node "roadmap" should have current_version "0.7.5"
-
-  Rule: seed.sql no longer hardcodes roadmap current_version
-
-    Scenario: seed.sql roadmap node has no hardcoded current_version
-      Given the project source directory
-      Then the roadmap node in seed.sql should not have a hardcoded current_version
 
   Rule: API adapter reads from package.json
 
