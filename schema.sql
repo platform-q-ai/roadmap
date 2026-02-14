@@ -9,7 +9,7 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS nodes (
     id              TEXT PRIMARY KEY,
     name            TEXT NOT NULL,
-    type            TEXT NOT NULL CHECK(type IN ('layer', 'component', 'store', 'external', 'phase', 'app')),
+    type            TEXT NOT NULL CHECK(type IN ('layer', 'component', 'store', 'external', 'phase', 'app', 'mcp')),
     layer           TEXT,
     color           TEXT,
     icon            TEXT,
