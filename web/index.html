@@ -8,8 +8,8 @@
 <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
 <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
 <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js" integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu" crossorigin="anonymous"></script>
 <style>
 :root {
   --bg:#07080c;--surface:#0f1219;--surface-2:#171b25;--border:#262c3c;--border-accent:#384058;
@@ -594,18 +594,29 @@ function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+const _mdCache = new Map();
 function renderMarkdown(s) {
   if (!s) return '';
+  const cached = _mdCache.get(s);
+  if (cached !== undefined) return cached;
   try {
-    const raw = marked.parse(s, { breaks: true, gfm: true });
-    return DOMPurify.sanitize(raw, {
+    const raw = marked.parse(s, { breaks: true, gfm: true, async: false });
+    const clean = DOMPurify.sanitize(raw, {
       ALLOWED_TAGS: ['p','br','strong','em','b','i','ul','ol','li','code','pre',
                      'blockquote','h1','h2','h3','h4','h5','h6','a','hr','del','table',
                      'thead','tbody','tr','th','td'],
       ALLOWED_ATTR: ['href','target','rel']
     });
+    _mdCache.set(s, clean);
+    return clean;
   } catch { return escapeHtml(s); }
 }
+DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+  if (node.tagName === 'A') {
+    node.setAttribute('rel', 'noopener noreferrer');
+    node.setAttribute('target', '_blank');
+  }
+});
 
 // ─── Tab Switching ───────────────────────────────────────
 function switchTab(tab) {
