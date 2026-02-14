@@ -1,24 +1,29 @@
-Feature: Progression tree design update — circular icons and navigation controls
+Feature: Progression tree design update — hexagonal nodes and full-width layout
   As a user viewing the roadmap progression tree
-  I want component nodes rendered as circular skill icons instead of hexagons
-  And navigation controls enabled to explore the complex tree
-  So that the visual design feels immersive and navigation is intuitive
+  I want component nodes rendered as hexagons instead of rectangles
+  And the tree to fill the available width without manual zoom controls
+  So that the visual design feels polished and the tree is always fully visible
 
-  # ─── Circular node shape ────────────────────────────────────
+  # ─── Hexagonal node shape ────────────────────────────────────
 
-  Scenario: Progression tree nodes use circular shape
+  Scenario: Progression tree nodes use hexagonal shape
     Given the web view HTML
-    Then the cytoscape node shape should be "circle" not "roundrectangle"
+    Then the cytoscape node shape should be "hexagon" not "roundrectangle"
 
-  # ─── Navigation controls ─────────────────────────────────────
-
-  Scenario: User zooming is enabled on the progression tree
+  Scenario: Hexagonal nodes have adequate dimensions for labels
     Given the web view HTML
-    Then userZoomingEnabled should be true in the cytoscape config
+    Then the cytoscape node width should be at least 120 pixels
+    And the cytoscape node height should be at least 120 pixels
 
-  Scenario: User panning is enabled on the progression tree
+  # ─── Zoom removal ────────────────────────────────────────────
+
+  Scenario: User zooming is disabled on the progression tree
     Given the web view HTML
-    Then userPanningEnabled should be true in the cytoscape config
+    Then userZoomingEnabled should be false in the cytoscape config
+
+  Scenario: User panning is disabled on the progression tree
+    Given the web view HTML
+    Then userPanningEnabled should be false in the cytoscape config
 
   # ─── Full-width fit ──────────────────────────────────────────
 
