@@ -159,7 +159,29 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .tab-content.active{display:block;}
 
 /* ─── Progression Tree ────────────────────────────────── */
-#progression-container{width:100%;height:600px;background:var(--surface);border:1px solid var(--border);border-radius:7px;position:relative;cursor:pointer;}
+#progression-container{width:100%;height:650px;background:radial-gradient(circle at center, #1a1d28 0%, #07080c 100%);border:1px solid var(--border);border-radius:7px;position:relative;cursor:grab;overflow:hidden;}
+#progression-container:active{cursor:grabbing;}
+
+.skill-tree-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;padding:20px;display:flex;flex-direction:column;justify-content:space-between;}
+.skill-tree-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.skill-tree-center-top{text-align:center;position:absolute;top:20px;left:50%;transform:translateX(-50%);}
+.skill-tree-bottom{display:flex;justify-content:center;padding-bottom:10px;}
+
+.skill-branch-label{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.skill-branch-label.jager{position:absolute;left:10%;top:150px;}
+.skill-branch-label.ziener{position:absolute;right:10%;top:150px;}
+.skill-branch-label .count{width:32px;height:32px;border:2px solid var(--border-accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gold);background:rgba(232,185,49,0.05);}
+
+.skill-sync{text-align:left;}
+.skill-sync .title{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:2px;}
+.skill-sync .sub{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;}
+
+.skill-points{text-align:center;}
+.skill-points .num{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--text);line-height:1;}
+.skill-points .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:2px;margin-top:4px;text-transform:uppercase;}
+
+.skill-level-bar{width:200px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:8px auto 0;position:relative;overflow:hidden;}
+.skill-level-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.5s ease;}
 .state-concept{color:var(--text-muted);}
 .state-mvp{color:var(--amber);}
 .state-released{color:var(--green);}
@@ -208,7 +230,37 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   </div>
 
   <div id="tab-progression" class="tab-content active">
-    <div id="progression-container"></div>
+    <div id="progression-container">
+      <div class="skill-tree-overlay">
+        <div class="skill-tree-top">
+          <div class="skill-sync">
+            <div class="title" id="sync-title">SENU'S PERCEPTIE</div>
+            <div class="sub" id="sync-status">0/0 GESYNCHRONISEERD</div>
+          </div>
+          <div class="skill-branch-label jager">
+            <div class="count" id="count-jager">1</div>
+            <div>JAGER</div>
+          </div>
+          <div class="skill-branch-label ziener">
+            <div class="count" id="count-ziener">1</div>
+            <div>ZIENER</div>
+          </div>
+        </div>
+        <div class="skill-tree-center-top">
+          <div class="skill-branch-label">
+            <div>KRIJGER</div>
+            <div class="count" id="count-krijger">1</div>
+          </div>
+        </div>
+        <div class="skill-tree-bottom">
+          <div class="skill-points">
+            <div class="num" id="total-skill-points">23</div>
+            <div class="lbl">VAARDIGHEIDSPUNTEN</div>
+            <div class="skill-level-bar"><div class="skill-level-fill" id="sync-bar-fill" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="tab-architecture" class="tab-content">
@@ -235,6 +287,13 @@ const COLORS = {
 const PHASE_COLORS = {
   'phase-feature':'gold','phase-steps':'cyan','phase-units':'purple','phase-red':'red',
   'phase-green':'green','phase-refactor':'sky','phase-arch-review':'orange','phase-sec-review':'rose'
+};
+
+// Skill branch category mappings
+const SKILL_CATEGORIES = {
+  JAGER: new Set(['dual-agents', 'mcp-proxies', 'security-sandbox', 'downstream-tools', 'bdd-tdd-pipeline']),
+  ZIENER: new Set(['observability-dashboard']),
+  KRIJGER: new Set(['supervisor-layer', 'task-router-layer', 'shared-state', 'knowledge-graphs'])
 };
 
 // ─── State ───────────────────────────────────────────────
@@ -592,9 +651,9 @@ function renderProgressionTree() {
 
   // Color map for visual states
   const stateColors = {
-    'locked': { bg: '#1a1d28', border: '#383d50', text: '#5a5f75' },
-    'in-progress': { bg: '#1a2520', border: '#fbbf24', text: '#fbbf24' },
-    'complete': { bg: '#0f2a1a', border: '#34d399', text: '#34d399' }
+    'locked': { bg: '#10121a', border: '#262c3c', text: '#4a5068', glow: 'none' },
+    'in-progress': { bg: '#1a1d28', border: '#fbbf24', text: '#fbbf24', glow: '0 0 15px rgba(251,191,36,0.3)' },
+    'complete': { bg: '#0f2a1a', border: '#34d399', text: '#34d399', glow: '0 0 20px rgba(52,211,153,0.4)' }
   };
 
   // Compute visual state from display_state
@@ -605,26 +664,43 @@ function renderProgressionTree() {
     return 'complete';
   }
 
-  // Add nodes
+  let jagerCount = 0, zienerCount = 0, krijgerCount = 0;
+  let completeCount = 0;
+
+  // Enumerate nodes for tree elements
   for (const node of tree.nodes) {
     const vs = visualState(node);
     const colors = stateColors[vs];
-    const versionLabel = node.display_state + (node.current_version ? ' ' + node.current_version : '');
+    if (vs === 'complete') completeCount++;
+
+    // Assign branch for UI counters using O(1) set lookup
+    if (SKILL_CATEGORIES.JAGER.has(node.layer)) jagerCount++;
+    else if (SKILL_CATEGORIES.ZIENER.has(node.layer)) zienerCount++;
+    else krijgerCount++;
 
     elements.push({
       data: {
         id: node.id,
-        label: (node.icon || '') + ' ' + node.name,
-        stateLabel: versionLabel,
-        description: node.description || '',
+        label: node.icon || '?',
+        name: node.name,
         bgColor: colors.bg,
         borderColor: colors.border,
         textColor: colors.text,
         visualState: vs,
         nodeData: node,
+        shadow: colors.glow
       }
     });
   }
+
+  // Update UI Counters
+  document.getElementById('count-jager').textContent = jagerCount;
+  document.getElementById('count-ziener').textContent = zienerCount;
+  document.getElementById('count-krijger').textContent = krijgerCount;
+  document.getElementById('total-skill-points').textContent = tree.nodes.length;
+  document.getElementById('sync-status').textContent = `${completeCount}/${tree.nodes.length} GESYNCHRONISEERD`;
+  const syncPct = tree.nodes.length > 0 ? (completeCount / tree.nodes.length) * 100 : 0; // synchronization percentage
+  document.getElementById('sync-bar-fill').style.width = `${syncPct}%`;
 
   // Add edges
   for (const edge of tree.edges) {
@@ -633,7 +709,6 @@ function renderProgressionTree() {
         id: edge.source_id + '->' + edge.target_id,
         source: edge.source_id,
         target: edge.target_id,
-        label: edge.label || '',
       }
     });
   }
@@ -649,74 +724,62 @@ function renderProgressionTree() {
           'text-valign': 'center',
           'text-halign': 'center',
           'font-family': "'JetBrains Mono', monospace",
-          'font-size': '11px',
-          'font-weight': 600,
+          'font-size': '24px',
           'color': 'data(textColor)',
-          'text-wrap': 'wrap',
-          'text-max-width': '120px',
           'background-color': 'data(bgColor)',
           'border-color': 'data(borderColor)',
-          'border-width': 2,
-          'width': 130,
-          'height': 130,
-          'shape': 'hexagon',
-          'text-margin-y': 0,
-          'padding': '10px',
+          'border-width': 4,
+          'width': 64,
+          'height': 64,
+          'shape': 'circle',
+          'transition-property': 'background-color, border-color',
+          'transition-duration': '0.2s',
+          'shadow-blur': 0, // Disabled for performance during pan/zoom
+          'shadow-color': 'data(textColor)',
+          'shadow-opacity': 0.3,
+          'shadow-offset-x': 0,
+          'shadow-offset-y': 0
         }
       },
       {
         selector: 'node[visualState="locked"]',
         style: {
-          'opacity': 0.5,
-          'border-style': 'dashed',
-        }
-      },
-      {
-        selector: 'node[visualState="in-progress"]',
-        style: {
-          'border-width': 2.5,
-        }
-      },
-      {
-        selector: 'node[visualState="complete"]',
-        style: {
-          'border-width': 3,
+          'filter': 'grayscale(100%)',
+          'opacity': 0.6
         }
       },
       {
         selector: 'edge',
         style: {
-          'width': 1.5,
-          'line-color': '#383d50',
-          'target-arrow-color': '#383d50',
-          'target-arrow-shape': 'triangle',
-          'curve-style': 'bezier',
-          'arrow-scale': 0.8,
+          'width': 3,
+          'line-color': '#262c3c',
+          'curve-style': 'taxi',
+          'taxi-direction': 'vertical',
+          'taxi-turn': '20px',
+          'target-arrow-shape': 'none',
+          'source-arrow-shape': 'none'
         }
       }
     ],
     layout: {
       name: 'dagre',
-      rankDir: 'TB',
-      nodeSep: 50,
-      rankSep: 70,
-      padding: 30,
+      rankDir: 'BT', // Bottom to top to match skill tree growth
+      nodeSep: 80,
+      rankSep: 100,
+      padding: 50,
     },
-    userZoomingEnabled: false,
-    userPanningEnabled: false,
+    userZoomingEnabled: true,
+    userPanningEnabled: true,
     boxSelectionEnabled: false,
-    autoungrabify: true,
+    autoungrabify: false,
   });
 
-  // Fit tree to container after layout completes
-  cy.on('layoutstop', function() {
-    cy.fit();
-  });
-
-  // Re-fit on window resize so the tree always fills the width
-  window.addEventListener('resize', function() {
-    if (cy) cy.fit();
-  });
+  cy.on('layoutstop', () => cy.fit());
+  
+  if (!window._resizeHandlerAttached) {
+    window.addEventListener('resize', () => cy && cy.fit());
+    window._resizeHandlerAttached = true;
+  }
 
   // Click node to open detail dialog
   cy.on('tap', 'node', function(e) {
