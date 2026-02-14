@@ -75,33 +75,6 @@ export function applySchema(db: BetterSQLite3Database): void {
     is_active INTEGER NOT NULL DEFAULT 1
   )`);
 
-  // ─── Migration: add 'mcp' to nodes.type CHECK constraint ─────────
-  // SQLite doesn't support ALTER TABLE to modify CHECK constraints.
-  // Detect the old constraint and recreate the table if needed.
-  const tableInfo = db.all<{ sql: string }>(
-    sql`SELECT sql FROM sqlite_master WHERE type='table' AND name='nodes'`
-  );
-  const createSql = tableInfo[0]?.sql ?? '';
-  if (createSql.includes("'app')") && !createSql.includes("'mcp'")) {
-    db.run(sql`CREATE TABLE nodes_new (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      type TEXT NOT NULL CHECK(type IN ('layer', 'component', 'store', 'external', 'phase', 'app', 'mcp')),
-      layer TEXT,
-      color TEXT,
-      icon TEXT,
-      description TEXT,
-      tags TEXT,
-      sort_order INTEGER DEFAULT 0,
-      current_version TEXT
-    )`);
-    db.run(
-      sql`INSERT INTO nodes_new SELECT id, name, type, layer, color, icon, description, tags, sort_order, current_version FROM nodes`
-    );
-    db.run(sql`DROP TABLE nodes`);
-    db.run(sql`ALTER TABLE nodes_new RENAME TO nodes`);
-  }
-
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_source ON edges(source_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_target ON edges(target_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_type ON edges(type)`);
@@ -151,6 +124,34 @@ function ensureDbDirectory(dbPath: string): void {
  * Create a Drizzle ORM connection backed by better-sqlite3.
  * Enables WAL mode + foreign keys and applies schema.
  */
+/**
+ * Migrate the nodes table CHECK constraint to include 'mcp'.
+ * Uses the raw better-sqlite3 instance for reliable sqlite_master queries.
+ * SQLite doesn't support ALTER CONSTRAINT, so table recreation is required.
+ */
+function migrateNodeTypeConstraint(sqlite: InstanceType<typeof Database>): void {
+  const row = sqlite
+    .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='nodes'")
+    .get() as { sql: string } | undefined;
+  const createSql = row?.sql ?? '';
+  if (createSql.includes("'app')") && !createSql.includes("'mcp'")) {
+    sqlite.pragma('foreign_keys = OFF');
+    sqlite.exec(`CREATE TABLE nodes_new (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('layer', 'component', 'store', 'external', 'phase', 'app', 'mcp')),
+      layer TEXT, color TEXT, icon TEXT, description TEXT, tags TEXT,
+      sort_order INTEGER DEFAULT 0, current_version TEXT
+    )`);
+    sqlite.exec(
+      'INSERT INTO nodes_new SELECT id, name, type, layer, color, icon, description, tags, sort_order, current_version FROM nodes'
+    );
+    sqlite.exec('DROP TABLE nodes');
+    sqlite.exec('ALTER TABLE nodes_new RENAME TO nodes');
+    sqlite.pragma('foreign_keys = ON');
+  }
+}
+
 export function createDrizzleConnection(dbPath: string): BetterSQLite3Database {
   ensureDbDirectory(dbPath);
   const sqlite = new Database(dbPath);
@@ -159,6 +160,7 @@ export function createDrizzleConnection(dbPath: string): BetterSQLite3Database {
 
   const db = drizzle(sqlite);
   applySchema(db);
+  migrateNodeTypeConstraint(sqlite);
 
   return db;
 }

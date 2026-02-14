@@ -398,45 +398,52 @@ describe('Drizzle Repositories', () => {
 
 describe('Schema migration — mcp node type', () => {
   it('migrates old nodes table to include mcp in CHECK constraint', async () => {
-    // 1. Create a DB with the OLD schema (no 'mcp')
-    const Database = (await import('better-sqlite3')).default;
-    const sqlite = new Database(':memory:');
-    sqlite.pragma('journal_mode = WAL');
-    sqlite.pragma('foreign_keys = ON');
-    sqlite.exec(`CREATE TABLE nodes (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
+    const { mkdtempSync, unlinkSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const tmpDir = mkdtempSync(join(tmpdir(), 'roadmap-test-'));
+    const dbPath = join(tmpDir, 'migrate-test.db');
+
+    // 1. Create a DB with the OLD schema (no 'mcp') + seed data
+    const BetterSqlite = (await import('better-sqlite3')).default;
+    const raw = new BetterSqlite(dbPath);
+    raw.pragma('journal_mode = WAL');
+    raw.exec(`CREATE TABLE nodes (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL,
       type TEXT NOT NULL CHECK(type IN ('layer', 'component', 'store', 'external', 'phase', 'app')),
       layer TEXT, color TEXT, icon TEXT, description TEXT, tags TEXT,
       sort_order INTEGER DEFAULT 0, current_version TEXT
     )`);
-    // Insert test data
-    sqlite.exec(`INSERT INTO nodes (id, name, type) VALUES ('old-app', 'Old App', 'app')`);
+    raw.exec("INSERT INTO nodes (id, name, type) VALUES ('old-app', 'Old App', 'app')");
+    raw.close();
 
-    // 2. Apply schema (should detect old constraint and migrate)
-    const { drizzle } = await import('drizzle-orm/better-sqlite3');
-    const { applySchema } = await import('../../../../src/infrastructure/drizzle/connection.js');
-    const db = drizzle(sqlite);
-    applySchema(db);
+    // 2. Open with createDrizzleConnection — triggers migration
+    const migratedDb = createDrizzleConnection(dbPath);
 
-    // 3. Verify migration: can insert 'mcp' type
-    sqlite.exec(`INSERT INTO nodes (id, name, type) VALUES ('mcp-test', 'MCP', 'mcp')`);
-    const row = sqlite.prepare(`SELECT type FROM nodes WHERE id = 'mcp-test'`).get() as {
-      type: string;
-    };
-    expect(row.type).toBe('mcp');
+    // 3. Verify mcp type is accepted
+    migratedDb.run(sql`INSERT INTO nodes (id, name, type) VALUES ('mcp-test', 'MCP', 'mcp')`);
+    const rows = migratedDb.all<{ type: string }>(
+      sql`SELECT type FROM nodes WHERE id = 'mcp-test'`
+    );
+    expect(rows[0]?.type).toBe('mcp');
 
     // 4. Verify old data preserved
-    const oldRow = sqlite.prepare(`SELECT type FROM nodes WHERE id = 'old-app'`).get() as {
-      type: string;
-    };
-    expect(oldRow.type).toBe('app');
+    const oldRows = migratedDb.all<{ type: string }>(
+      sql`SELECT type FROM nodes WHERE id = 'old-app'`
+    );
+    expect(oldRows[0]?.type).toBe('app');
+
+    // Cleanup
+    try {
+      unlinkSync(dbPath);
+    } catch {
+      /* ignore */
+    }
   });
 
   it('skips migration when mcp constraint already exists', () => {
     // Fresh DB via createDrizzleConnection already has mcp
     const freshDb = createDrizzleConnection(':memory:');
-    // Should be able to insert mcp directly
     freshDb.run(sql`INSERT INTO nodes (id, name, type) VALUES ('mcp-fresh', 'MCP Fresh', 'mcp')`);
     const rows = freshDb.all<{ type: string }>(sql`SELECT type FROM nodes WHERE id = 'mcp-fresh'`);
     expect(rows[0]?.type).toBe('mcp');
