@@ -234,9 +234,7 @@ export class GetArchitecture {
     const appNodeIds = new Set(nodes.filter(n => n.isApp()).map(n => n.id));
     const progressionNodes = enrichedNodes.filter(n => appNodeIds.has(n.id));
     const progressionEdges: ProgressionEdge[] = edges
-      .filter(
-        e => e.type === 'DEPENDS_ON' && appNodeIds.has(e.source_id) && appNodeIds.has(e.target_id)
-      )
+      .filter(e => !e.isContainment() && appNodeIds.has(e.source_id) && appNodeIds.has(e.target_id))
       .map(e => ({
         source_id: e.source_id,
         target_id: e.target_id,

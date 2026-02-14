@@ -60,7 +60,7 @@ describe('GetArchitecture — progression tree', () => {
     expect(result.progression_tree.edges[0].target_id).toBe('mcp1');
   });
 
-  it('should include only DEPENDS_ON edges between apps in progression_tree', async () => {
+  it('should include all non-CONTAINS edges between app/mcp nodes in progression_tree', async () => {
     const nodes = [
       new Node({ id: 'app1', name: 'App 1', type: 'app' }),
       new Node({ id: 'app2', name: 'App 2', type: 'app' }),
@@ -68,14 +68,32 @@ describe('GetArchitecture — progression tree', () => {
     ];
     const edges = [
       new Edge({ source_id: 'app1', target_id: 'app2', type: 'DEPENDS_ON' }),
+      new Edge({ source_id: 'app1', target_id: 'app2', type: 'READS_FROM' }),
       new Edge({ source_id: 'app1', target_id: 'comp1', type: 'CONTROLS' }),
     ];
     const useCase = new GetArchitecture(repos(nodes, edges));
     const result = await useCase.execute();
 
+    expect(result.progression_tree.edges).toHaveLength(2);
+    const types = result.progression_tree.edges.map(e => e.type);
+    expect(types).toContain('DEPENDS_ON');
+    expect(types).toContain('READS_FROM');
+  });
+
+  it('should exclude CONTAINS edges from progression_tree', async () => {
+    const nodes = [
+      new Node({ id: 'app1', name: 'App 1', type: 'app' }),
+      new Node({ id: 'app2', name: 'App 2', type: 'app' }),
+    ];
+    const edges = [
+      new Edge({ source_id: 'app1', target_id: 'app2', type: 'CONTAINS' }),
+      new Edge({ source_id: 'app1', target_id: 'app2', type: 'DEPENDS_ON' }),
+    ];
+    const useCase = new GetArchitecture(repos(nodes, edges));
+    const result = await useCase.execute();
+
     expect(result.progression_tree.edges).toHaveLength(1);
-    expect(result.progression_tree.edges[0].source_id).toBe('app1');
-    expect(result.progression_tree.edges[0].target_id).toBe('app2');
+    expect(result.progression_tree.edges[0].type).toBe('DEPENDS_ON');
   });
 
   it('should include display_state and current_version on progression nodes', async () => {

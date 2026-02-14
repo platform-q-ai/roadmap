@@ -108,12 +108,12 @@ Then('the progression_tree should contain only app-type nodes', function (this: 
   }
 });
 
-Then('the progression_tree should contain DEPENDS_ON edges between apps', function (this: World) {
+Then('the progression_tree should contain non-CONTAINS edges between apps', function (this: World) {
   const tree = this.result.progression_tree;
   assert.ok(tree);
   assert.ok(tree.edges.length > 0, 'No edges in progression tree');
   for (const edge of tree.edges) {
-    assert.equal(edge.type, 'DEPENDS_ON');
+    assert.notEqual(edge.type, 'CONTAINS', 'CONTAINS edges should not appear in progression tree');
   }
 });
 

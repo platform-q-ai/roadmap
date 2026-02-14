@@ -260,8 +260,8 @@ Then(
 );
 
 Then(
-  'every edge in the progression_tree has type {string}',
-  function (this: ApiWorld, expectedType: string) {
+  'no edge in the progression_tree has type {string}',
+  function (this: ApiWorld, excludedType: string) {
     assert.ok(this.response, 'No response received');
     const body = this.response.body as Record<string, unknown>;
     const tree = body['progression_tree'] as Record<string, unknown>;
@@ -269,7 +269,11 @@ Then(
     const edges = tree['edges'] as Array<Record<string, unknown>>;
     assert.ok(Array.isArray(edges), 'progression_tree.edges is not an array');
     for (const edge of edges) {
-      assert.strictEqual(edge['type'], expectedType);
+      assert.notStrictEqual(
+        edge['type'],
+        excludedType,
+        `Found edge with excluded type "${excludedType}"`
+      );
     }
   }
 );
