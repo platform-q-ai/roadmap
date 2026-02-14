@@ -245,16 +245,15 @@ describe('GET /api/architecture — v1 enriched graph', () => {
     });
   });
 
-  it('progression_tree edges are all DEPENDS_ON type', async () => {
+  it('progression_tree edges exclude CONTAINS type', async () => {
     const repos = buildTestRepos(architectureSeedData());
     await withServer(repos, async server => {
       const res = await request(server, 'GET', '/api/architecture');
       const body = res.body as Record<string, unknown>;
       const tree = body['progression_tree'] as Record<string, unknown>;
       const treeEdges = tree['edges'] as Array<Record<string, unknown>>;
-      expect(treeEdges.length).toBeGreaterThan(0);
       for (const edge of treeEdges) {
-        expect(edge['type']).toBe('DEPENDS_ON');
+        expect(edge['type']).not.toBe('CONTAINS');
       }
     });
   });

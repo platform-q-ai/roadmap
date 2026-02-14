@@ -44,7 +44,7 @@ Feature: API Architecture Graph Endpoint
       And the database has a complete architecture graph
       When I send a GET request to "/api/architecture"
       Then every node in the progression_tree has type "app"
-      And every edge in the progression_tree has type "DEPENDS_ON"
+      And no edge in the progression_tree has type "CONTAINS"
 
     Scenario: Architecture response uses derived progress
       Given the API server is running

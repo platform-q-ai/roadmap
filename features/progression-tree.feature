@@ -25,7 +25,7 @@ Feature: Progression Tree
     When I assemble the architecture
     Then the result should include a progression_tree section
     And the progression_tree should contain only app-type nodes
-    And the progression_tree should contain DEPENDS_ON edges between apps
+    And the progression_tree should contain non-CONTAINS edges between apps
 
   Scenario: Progression tree nodes include version state
     Given app node "supervisor" with current_version "0.1.0"
