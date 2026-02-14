@@ -41,7 +41,7 @@ Given(
 );
 
 When('I filter for progression tree nodes', function (this: World) {
-  this.filteredNodes = this.nodes.filter(n => n.type === 'app');
+  this.filteredNodes = this.nodes.filter(n => n.isApp());
 });
 
 Then('only nodes with type {string} should be included', function (this: World, type: string) {
@@ -100,8 +100,12 @@ Then('the result should include a progression_tree section', function (this: Wor
 Then('the progression_tree should contain only app-type nodes', function (this: World) {
   const tree = this.result.progression_tree;
   assert.ok(tree);
+  const appLikeTypes = new Set(['app', 'mcp']);
   for (const node of tree.nodes) {
-    assert.equal(node.type, 'app', `Node ${node.id} is not app type`);
+    assert.ok(
+      appLikeTypes.has(node.type),
+      `Node ${node.id} has type ${node.type}, expected app or mcp`
+    );
   }
 });
 
@@ -172,7 +176,7 @@ Given('app node {string} with no dependencies', function (this: World, id: strin
 
 When('I compute the tree layout', function (this: World) {
   // Compute levels from dependency edges
-  const appNodes = this.nodes.filter(n => n.type === 'app');
+  const appNodes = this.nodes.filter(n => n.isApp());
   const depEdges = this.edges.filter(e => e.type === 'DEPENDS_ON');
 
   this.treeLayout = appNodes.map(n => {

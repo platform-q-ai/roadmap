@@ -30,6 +30,36 @@ describe('GetArchitecture — progression tree', () => {
     expect(result.progression_tree.nodes[0].id).toBe('app1');
   });
 
+  it('should include mcp-type nodes in progression_tree', async () => {
+    const nodes = [
+      new Node({ id: 'app1', name: 'App 1', type: 'app' }),
+      new Node({ id: 'mcp1', name: 'MCP Server', type: 'mcp' }),
+      new Node({ id: 'comp1', name: 'Comp 1', type: 'component' }),
+    ];
+    const useCase = new GetArchitecture(repos(nodes));
+    const result = await useCase.execute();
+
+    const ids = result.progression_tree.nodes.map(n => n.id);
+    expect(ids).toContain('app1');
+    expect(ids).toContain('mcp1');
+    expect(ids).not.toContain('comp1');
+    expect(result.progression_tree.nodes).toHaveLength(2);
+  });
+
+  it('should include DEPENDS_ON edges between app and mcp nodes', async () => {
+    const nodes = [
+      new Node({ id: 'app1', name: 'App 1', type: 'app' }),
+      new Node({ id: 'mcp1', name: 'MCP Server', type: 'mcp' }),
+    ];
+    const edges = [new Edge({ source_id: 'app1', target_id: 'mcp1', type: 'DEPENDS_ON' })];
+    const useCase = new GetArchitecture(repos(nodes, edges));
+    const result = await useCase.execute();
+
+    expect(result.progression_tree.edges).toHaveLength(1);
+    expect(result.progression_tree.edges[0].source_id).toBe('app1');
+    expect(result.progression_tree.edges[0].target_id).toBe('mcp1');
+  });
+
   it('should include only DEPENDS_ON edges between apps in progression_tree', async () => {
     const nodes = [
       new Node({ id: 'app1', name: 'App 1', type: 'app' }),
