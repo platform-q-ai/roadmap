@@ -161,6 +161,8 @@ The interactive page fetches live data from the `/api/architecture` endpoint and
 - Displays the selected version's content with a progress bar
 - Lists associated Gherkin feature files (expandable)
 
+Component descriptions, layer descriptions, and version content support **Markdown formatting**. Markdown is rendered client-side using [marked.js](https://marked.js.org/) (GFM mode with line breaks) and sanitized with [DOMPurify](https://github.com/cure53/DOMPurify) to prevent XSS. Supported elements include headings, bold/italic, lists, code blocks, blockquotes, tables, links, and horizontal rules. Raw HTML tags in descriptions are stripped on the server side during sanitization; Markdown syntax is preserved.
+
 ## REST API
 
 The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http://localhost:3000` (local via `npm run serve:api`). All endpoints return JSON. The server also serves the static web view at the root path.
@@ -218,7 +220,7 @@ curl -X POST https://roadmap-5vvp.onrender.com/api/components \
 
 Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`, `mcp`.
 
-The request body requires `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, and `layer` (must reference an existing layer node). Optional fields: `description`, `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized. The `201` response returns the full node object with all fields.
+The request body requires `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, and `layer` (must reference an existing layer node). Optional fields: `description` (supports Markdown formatting), `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized (HTML tags are stripped, Markdown syntax is preserved). The `201` response returns the full node object with all fields.
 
 ### Example: Partially update a component
 
@@ -228,7 +230,7 @@ curl -X PATCH https://roadmap-5vvp.onrender.com/api/components/my-svc \
   -d '{"name":"Renamed Service","description":"Updated description","tags":["new-tag"]}'
 ```
 
-Updatable fields: `name` (non-empty string), `description` (string), `tags` (string array, max 50), `sort_order` (number), `current_version` (semver string, e.g. `"0.7.5"`), `layer` (string, must reference an existing layer node). Only supplied fields are changed; unmentioned fields are preserved. When `current_version` changes, all phase version records are automatically recalculated. When `layer` changes, the component is moved to the new layer and the CONTAINS edge is re-wired. All string inputs are HTML-sanitized. The `200` response returns the full updated node object.
+Updatable fields: `name` (non-empty string), `description` (string, supports Markdown formatting), `tags` (string array, max 50), `sort_order` (number), `current_version` (semver string, e.g. `"0.7.5"`), `layer` (string, must reference an existing layer node). Only supplied fields are changed; unmentioned fields are preserved. When `current_version` changes, all phase version records are automatically recalculated. When `layer` changes, the component is moved to the new layer and the CONTAINS edge is re-wired. All string inputs are HTML-sanitized (HTML tags are stripped, Markdown syntax is preserved). The `200` response returns the full updated node object.
 
 ### Example: Upload a feature file (version-scoped)
 
@@ -400,7 +402,7 @@ The Render blueprint (`render.yaml`) defines the service configuration including
 
 - **SQLite** + **Drizzle ORM** (+ better-sqlite3) -- graph database backend with type-safe queries
 - **Node.js** + **TypeScript** (ESM) -- Clean Architecture application layer
-- **Vanilla HTML/CSS/JS** + **Cytoscape.js** -- interactive web view, zero frameworks
+- **Vanilla HTML/CSS/JS** + **Cytoscape.js** + **marked.js** + **DOMPurify** -- interactive web view with Markdown rendering, zero frameworks
 - **Gherkin** + **Cucumber.js** -- BDD feature specs per component
 - **Vitest** -- unit testing with 90% coverage thresholds
 - **ESLint** + **eslint-plugin-boundaries** -- linting with Clean Architecture enforcement
