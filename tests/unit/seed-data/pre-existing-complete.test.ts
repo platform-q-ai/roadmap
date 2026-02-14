@@ -6,10 +6,15 @@ import { describe, expect, it } from 'vitest';
 const ROOT = join(import.meta.dirname, '..', '..', '..');
 const seedSql = readFileSync(join(ROOT, 'seed.sql'), 'utf-8');
 
-/**
- * Extract the full seed.sql line containing a given node ID.
- * Works by finding the line that starts with ('nodeId', ...).
- */
+const ORCHESTRATION_IDS = [
+  'orchestrator-session',
+  'worker-session-1',
+  'worker-session-2',
+  'worker-session-3',
+  'worker-session-4',
+];
+
+/** Extract the full seed.sql line containing a given node ID. */
 function seedLineForNode(id: string): string {
   const lines = seedSql.split('\n');
   const line = lines.find(l => l.includes(`'${id}'`));
@@ -17,16 +22,8 @@ function seedLineForNode(id: string): string {
 }
 
 describe('Seed data — orchestration components marked complete', () => {
-  const componentIds = [
-    'orchestrator-session',
-    'worker-session-1',
-    'worker-session-2',
-    'worker-session-3',
-    'worker-session-4',
-  ];
-
   describe('current_version set to 1.0.0', () => {
-    for (const id of componentIds) {
+    for (const id of ORCHESTRATION_IDS) {
       it(`${id} should have current_version '1.0.0' in seed.sql`, () => {
         const line = seedLineForNode(id);
         expect(line).toBeTruthy();
@@ -36,7 +33,7 @@ describe('Seed data — orchestration components marked complete', () => {
   });
 
   describe('color set to green', () => {
-    for (const id of componentIds) {
+    for (const id of ORCHESTRATION_IDS) {
       it(`${id} should have color 'green' in seed.sql`, () => {
         const line = seedLineForNode(id);
         expect(line).toBeTruthy();
@@ -46,7 +43,7 @@ describe('Seed data — orchestration components marked complete', () => {
   });
 
   describe('tagged as pre-existing', () => {
-    for (const id of [...componentIds, 'meta-agent']) {
+    for (const id of [...ORCHESTRATION_IDS, 'meta-agent']) {
       it(`${id} should have "pre-existing" tag in seed.sql`, () => {
         const line = seedLineForNode(id);
         expect(line).toBeTruthy();
@@ -55,17 +52,8 @@ describe('Seed data — orchestration components marked complete', () => {
     }
   });
 });
-
 describe('Seed data — version records at 100%', () => {
-  const componentIds = [
-    'orchestrator-session',
-    'worker-session-1',
-    'worker-session-2',
-    'worker-session-3',
-    'worker-session-4',
-  ];
-
-  for (const id of componentIds) {
+  for (const id of ORCHESTRATION_IDS) {
     describe(`${id} version records`, () => {
       it(`should have overview version at 100% complete`, () => {
         // Match: ('nodeId', 'overview', '...content...', 100, 'complete')
