@@ -11,6 +11,7 @@ export type { ApiDeps, Route } from './routes.js';
 export { buildRoutes } from './routes.js';
 export type { SeedExportDeps } from './routes-seed-export.js';
 export { buildSeedExportRoutes } from './routes-seed-export.js';
+export { stripHtml } from './routes-shared.js';
 export type { SeedApiKeysDeps } from './seed-api-keys.js';
 export { parseSeedEntries, seedApiKeys } from './seed-api-keys.js';
 export type { AppOptions, RequestLogEntry } from './server.js';
