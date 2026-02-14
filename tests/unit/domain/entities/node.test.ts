@@ -62,6 +62,27 @@ describe('Node Entity', () => {
     expect(Node.TYPES).toContain('store');
     expect(Node.TYPES).toContain('external');
     expect(Node.TYPES).toContain('phase');
+    expect(Node.TYPES).toContain('mcp');
+  });
+
+  it('creates an mcp node', () => {
+    const node = new Node({ id: 'meta-agent', name: 'Meta Agent', type: 'mcp' });
+    expect(node.type).toBe('mcp');
+  });
+
+  it('identifies mcp nodes as app-like for progression tree', () => {
+    const mcpNode = new Node({ id: 'mcp1', name: 'MCP Server', type: 'mcp' });
+    expect(mcpNode.isApp()).toBe(true);
+  });
+
+  it('still identifies app nodes via isApp', () => {
+    const appNode = new Node({ id: 'app1', name: 'App', type: 'app' });
+    expect(appNode.isApp()).toBe(true);
+  });
+
+  it('does not identify component nodes as app-like', () => {
+    const comp = new Node({ id: 'comp', name: 'Comp', type: 'component' });
+    expect(comp.isApp()).toBe(false);
   });
 
   it('produces a plain JSON representation', () => {

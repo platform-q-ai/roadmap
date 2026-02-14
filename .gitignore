@@ -8,4 +8,7 @@ reports/
 .opencode/
 opencode.json
 db/architecture.db
+db/*.db-shm
+db/*.db-wal
+db/*.db-journal
 web/data.json

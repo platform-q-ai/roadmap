@@ -216,7 +216,7 @@ curl -X POST https://roadmap-5vvp.onrender.com/api/components \
   -d '{"id":"my-svc","name":"My Service","type":"component","layer":"supervisor-layer","color":"#3498DB","icon":"server","sort_order":10}'
 ```
 
-Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
+Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`, `mcp`.
 
 The request body requires `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, and `layer` (must reference an existing layer node). Optional fields: `description`, `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized. The `201` response returns the full node object with all fields.
 

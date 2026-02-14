@@ -527,7 +527,7 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /a
 
 Required: `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, `layer` (must reference an existing layer node). Optional: `description`, `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized. Returns the full node object (all fields) in the `201` response.
 
-Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`.
+Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`, `mcp`.
 
 ### PATCH /api/components/:id body
 

@@ -1,4 +1,4 @@
-export type NodeType = 'layer' | 'component' | 'store' | 'external' | 'phase' | 'app';
+export type NodeType = 'layer' | 'component' | 'store' | 'external' | 'phase' | 'app' | 'mcp';
 
 export interface NodeProps {
   id: string;
@@ -16,7 +16,7 @@ export interface NodeProps {
 /**
  * Node entity — a component in the architecture graph.
  *
- * Types: layer, component, store, external, phase, app
+ * Types: layer, component, store, external, phase, app, mcp
  * A node belongs to a layer (via its `layer` field) and can have
  * versioned documentation, feature files, and typed edges.
  */
@@ -32,7 +32,15 @@ export class Node {
   readonly sort_order: number;
   readonly current_version: string | null;
 
-  static readonly TYPES: NodeType[] = ['layer', 'component', 'store', 'external', 'phase', 'app'];
+  static readonly TYPES: NodeType[] = [
+    'layer',
+    'component',
+    'store',
+    'external',
+    'phase',
+    'app',
+    'mcp',
+  ];
 
   constructor(props: NodeProps) {
     this.id = props.id;
@@ -52,7 +60,7 @@ export class Node {
   }
 
   isApp(): boolean {
-    return this.type === 'app';
+    return this.type === 'app' || this.type === 'mcp';
   }
 
   /**

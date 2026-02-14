@@ -621,6 +621,7 @@ function renderProgressionTree() {
         borderColor: colors.border,
         textColor: colors.text,
         visualState: vs,
+        nodeType: node.type || 'app',
         nodeData: node,
       }
     });
@@ -659,9 +660,21 @@ function renderProgressionTree() {
           'border-width': 2,
           'width': 130,
           'height': 130,
-          'shape': 'hexagon',
+          'shape': 'hexagon', /* default; overridden per node type below */
           'text-margin-y': 0,
           'padding': '10px',
+        }
+      },
+      {
+        selector: 'node[nodeType="app"]',
+        style: {
+          'shape': 'octagon',
+        }
+      },
+      {
+        selector: 'node[nodeType="mcp"]',
+        style: {
+          'shape': 'ellipse',
         }
       },
       {
