@@ -252,6 +252,7 @@ describe('GET /api/architecture — v1 enriched graph', () => {
       const body = res.body as Record<string, unknown>;
       const tree = body['progression_tree'] as Record<string, unknown>;
       const treeEdges = tree['edges'] as Array<Record<string, unknown>>;
+      expect(treeEdges.length).toBeGreaterThan(0);
       for (const edge of treeEdges) {
         expect(edge['type']).not.toBe('CONTAINS');
       }
