@@ -525,7 +525,7 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /a
 }
 ```
 
-Required: `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, `layer` (must reference an existing layer node). Optional: `description`, `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized. Returns the full node object (all fields) in the `201` response.
+Required: `id` (kebab-case, max 64 chars), `name` (non-empty), `type`, `layer` (must reference an existing layer node). Optional: `description` (supports Markdown formatting), `tags`, `color`, `icon`, `sort_order`. All string inputs are HTML-sanitized (HTML tags are stripped, Markdown syntax is preserved). Returns the full node object (all fields) in the `201` response.
 
 Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`, `mcp`.
 
@@ -542,7 +542,7 @@ Valid types: `layer`, `component`, `store`, `external`, `phase`, `app`, `mcp`.
 }
 ```
 
-All fields are optional. Only supplied fields are changed; unmentioned fields are preserved (merge-patch semantics). `name` must be non-empty if provided. `tags` is capped at 50 entries. `current_version` must be a valid semver string (`MAJOR.MINOR` or `MAJOR.MINOR.PATCH`). When `current_version` changes, all phase version records are automatically recalculated. `layer` must reference an existing layer node; when changed, the component is moved to the new layer and the CONTAINS edge is re-wired automatically. All string inputs are HTML-sanitized. Returns the full updated node object in the `200` response.
+All fields are optional. Only supplied fields are changed; unmentioned fields are preserved (merge-patch semantics). `name` must be non-empty if provided. `description` supports Markdown formatting. `tags` is capped at 50 entries. `current_version` must be a valid semver string (`MAJOR.MINOR` or `MAJOR.MINOR.PATCH`). When `current_version` changes, all phase version records are automatically recalculated. `layer` must reference an existing layer node; when changed, the component is moved to the new layer and the CONTAINS edge is re-wired automatically. All string inputs are HTML-sanitized (HTML tags are stripped, Markdown syntax is preserved). Returns the full updated node object in the `200` response.
 
 ### POST /api/edges body
 

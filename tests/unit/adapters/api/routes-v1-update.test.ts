@@ -304,6 +304,27 @@ describe('API Routes — v1 component PATCH update', () => {
     });
   });
 
+  it('preserves Markdown syntax in description while stripping HTML tags', async () => {
+    const repos = buildTestRepos(seedData());
+    await withServer(repos, async server => {
+      const markdown =
+        '# Title\n\n**Bold** and *italic*\n\n- Item one\n- Item two\n\n> Blockquote\n\n`code`';
+      const mixed = '<script>xss</script>' + markdown;
+      const body = JSON.stringify({ description: mixed });
+      const res = await request(server, 'PATCH', '/api/components/comp-a', body);
+      expect(res.status).toBe(200);
+      const resBody = res.body as Record<string, unknown>;
+      const desc = resBody.description as string;
+      expect(desc).not.toContain('<script>');
+      expect(desc).toContain('# Title');
+      expect(desc).toContain('**Bold**');
+      expect(desc).toContain('*italic*');
+      expect(desc).toContain('- Item one');
+      expect(desc).toContain('> Blockquote');
+      expect(desc).toContain('`code`');
+    });
+  });
+
   it('recalculates version progress when current_version changes', async () => {
     const repos = buildTestRepos(seedData());
     await withServer(repos, async server => {

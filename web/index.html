@@ -8,6 +8,8 @@
 <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
 <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
 <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js" integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu" crossorigin="anonymous"></script>
 <style>
 :root {
   --bg:#07080c;--surface:#0f1219;--surface-2:#171b25;--border:#262c3c;--border-accent:#384058;
@@ -176,6 +178,28 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .dialog-header .dialog-desc{font-size:13px;color:var(--text-dim);line-height:1.6;margin-top:8px;}
 .dialog-body{margin-top:12px;}
 
+/* ─── Markdown Content ─────────────────────────────────── */
+.md-content{font-size:inherit;line-height:1.6;color:inherit;}
+.md-content p{margin:0 0 0.4em;}
+.md-content p:last-child{margin-bottom:0;}
+.md-content h1,.md-content h2,.md-content h3,.md-content h4{font-family:'JetBrains Mono',monospace;margin:0.6em 0 0.3em;line-height:1.3;}
+.md-content h1{font-size:1.15em;} .md-content h2{font-size:1.05em;} .md-content h3{font-size:1em;}
+.md-content strong,.md-content b{color:var(--text);font-weight:600;}
+.md-content em,.md-content i{color:var(--text-dim);font-style:italic;}
+.md-content ul,.md-content ol{margin:0.3em 0 0.5em 1.4em;padding:0;}
+.md-content li{margin:0.15em 0;line-height:1.5;}
+.md-content code{font-family:'JetBrains Mono',monospace;font-size:0.88em;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;padding:1px 5px;color:var(--cyan);}
+.md-content pre{background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:8px 12px;margin:0.4em 0;overflow-x:auto;}
+.md-content pre code{background:none;border:none;padding:0;font-size:0.85em;color:var(--text);}
+.md-content blockquote{border-left:3px solid var(--border-accent);margin:0.4em 0;padding:0.3em 0 0.3em 12px;color:var(--text-dim);font-style:italic;}
+.md-content a{color:var(--blue);text-decoration:none;} .md-content a:hover{text-decoration:underline;}
+.md-content hr{border:none;border-top:1px solid var(--border);margin:0.6em 0;}
+.md-content table{border-collapse:collapse;margin:0.4em 0;width:100%;}
+.md-content th,.md-content td{border:1px solid var(--border);padding:4px 8px;font-size:0.9em;text-align:left;}
+.md-content th{background:var(--surface-2);font-weight:600;}
+.d.md-content{max-height:none;}
+.box .d.md-content>p:first-child{margin-top:0;}
+
 /* ─── Responsive ──────────────────────────────────────── */
 @media(max-width:900px){
   .row,.split,.dual-panel{display:flex;flex-direction:column;}
@@ -299,7 +323,7 @@ function renderVersionContent(node) {
   const ver = (node.versions || {})[active];
   if (!ver) return '';
 
-  let html = `<div class="version-content"><p>${escapeHtml(ver.content || 'No content yet.')}</p></div>`;
+  let html = `<div class="version-content md-content">${renderMarkdown(ver.content || 'No content yet.')}</div>`;
 
   // Feature files for this version
   const features = (node.features || {})[active];
@@ -352,7 +376,7 @@ function renderBox(node, extraClass) {
         ${renderVersionBadge(node)}
         ${renderProgressBadge(getBestVersion(node))}
       </div>
-      <div class="d">${escapeHtml(getOverviewText(node))}</div>
+      <div class="d md-content">${renderMarkdown(getOverviewText(node))}</div>
       ${!isExpanded ? renderTags(node) : ''}
       ${isExpanded ? renderVersionStrip(node) : ''}
       ${isExpanded ? renderVersionContent(node) : ''}
@@ -388,7 +412,7 @@ function renderLayer(layer) {
         <div class="row">
           <div class="box b-${c}" style="min-width:100%;cursor:default;">
             <div class="t"><span class="ic">${layer.icon || '?'}</span> ${escapeHtml(layer.name)}</div>
-            <div class="d">${escapeHtml(layer.description || '')}</div>
+            <div class="d md-content">${renderMarkdown(layer.description || '')}</div>
           </div>
         </div>
       </div>
@@ -569,6 +593,30 @@ function escapeHtml(s) {
   if (!s) return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+const _mdCache = new Map();
+function renderMarkdown(s) {
+  if (!s) return '';
+  const cached = _mdCache.get(s);
+  if (cached !== undefined) return cached;
+  try {
+    const raw = marked.parse(s, { breaks: true, gfm: true, async: false });
+    const clean = DOMPurify.sanitize(raw, {
+      ALLOWED_TAGS: ['p','br','strong','em','b','i','ul','ol','li','code','pre',
+                     'blockquote','h1','h2','h3','h4','h5','h6','a','hr','del','table',
+                     'thead','tbody','tr','th','td'],
+      ALLOWED_ATTR: ['href','target','rel']
+    });
+    _mdCache.set(s, clean);
+    return clean;
+  } catch { return escapeHtml(s); }
+}
+DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+  if (node.tagName === 'A') {
+    node.setAttribute('rel', 'noopener noreferrer');
+    node.setAttribute('target', '_blank');
+  }
+});
 
 // ─── Tab Switching ───────────────────────────────────────
 function switchTab(tab) {
@@ -798,7 +846,7 @@ function renderDialog() {
       ${renderProgressBadge(getBestVersion(node))}
     </div>
     <div class="dialog-state ${stateClass}">${escapeHtml(stateLabel)}</div>
-    <div class="dialog-desc">${escapeHtml(node.description || '')}</div>
+    <div class="dialog-desc md-content">${renderMarkdown(node.description || '')}</div>
   `;
 
   // Version strip
@@ -815,7 +863,7 @@ function renderDialog() {
   const activeVer = (node.versions || {})[dialogVersion];
   let contentHtml = '';
   if (activeVer) {
-    contentHtml = `<div class="version-content"><p>${escapeHtml(activeVer.content || 'No content yet.')}</p></div>`;
+    contentHtml = `<div class="version-content md-content">${renderMarkdown(activeVer.content || 'No content yet.')}</div>`;
   }
 
   // Feature files
