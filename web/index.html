@@ -168,6 +168,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .skill-tree-bottom{display:flex;justify-content:center;padding-bottom:10px;}
 
 .skill-branch-label{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.skill-branch-label.jager{position:absolute;left:10%;top:150px;}
+.skill-branch-label.ziener{position:absolute;right:10%;top:150px;}
 .skill-branch-label .count{width:32px;height:32px;border:2px solid var(--border-accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gold);background:rgba(232,185,49,0.05);}
 
 .skill-sync{text-align:left;}
@@ -235,11 +237,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
             <div class="title" id="sync-title">SENU'S PERCEPTIE</div>
             <div class="sub" id="sync-status">0/0 GESYNCHRONISEERD</div>
           </div>
-          <div class="skill-branch-label" style="position:absolute;left:10%;top:150px;">
+          <div class="skill-branch-label jager">
             <div class="count" id="count-jager">1</div>
             <div>JAGER</div>
           </div>
-          <div class="skill-branch-label" style="position:absolute;right:10%;top:150px;">
+          <div class="skill-branch-label ziener">
             <div class="count" id="count-ziener">1</div>
             <div>ZIENER</div>
           </div>
@@ -285,6 +287,13 @@ const COLORS = {
 const PHASE_COLORS = {
   'phase-feature':'gold','phase-steps':'cyan','phase-units':'purple','phase-red':'red',
   'phase-green':'green','phase-refactor':'sky','phase-arch-review':'orange','phase-sec-review':'rose'
+};
+
+// Skill branch category mappings
+const SKILL_CATEGORIES = {
+  JAGER: new Set(['dual-agents', 'mcp-proxies', 'security-sandbox', 'downstream-tools', 'bdd-tdd-pipeline']),
+  ZIENER: new Set(['observability-dashboard']),
+  KRIJGER: new Set(['supervisor-layer', 'task-router-layer', 'shared-state', 'knowledge-graphs'])
 };
 
 // ─── State ───────────────────────────────────────────────
@@ -655,11 +664,6 @@ function renderProgressionTree() {
     return 'complete';
   }
 
-  // Branch mapping (skill categories)
-  const JAGER_LAYERS = ['dual-agents', 'mcp-proxies', 'security-sandbox', 'downstream-tools', 'bdd-tdd-pipeline'];
-  const ZIENER_LAYERS = ['observability-dashboard'];
-  const KRIJGER_LAYERS = ['supervisor-layer', 'task-router-layer', 'shared-state', 'knowledge-graphs'];
-
   let jagerCount = 0, zienerCount = 0, krijgerCount = 0;
   let completeCount = 0;
 
@@ -669,9 +673,9 @@ function renderProgressionTree() {
     const colors = stateColors[vs];
     if (vs === 'complete') completeCount++;
 
-    // Assign branch for UI counters
-    if (JAGER_LAYERS.includes(node.layer)) jagerCount++;
-    else if (ZIENER_LAYERS.includes(node.layer)) zienerCount++;
+    // Assign branch for UI counters using O(1) set lookup
+    if (SKILL_CATEGORIES.JAGER.has(node.layer)) jagerCount++;
+    else if (SKILL_CATEGORIES.ZIENER.has(node.layer)) zienerCount++;
     else krijgerCount++;
 
     elements.push({
@@ -730,7 +734,7 @@ function renderProgressionTree() {
           'shape': 'circle',
           'transition-property': 'background-color, border-color',
           'transition-duration': '0.2s',
-          'shadow-blur': 15,
+          'shadow-blur': 0, // Disabled for performance during pan/zoom
           'shadow-color': 'data(textColor)',
           'shadow-opacity': 0.3,
           'shadow-offset-x': 0,
@@ -771,8 +775,13 @@ function renderProgressionTree() {
   });
 
   cy.on('layoutstop', () => cy.fit());
-  window.addEventListener('resize', () => cy && cy.fit());
+  
+  if (!window._resizeHandlerAttached) {
+    window.addEventListener('resize', () => cy && cy.fit());
+    window._resizeHandlerAttached = true;
+  }
 
+  // Click node to open detail dialog
   cy.on('tap', 'node', function(e) {
     const nodeData = e.target.data('nodeData');
     if (nodeData) openDialog(nodeData.id);

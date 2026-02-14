@@ -3,7 +3,8 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-const htmlPath = join(process.cwd(), 'web', 'index.html');
+const ROOT = join(import.meta.dirname, '..', '..', '..');
+const htmlPath = join(ROOT, 'web', 'index.html');
 
 function readHtml(): string {
   return readFileSync(htmlPath, 'utf-8');
