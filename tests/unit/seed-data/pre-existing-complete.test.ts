@@ -6,6 +6,16 @@ import { describe, expect, it } from 'vitest';
 const ROOT = join(import.meta.dirname, '..', '..', '..');
 const seedSql = readFileSync(join(ROOT, 'seed.sql'), 'utf-8');
 
+/**
+ * Extract the full seed.sql line containing a given node ID.
+ * Works by finding the line that starts with ('nodeId', ...).
+ */
+function seedLineForNode(id: string): string {
+  const lines = seedSql.split('\n');
+  const line = lines.find(l => l.includes(`'${id}'`));
+  return line ?? '';
+}
+
 describe('Seed data — orchestration components marked complete', () => {
   const componentIds = [
     'orchestrator-session',
@@ -18,11 +28,9 @@ describe('Seed data — orchestration components marked complete', () => {
   describe('current_version set to 1.0.0', () => {
     for (const id of componentIds) {
       it(`${id} should have current_version '1.0.0' in seed.sql`, () => {
-        // The nodes table INSERT should include current_version for this node
-        const nodePattern = new RegExp(`'${id}'[^)]*`);
-        const match = seedSql.match(nodePattern);
-        expect(match).not.toBeNull();
-        expect(match![0]).toContain("'1.0.0'");
+        const line = seedLineForNode(id);
+        expect(line).toBeTruthy();
+        expect(line).toContain("'1.0.0'");
       });
     }
   });
@@ -30,10 +38,9 @@ describe('Seed data — orchestration components marked complete', () => {
   describe('color set to green', () => {
     for (const id of componentIds) {
       it(`${id} should have color 'green' in seed.sql`, () => {
-        const nodePattern = new RegExp(`'${id}'[^)]*`);
-        const match = seedSql.match(nodePattern);
-        expect(match).not.toBeNull();
-        expect(match![0]).toContain("'green'");
+        const line = seedLineForNode(id);
+        expect(line).toBeTruthy();
+        expect(line).toContain("'green'");
       });
     }
   });
@@ -41,10 +48,9 @@ describe('Seed data — orchestration components marked complete', () => {
   describe('tagged as pre-existing', () => {
     for (const id of [...componentIds, 'meta-agent']) {
       it(`${id} should have "pre-existing" tag in seed.sql`, () => {
-        const nodePattern = new RegExp(`'${id}'[^)]*`);
-        const match = seedSql.match(nodePattern);
-        expect(match).not.toBeNull();
-        expect(match![0]).toContain('"pre-existing"');
+        const line = seedLineForNode(id);
+        expect(line).toBeTruthy();
+        expect(line).toContain('"pre-existing"');
       });
     }
   });
@@ -62,8 +68,10 @@ describe('Seed data — version records at 100%', () => {
   for (const id of componentIds) {
     describe(`${id} version records`, () => {
       it(`should have overview version at 100% complete`, () => {
+        // Match: ('nodeId', 'overview', '...content...', 100, 'complete')
+        // Content can have commas, so match everything up to the last ', NUMBER, 'status''
         const pattern = new RegExp(
-          `'${id}'\\s*,\\s*'overview'\\s*,[^,]*,\\s*(\\d+)\\s*,\\s*'([^']+)'`
+          `'${id}'\\s*,\\s*'overview'\\s*,\\s*'[^']*(?:''[^']*)*'\\s*,\\s*(\\d+)\\s*,\\s*'([^']+)'`
         );
         const match = seedSql.match(pattern);
         expect(match).not.toBeNull();
@@ -72,7 +80,9 @@ describe('Seed data — version records at 100%', () => {
       });
 
       it(`should have mvp version at 100% complete`, () => {
-        const pattern = new RegExp(`'${id}'\\s*,\\s*'mvp'\\s*,[^,]*,\\s*(\\d+)\\s*,\\s*'([^']+)'`);
+        const pattern = new RegExp(
+          `'${id}'\\s*,\\s*'mvp'\\s*,\\s*'[^']*(?:''[^']*)*'\\s*,\\s*(\\d+)\\s*,\\s*'([^']+)'`
+        );
         const match = seedSql.match(pattern);
         expect(match).not.toBeNull();
         expect(parseInt(match![1], 10)).toBe(100);

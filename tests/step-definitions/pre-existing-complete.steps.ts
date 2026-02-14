@@ -22,27 +22,23 @@ Given('an architecture with orchestration components', function (this: World) {
   this.webHtml = readFileSync(join(ROOT, 'web', 'index.html'), 'utf-8');
 });
 
+// ─── Helper: find the seed.sql line containing a given node ID ───────
+
+function seedLineForNode(seedSql: string, nodeId: string): string {
+  const lines = seedSql.split('\n');
+  const line = lines.find(l => l.includes(`'${nodeId}'`));
+  return line ?? '';
+}
+
 // ─── Seed Data: current_version ──────────────────────────────────────
 
 Then(
   'the seed node {string} should have current_version {string}',
   function (this: World, nodeId: string, expectedVersion: string) {
-    // Find the INSERT for this node in seed.sql
-    // The nodes table columns are: id, name, type, layer, color, icon, description, tags, sort_order
-    // But the current_version may be set via node_versions or via a separate UPDATE
-    // Actually, nodes table has a current_version column; check if the node INSERT or
-    // a separate mechanism sets it.
-    //
-    // Since nodes table schema now includes current_version, we check seed.sql for
-    // the node entry having the expected version value.
-    const nodePattern = new RegExp(`'${nodeId}'[^)]*`, 'g');
-    const matches = this.seedSql.match(nodePattern);
-    assert.ok(matches, `Node ${nodeId} not found in seed.sql`);
-
-    // Check that the expected version appears associated with this node
-    const nodeContext = matches.join(' ');
+    const line = seedLineForNode(this.seedSql, nodeId);
+    assert.ok(line, `Node ${nodeId} not found in seed.sql`);
     assert.ok(
-      nodeContext.includes(`'${expectedVersion}'`) || nodeContext.includes(expectedVersion),
+      line.includes(`'${expectedVersion}'`),
       `Node ${nodeId} does not have current_version ${expectedVersion} in seed.sql`
     );
   }
@@ -53,14 +49,10 @@ Then(
 Then(
   'the seed node {string} should have color {string}',
   function (this: World, nodeId: string, expectedColor: string) {
-    // Find the INSERT line containing this node and check for the color value
-    const nodePattern = new RegExp(`'${nodeId}'[^)]*`, 'g');
-    const matches = this.seedSql.match(nodePattern);
-    assert.ok(matches, `Node ${nodeId} not found in seed.sql`);
-
-    const nodeContext = matches.join(' ');
+    const line = seedLineForNode(this.seedSql, nodeId);
+    assert.ok(line, `Node ${nodeId} not found in seed.sql`);
     assert.ok(
-      nodeContext.includes(`'${expectedColor}'`),
+      line.includes(`'${expectedColor}'`),
       `Node ${nodeId} does not have color '${expectedColor}' in seed.sql`
     );
   }
@@ -71,13 +63,10 @@ Then(
 Then(
   'the seed node {string} should have tag {string}',
   function (this: World, nodeId: string, expectedTag: string) {
-    const nodePattern = new RegExp(`'${nodeId}'[^)]*`, 'g');
-    const matches = this.seedSql.match(nodePattern);
-    assert.ok(matches, `Node ${nodeId} not found in seed.sql`);
-
-    const nodeContext = matches.join(' ');
+    const line = seedLineForNode(this.seedSql, nodeId);
+    assert.ok(line, `Node ${nodeId} not found in seed.sql`);
     assert.ok(
-      nodeContext.includes(`"${expectedTag}"`),
+      line.includes(`"${expectedTag}"`),
       `Node ${nodeId} does not have tag "${expectedTag}" in seed.sql`
     );
   }
@@ -107,9 +96,9 @@ Then('the node visual state should be {string}', function (this: World, expected
 Then(
   'the seed version {string} for {string} should have progress {int}',
   function (this: World, versionTag: string, nodeId: string, expectedProgress: number) {
-    // Find the INSERT INTO node_versions for this node_id and version
+    // Match: ('nodeId', 'versionTag', '...content with escaped quotes...', PROGRESS, 'status')
     const versionPattern = new RegExp(
-      `'${nodeId}'\\s*,\\s*'${versionTag}'\\s*,[^,]*,\\s*(\\d+)\\s*,`,
+      `'${nodeId}'\\s*,\\s*'${versionTag}'\\s*,\\s*'[^']*(?:''[^']*)*'\\s*,\\s*(\\d+)\\s*,`,
       'g'
     );
     const match = versionPattern.exec(this.seedSql);
@@ -127,7 +116,7 @@ Then(
   'the seed version {string} for {string} should have status {string}',
   function (this: World, versionTag: string, nodeId: string, expectedStatus: string) {
     const versionPattern = new RegExp(
-      `'${nodeId}'\\s*,\\s*'${versionTag}'\\s*,[^,]*,\\s*\\d+\\s*,\\s*'([^']+)'`,
+      `'${nodeId}'\\s*,\\s*'${versionTag}'\\s*,\\s*'[^']*(?:''[^']*)*'\\s*,\\s*\\d+\\s*,\\s*'([^']+)'`,
       'g'
     );
     const match = versionPattern.exec(this.seedSql);
@@ -149,7 +138,6 @@ Then(
       this.webHtml.includes(expectedBorder),
       `Web view does not contain green border color ${expectedBorder}`
     );
-    // Verify it's in the 'complete' state definition
     assert.ok(this.webHtml.includes(`'complete'`), 'Web view does not define a complete state');
   }
 );
@@ -157,7 +145,6 @@ Then(
 Then(
   'the web view should define complete state with dark green background',
   function (this: World) {
-    // The complete state should have a dark green background (#0f2a1a)
     assert.ok(
       this.webHtml.includes('#0f2a1a'),
       'Web view does not define dark green background for complete state'
@@ -168,12 +155,10 @@ Then(
 // ─── Web View: Box color classes ─────────────────────────────────────
 
 Given('a component with color {string} in the web view', function (this: World, _color: string) {
-  // Store for use in Then steps
   this.testColor = _color;
 });
 
 Then('the box should use CSS class {string}', function (this: World, cssClass: string) {
-  // Verify the web view has the CSS class definition
   assert.ok(
     this.webHtml.includes(`.${cssClass}`),
     `Web view does not contain CSS class .${cssClass}`
@@ -181,7 +166,6 @@ Then('the box should use CSS class {string}', function (this: World, cssClass: s
 });
 
 Then('the green box should have green-tinted title color', function (this: World) {
-  // .b-green .t should set color to var(--green)
   assert.ok(
     this.webHtml.includes('.b-green .t{color:var(--green)'),
     'Web view does not have green-tinted title color for .b-green boxes'
