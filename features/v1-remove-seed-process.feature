@@ -44,13 +44,16 @@ Feature: Remove seed process from build pipeline
     Scenario: db/architecture.db is removed from the repository
       Then the file "db/architecture.db" should not exist
 
-  Rule: seed.sql is retained as a reference
-
-    Scenario: seed.sql is kept for reference and API seeding script
-      Then the file "seed.sql" should exist
+  Rule: Reference files
 
     Scenario: schema.sql is kept for reference
       Then the file "schema.sql" should exist
+
+    Scenario: seed.sql is removed
+      Then the file "seed.sql" should not exist
+
+    Scenario: seed-via-api.ts is removed
+      Then the file "scripts/seed-via-api.ts" should not exist
 
   Rule: Dockerfile has no seed artifacts
 

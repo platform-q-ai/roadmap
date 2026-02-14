@@ -1,7 +1,7 @@
 Feature: API-First Persistence
   As a runtime operator
   I want API mutations to persist across deploys
-  So that the database is the source of truth, not seed.sql
+  So that the database is the sole source of truth
 
   Scenario: Schema is applied on startup without wiping data
     Given the API server is running with a persistent database

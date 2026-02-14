@@ -52,12 +52,18 @@ describe('Remove seed process from build pipeline', () => {
   });
 
   describe('reference files retained', () => {
-    it('seed.sql should still exist as reference', () => {
-      expect(existsSync(join(ROOT, 'seed.sql'))).toBe(true);
-    });
-
     it('schema.sql should still exist as reference', () => {
       expect(existsSync(join(ROOT, 'schema.sql'))).toBe(true);
+    });
+  });
+
+  describe('seed artifacts removed', () => {
+    it('seed.sql should not exist', () => {
+      expect(existsSync(join(ROOT, 'seed.sql'))).toBe(false);
+    });
+
+    it('scripts/seed-via-api.ts should not exist', () => {
+      expect(existsSync(join(ROOT, 'scripts', 'seed-via-api.ts'))).toBe(false);
     });
   });
 

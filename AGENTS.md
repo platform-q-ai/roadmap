@@ -18,7 +18,7 @@ This file tells you how to work with this repository. Read it before making chan
 
 Living documentation for the Open Autonomous Runtime. The source of truth is a SQLite database (`db/architecture.db`) managed at runtime via the REST API. The web view (`web/index.html`) is a read-only page that fetches live data from the `/api/architecture` endpoint (no authentication required).
 
-**Do not edit `db/architecture.db` directly.** It is created and managed at runtime by the API server. Edit `schema.sql` or `seed.sql` only as reference material, `web/index.html` for UI changes.
+**Do not edit `db/architecture.db` directly.** It is created and managed at runtime by the API server. Edit `schema.sql` for schema reference, `web/index.html` for UI changes.
 
 ## Architecture Overview
 
@@ -395,7 +395,6 @@ npm run pre-commit       # Full pre-commit pipeline
 | File | Role | Edit? |
 |------|------|-------|
 | `schema.sql` | Database schema reference (4 tables) | Yes -- structural changes |
-| `seed.sql` | Reference data for API seeding scripts | Yes -- reference data |
 | `src/domain/entities/*.ts` | Domain entities (Node, Edge, Version, Feature) | Yes -- data model changes |
 | `src/domain/repositories/*.ts` | Repository interfaces (contracts) | Yes -- new queries |
 | `src/use-cases/*.ts` | Business logic | Yes -- new operations |
