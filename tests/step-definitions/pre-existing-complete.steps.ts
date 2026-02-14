@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { Given, Then } from '@cucumber/cucumber';
 
-import { Node } from '../../src/domain/entities/node.js';
+import { Node } from '../../src/domain/index.js';
 
 interface World {
   seedSql: string;

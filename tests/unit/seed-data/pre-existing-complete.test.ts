@@ -52,6 +52,7 @@ describe('Seed data — orchestration components marked complete', () => {
     }
   });
 });
+
 describe('Seed data — version records at 100%', () => {
   for (const id of ORCHESTRATION_IDS) {
     describe(`${id} version records`, () => {
@@ -63,8 +64,11 @@ describe('Seed data — version records at 100%', () => {
         );
         const match = seedSql.match(pattern);
         expect(match).not.toBeNull();
-        expect(parseInt(match![1], 10)).toBe(100);
-        expect(match![2]).toBe('complete');
+        if (!match) {
+          return;
+        }
+        expect(parseInt(match[1], 10)).toBe(100);
+        expect(match[2]).toBe('complete');
       });
 
       it(`should have mvp version at 100% complete`, () => {
@@ -73,8 +77,11 @@ describe('Seed data — version records at 100%', () => {
         );
         const match = seedSql.match(pattern);
         expect(match).not.toBeNull();
-        expect(parseInt(match![1], 10)).toBe(100);
-        expect(match![2]).toBe('complete');
+        if (!match) {
+          return;
+        }
+        expect(parseInt(match[1], 10)).toBe(100);
+        expect(match[2]).toBe('complete');
       });
     });
   }
