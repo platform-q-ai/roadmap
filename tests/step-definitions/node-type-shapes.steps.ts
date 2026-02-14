@@ -2,8 +2,8 @@ import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
-import type { NodeType } from '../../src/domain/entities/node.js';
-import { Node } from '../../src/domain/entities/node.js';
+import type { NodeType } from '../../src/domain/index.js';
+import { Node } from '../../src/domain/index.js';
 
 interface World {
   node: Node;
