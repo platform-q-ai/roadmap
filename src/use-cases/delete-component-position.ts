@@ -1,3 +1,4 @@
+import { ValidationError } from '../domain/errors.js';
 import type { ComponentPositionRepository } from '../domain/repositories/component-position-repository.js';
 
 interface DeleteComponentPositionDeps {
@@ -17,7 +18,7 @@ export class DeleteComponentPosition {
 
   execute(input: DeleteComponentPositionInput): void {
     if (!input.componentId || input.componentId.trim() === '') {
-      throw new Error('Component ID is required');
+      throw new ValidationError('Component ID is required');
     }
 
     this.positionRepo.delete(input.componentId);

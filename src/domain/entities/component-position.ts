@@ -1,3 +1,5 @@
+import { ValidationError } from '../errors.js';
+
 export interface ComponentPositionData {
   componentId: string;
   x: number;
@@ -18,15 +20,15 @@ export class ComponentPosition {
 
   private validate(data: ComponentPositionData): void {
     if (!data.componentId || data.componentId.trim() === '') {
-      throw new Error('Component ID is required');
+      throw new ValidationError('Component ID is required');
     }
 
     if (typeof data.x !== 'number' || Number.isNaN(data.x)) {
-      throw new Error('Invalid x coordinate');
+      throw new ValidationError('Invalid x coordinate');
     }
 
     if (typeof data.y !== 'number' || Number.isNaN(data.y)) {
-      throw new Error('Invalid y coordinate');
+      throw new ValidationError('Invalid y coordinate');
     }
   }
 }

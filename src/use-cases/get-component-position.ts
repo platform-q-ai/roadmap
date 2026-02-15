@@ -1,4 +1,5 @@
 import type { ComponentPosition } from '../domain/entities/component-position.js';
+import { ValidationError } from '../domain/errors.js';
 import type { ComponentPositionRepository } from '../domain/repositories/component-position-repository.js';
 
 interface GetComponentPositionDeps {
@@ -18,7 +19,7 @@ export class GetComponentPosition {
 
   execute(input: GetComponentPositionInput): ComponentPosition | null {
     if (!input.componentId || input.componentId.trim() === '') {
-      throw new Error('Component ID is required');
+      throw new ValidationError('Component ID is required');
     }
 
     return this.positionRepo.findByComponentId(input.componentId);

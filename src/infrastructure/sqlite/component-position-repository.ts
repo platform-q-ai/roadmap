@@ -11,18 +11,7 @@ export class SqliteComponentPositionRepository implements ComponentPositionRepos
 
   constructor(db: Database) {
     this.db = db;
-    this.initializeTable();
-  }
-
-  private initializeTable(): void {
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS component_positions (
-        component_id TEXT PRIMARY KEY,
-        x REAL NOT NULL,
-        y REAL NOT NULL,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+    // Table created via schema.sql - see AGENTS.md for schema management
   }
 
   findByComponentId(componentId: string): ComponentPosition | null {

@@ -90,6 +90,14 @@ export function buildComponentPositionRoutes(deps: ApiDeps): Route[] {
       json(res, 400, { error: 'componentId is required' });
       return;
     }
+
+    // Validate component exists before saving position
+    const componentExists = await deps.nodeRepo.exists(componentId);
+    if (!componentExists) {
+      json(res, 404, { error: 'Component not found' });
+      return;
+    }
+
     try {
       const position = saveComponentPosition.execute({ componentId, x: coords.x, y: coords.y });
       json(res, 201, position);
