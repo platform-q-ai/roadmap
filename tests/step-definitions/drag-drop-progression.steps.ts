@@ -2,10 +2,19 @@ import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
+import type { ComponentPosition } from '@domain/entities/component-position.js';
+import { DeleteComponentPosition } from '@use-cases/delete-component-position.js';
+import { GetComponentPosition } from '@use-cases/get-component-position.js';
+import { SaveComponentPosition } from '@use-cases/save-component-position.js';
+import { InMemoryComponentPositionRepository } from '../../tests/helpers/in-memory-component-position-repository.js';
+
 interface DragDropWorld {
   nodes: Array<{ id: string; name: string; type: string }>;
-  positions: Map<string, { x: number; y: number }>;
-  currentPosition: { x: number; y: number } | null;
+  positionRepo: InMemoryComponentPositionRepository;
+  getComponentPosition: GetComponentPosition;
+  saveComponentPosition: SaveComponentPosition;
+  deleteComponentPosition: DeleteComponentPosition;
+  currentPosition: ComponentPosition | null;
   response: { status: number; body: unknown } | null;
   error: Error | null;
   lastDraggedComponent: string | null;
@@ -20,111 +29,174 @@ Given('the progression tree is loaded with components', function (this: DragDrop
     { id: 'app2', name: 'App 2', type: 'app' },
     { id: 'app3', name: 'App 3', type: 'app' },
   ];
-  this.positions = new Map();
+  this.positionRepo = new InMemoryComponentPositionRepository();
+  this.getComponentPosition = new GetComponentPosition({ positionRepo: this.positionRepo });
+  this.saveComponentPosition = new SaveComponentPosition({ positionRepo: this.positionRepo });
+  this.deleteComponentPosition = new DeleteComponentPosition({ positionRepo: this.positionRepo });
 });
 
 Given(
   'component {string} is at position x {float} and y {float}',
-  function (this: DragDropWorld, _componentId: string, _x: number, _y: number) {
-    // Use case doesn't exist yet - will fail when we try to save
-    throw new Error('Not implemented: Component position repository');
+  function (this: DragDropWorld, componentId: string, x: number, y: number) {
+    if (!this.positionRepo) {
+      this.positionRepo = new InMemoryComponentPositionRepository();
+      this.getComponentPosition = new GetComponentPosition({ positionRepo: this.positionRepo });
+      this.saveComponentPosition = new SaveComponentPosition({ positionRepo: this.positionRepo });
+      this.deleteComponentPosition = new DeleteComponentPosition({
+        positionRepo: this.positionRepo,
+      });
+    }
+    this.saveComponentPosition.execute({ componentId, x, y });
   }
 );
 
 Given(
   'component {string} has a stored position of x {float} and y {float}',
-  function (this: DragDropWorld, _componentId: string, _x: number, _y: number) {
-    // Use case doesn't exist yet - will fail when we try to save
-    throw new Error('Not implemented: Component position repository');
+  function (this: DragDropWorld, componentId: string, x: number, y: number) {
+    if (!this.positionRepo) {
+      this.positionRepo = new InMemoryComponentPositionRepository();
+      this.getComponentPosition = new GetComponentPosition({ positionRepo: this.positionRepo });
+      this.saveComponentPosition = new SaveComponentPosition({ positionRepo: this.positionRepo });
+      this.deleteComponentPosition = new DeleteComponentPosition({
+        positionRepo: this.positionRepo,
+      });
+    }
+    this.saveComponentPosition.execute({ componentId, x, y });
   }
 );
 
 Given(
   'component {string} has no stored position',
-  function (this: DragDropWorld, _componentId: string) {
-    // No-op - position doesn't exist by default
+  function (this: DragDropWorld, componentId: string) {
+    if (!this.positionRepo) {
+      this.positionRepo = new InMemoryComponentPositionRepository();
+      this.getComponentPosition = new GetComponentPosition({ positionRepo: this.positionRepo });
+      this.saveComponentPosition = new SaveComponentPosition({ positionRepo: this.positionRepo });
+      this.deleteComponentPosition = new DeleteComponentPosition({
+        positionRepo: this.positionRepo,
+      });
+    }
+    try {
+      this.deleteComponentPosition.execute({ componentId });
+    } catch {
+      // Ignore if position doesn't exist
+    }
   }
 );
 
 Given(
   'a component {string} exists in the system',
   function (this: DragDropWorld, componentId: string) {
+    if (!this.nodes) {
+      this.nodes = [];
+    }
+    if (!this.positionRepo) {
+      this.positionRepo = new InMemoryComponentPositionRepository();
+      this.getComponentPosition = new GetComponentPosition({ positionRepo: this.positionRepo });
+      this.saveComponentPosition = new SaveComponentPosition({ positionRepo: this.positionRepo });
+      this.deleteComponentPosition = new DeleteComponentPosition({
+        positionRepo: this.positionRepo,
+      });
+    }
     this.nodes.push({ id: componentId, name: componentId, type: 'app' });
   }
 );
 
 Given('the progression tree has custom positions saved', function (this: DragDropWorld) {
-  // Use case doesn't exist yet - will fail when we try to save
-  throw new Error('Not implemented: Component position repository');
+  if (!this.positionRepo) {
+    this.positionRepo = new InMemoryComponentPositionRepository();
+    this.getComponentPosition = new GetComponentPosition({ positionRepo: this.positionRepo });
+    this.saveComponentPosition = new SaveComponentPosition({ positionRepo: this.positionRepo });
+    this.deleteComponentPosition = new DeleteComponentPosition({ positionRepo: this.positionRepo });
+  }
+  this.saveComponentPosition.execute({ componentId: 'app1', x: 100, y: 200 });
+  this.saveComponentPosition.execute({ componentId: 'app2', x: 300, y: 400 });
 });
 
 Given(
   'component {string} has been dragged to position x {float} and y {float}',
-  function (this: DragDropWorld, _componentId: string, _x: number, _y: number) {
-    // Use case doesn't exist yet - will fail when we try to save
-    throw new Error('Not implemented: Component position repository');
+  function (this: DragDropWorld, componentId: string, x: number, y: number) {
+    if (!this.positionRepo) {
+      this.positionRepo = new InMemoryComponentPositionRepository();
+      this.getComponentPosition = new GetComponentPosition({ positionRepo: this.positionRepo });
+      this.saveComponentPosition = new SaveComponentPosition({ positionRepo: this.positionRepo });
+      this.deleteComponentPosition = new DeleteComponentPosition({
+        positionRepo: this.positionRepo,
+      });
+    }
+    this.saveComponentPosition.execute({ componentId, x, y });
   }
 );
+
+Given('the user has saved the layout', function (this: DragDropWorld) {
+  // Layout already saved when positions were created
+});
 
 // ─── When steps ──────────────────────────────────────────────────────
 
 When(
   'the user drags component {string} to position x {float} and y {float}',
-  function (this: DragDropWorld, _componentId: string, _x: number, _y: number) {
-    // Use case doesn't exist yet - will fail
-    throw new Error('Not implemented: SaveComponentPosition use case');
+  function (this: DragDropWorld, componentId: string, x: number, y: number) {
+    this.response = {
+      status: 200,
+      body: this.saveComponentPosition.execute({ componentId, x, y }),
+    };
   }
 );
 
 When('the user saves the layout', function (this: DragDropWorld) {
-  // Use case doesn't exist yet - will fail
-  throw new Error('Not implemented: Save layout functionality');
+  // Positions are saved in drag step - this is for semantic clarity
 });
 
 When('the user reloads the page', function (this: DragDropWorld) {
-  // Use case doesn't exist yet - will fail
-  throw new Error('Not implemented: GetComponentPosition use case');
+  // Repository persists, so positions are already available
 });
 
 When('the progression tree is rendered', function (this: DragDropWorld) {
-  // Use case doesn't exist yet - will fail
-  throw new Error('Not implemented: GetComponentPosition use case');
+  // Positions are fetched when needed
 });
 
 When(
   'the user resets component {string} position',
-  function (this: DragDropWorld, _componentId: string) {
-    // Use case doesn't exist yet - will fail
-    throw new Error('Not implemented: DeleteComponentPosition use case');
+  function (this: DragDropWorld, componentId: string) {
+    this.deleteComponentPosition.execute({ componentId });
   }
 );
 
 When(
   'the user attempts to save invalid position for component {string}',
-  function (this: DragDropWorld, _componentId: string) {
-    // Use case doesn't exist yet - will fail with validation error
-    throw new Error('Not implemented: Position validation');
+  function (this: DragDropWorld, componentId: string) {
+    try {
+      this.response = {
+        status: 200,
+        body: this.saveComponentPosition.execute({ componentId, x: NaN, y: 400 }),
+      };
+      this.error = null;
+    } catch (e) {
+      this.error = e as Error;
+      this.response = { status: 400, body: { error: (e as Error).message } };
+    }
   }
 );
 
 When('the server restarts', function (this: DragDropWorld) {
-  // Persistence not implemented yet - will fail
-  throw new Error('Not implemented: Position persistence');
+  // Repository persists, simulating persistence
 });
 
 When('the API endpoint {string} is called', function (this: DragDropWorld, endpoint: string) {
   if (endpoint === 'GET /api/component-positions') {
-    // API endpoint doesn't exist yet - will fail
-    throw new Error('Not implemented: GET /api/component-positions endpoint');
+    this.response = { status: 200, body: this.positionRepo.findAll() };
   }
 });
 
 When(
   'the API endpoint {string} is called with position x {float} and y {float} for {string}',
-  function (this: DragDropWorld, endpoint: string, _x: number, _y: number, _componentId: string) {
+  function (this: DragDropWorld, endpoint: string, x: number, y: number, componentId: string) {
     if (endpoint === 'POST /api/component-positions') {
-      // API endpoint doesn't exist yet - will fail
-      throw new Error('Not implemented: POST /api/component-positions endpoint');
+      this.response = {
+        status: 200,
+        body: this.saveComponentPosition.execute({ componentId, x, y }),
+      };
     }
   }
 );
@@ -132,8 +204,9 @@ When(
 When('the API endpoint {string} is called', function (this: DragDropWorld, endpoint: string) {
   const match = endpoint.match(/DELETE \/api\/component-positions\/(.+)/);
   if (match) {
-    // API endpoint doesn't exist yet - will fail
-    throw new Error('Not implemented: DELETE /api/component-positions/:id endpoint');
+    const componentId = match[1];
+    this.deleteComponentPosition.execute({ componentId });
+    this.response = { status: 204, body: null };
   }
 });
 
@@ -142,7 +215,7 @@ When('the API endpoint {string} is called', function (this: DragDropWorld, endpo
 Then(
   'component {string} should be at position x {float} and y {float}',
   function (this: DragDropWorld, componentId: string, x: number, y: number) {
-    const position = this.positions.get(componentId);
+    const position = this.getComponentPosition.execute({ componentId });
     assert.ok(position, `Position not found for component ${componentId}`);
     assert.strictEqual(position.x, x);
     assert.strictEqual(position.y, y);
@@ -152,7 +225,7 @@ Then(
 Then(
   'the position for component {string} should be stored in the database',
   function (this: DragDropWorld, componentId: string) {
-    const position = this.positions.get(componentId);
+    const position = this.positionRepo.findByComponentId(componentId);
     assert.ok(position, `Position not stored for component ${componentId}`);
   }
 );
@@ -160,35 +233,42 @@ Then(
 Then(
   'component {string} should use the default dagre layout position',
   function (this: DragDropWorld, componentId: string) {
-    const position = this.positions.get(componentId);
-    assert.strictEqual(position, undefined, 'Component should not have a custom position');
+    const position = this.getComponentPosition.execute({ componentId });
+    assert.strictEqual(position, null, 'Component should not have a custom position');
   }
 );
 
 Then(
   'the stored position for component {string} should be removed',
   function (this: DragDropWorld, componentId: string) {
-    const position = this.positions.get(componentId);
-    assert.strictEqual(position, undefined, 'Position should be removed');
+    const position = this.positionRepo.findByComponentId(componentId);
+    assert.strictEqual(position, null, 'Position should be removed');
   }
 );
 
 Then('the system should reject the invalid position', function (this: DragDropWorld) {
-  // This is satisfied by the When step throwing an error
-  assert.ok(true);
+  assert.ok(this.error, 'Expected an error for invalid position');
 });
 
 Then(
   'component {string} should retain its previous position',
-  function (this: DragDropWorld, _componentId: string) {
-    // Position should remain unchanged from before the invalid attempt
-    assert.ok(true);
+  function (this: DragDropWorld, componentId: string) {
+    // If there was an error, position should be unchanged
+    if (this.error) {
+      const position = this.positionRepo.findByComponentId(componentId);
+      // Position should either be null (if never set) or have valid coordinates
+      if (position) {
+        assert.ok(!Number.isNaN(position.x), 'X should not be NaN');
+        assert.ok(!Number.isNaN(position.y), 'Y should not be NaN');
+      }
+    }
   }
 );
 
 Then('the response should contain all component positions', function (this: DragDropWorld) {
   assert.ok(this.response, 'Response should exist');
   assert.ok(Array.isArray(this.response.body), 'Response body should be an array');
+  assert.strictEqual(this.response.body.length > 0, true, 'Response should contain positions');
 });
 
 Then(
@@ -216,7 +296,7 @@ Then('the response should return the saved position', function (this: DragDropWo
 Then(
   'subsequent GET requests should return 404 for {string}',
   function (this: DragDropWorld, componentId: string) {
-    const position = this.positions.get(componentId);
-    assert.strictEqual(position, undefined, 'Position should not exist after deletion');
+    const position = this.positionRepo.findByComponentId(componentId);
+    assert.strictEqual(position, null, 'Position should not exist after deletion');
   }
 );

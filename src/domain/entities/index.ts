@@ -8,3 +8,5 @@ export type { NodeProps, NodeType } from './node.js';
 export { Node } from './node.js';
 export type { VersionProps, VersionStatus, VersionTag } from './version.js';
 export { Version } from './version.js';
+export { ComponentPosition, createComponentPosition } from './component-position.js';
+export type { ComponentPositionData } from './component-position.js';
