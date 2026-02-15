@@ -50,7 +50,7 @@ Given(
 
 Given(
   'component {string} is at position {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
+  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
     // Position persistence not implemented yet - will fail
     throw new Error(`Position persistence not implemented for ${componentId} at (${x}, ${y})`);
   }
@@ -58,7 +58,7 @@ Given(
 
 Given(
   'component {string} has a saved position of {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
+  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
     // Position loading not implemented yet - will fail
     throw new Error(`Position loading not implemented for ${componentId}`);
   }
@@ -66,7 +66,7 @@ Given(
 
 Given(
   'components {string} and {string} are visible',
-  function (this: WebDragDropWorld, comp1: string, comp2: string) {
+  function (this: WebDragDropWorld, _comp1: string, _comp2: string) {
     this.html = readWebView();
     assert.ok(
       this.html.includes('progression') || this.html.includes('tree'),
@@ -107,7 +107,7 @@ When(
 
 When(
   'the user completes dragging {string} to position {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
+  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
     // API save on drag end not implemented - will fail
     throw new Error(`Drag-end save not implemented for ${componentId} at (${x}, ${y})`);
   }
@@ -115,7 +115,7 @@ When(
 
 When(
   'the user drags component {string} to {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
+  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
     throw new Error(`Drag to position not implemented for ${componentId}`);
   }
 );
@@ -143,7 +143,7 @@ When('the user attempts to drag another component', function (this: WebDragDropW
 
 Then(
   'component {string} should be at the new position {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
+  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
     throw new Error(`Position verification not implemented for ${componentId} at (${x}, ${y})`);
   }
 );
@@ -158,7 +158,7 @@ Then(
 
 Then(
   'the node {string} should render at screen position {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
+  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
     throw new Error(`Visual position verification not implemented for ${componentId}`);
   }
 );
@@ -170,7 +170,7 @@ Then('a GET request should be made to {string}', function (this: WebDragDropWorl
 
 Then(
   'component {string} should be positioned at {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
+  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
     throw new Error(`Position verification not implemented for ${componentId}`);
   }
 );

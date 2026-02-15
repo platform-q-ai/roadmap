@@ -1,7 +1,6 @@
-import { describe, expect, it } from 'vitest';
-
 import { createRawConnection } from '@infrastructure/drizzle/index.js';
 import { SqliteComponentPositionRepository } from '@infrastructure/sqlite/component-position-repository.js';
+import { describe, expect, it } from 'vitest';
 
 describe('SqliteComponentPositionRepository', () => {
   it('should save and retrieve a position', () => {
