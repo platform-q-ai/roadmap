@@ -1,6 +1,6 @@
+import { DeleteComponentPosition } from '@use-cases/delete-component-position.js';
 import { describe, expect, it } from 'vitest';
 
-import { DeleteComponentPosition } from '@use-cases/delete-component-position.js';
 import { InMemoryComponentPositionRepository } from '../../helpers/in-memory-component-position-repository.js';
 
 describe('DeleteComponentPosition Use Case', () => {

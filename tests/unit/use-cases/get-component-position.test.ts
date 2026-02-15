@@ -1,6 +1,6 @@
+import { GetComponentPosition } from '@use-cases/get-component-position.js';
 import { describe, expect, it } from 'vitest';
 
-import { GetComponentPosition } from '@use-cases/get-component-position.js';
 import { InMemoryComponentPositionRepository } from '../../helpers/in-memory-component-position-repository.js';
 
 describe('GetComponentPosition Use Case', () => {

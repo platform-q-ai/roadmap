@@ -1,11 +1,11 @@
 import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
-
 import type { ComponentPosition } from '@domain/entities/component-position.js';
 import { DeleteComponentPosition } from '@use-cases/delete-component-position.js';
 import { GetComponentPosition } from '@use-cases/get-component-position.js';
 import { SaveComponentPosition } from '@use-cases/save-component-position.js';
+
 import { InMemoryComponentPositionRepository } from '../../tests/helpers/in-memory-component-position-repository.js';
 
 interface DragDropWorld {
@@ -179,10 +179,6 @@ When(
   }
 );
 
-When('the server restarts', function (this: DragDropWorld) {
-  // Repository persists, simulating persistence
-});
-
 When('the API endpoint {string} is called', function (this: DragDropWorld, endpoint: string) {
   if (endpoint === 'GET /api/component-positions') {
     this.response = { status: 200, body: this.positionRepo.findAll() };
@@ -240,6 +236,14 @@ Then(
 
 Then(
   'the stored position for component {string} should be removed',
+  function (this: DragDropWorld, componentId: string) {
+    const position = this.positionRepo.findByComponentId(componentId);
+    assert.strictEqual(position, null, 'Position should be removed');
+  }
+);
+
+Then(
+  'the position for component {string} should be removed',
   function (this: DragDropWorld, componentId: string) {
     const position = this.positionRepo.findByComponentId(componentId);
     assert.strictEqual(position, null, 'Position should be removed');

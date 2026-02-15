@@ -1,6 +1,6 @@
+import { SaveComponentPosition } from '@use-cases/save-component-position.js';
 import { describe, expect, it } from 'vitest';
 
-import { SaveComponentPosition } from '@use-cases/save-component-position.js';
 import { InMemoryComponentPositionRepository } from '../../helpers/in-memory-component-position-repository.js';
 
 describe('SaveComponentPosition Use Case', () => {

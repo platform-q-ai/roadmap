@@ -1,8 +1,8 @@
 import type { Database } from 'better-sqlite3';
 
 import {
-  createComponentPosition,
   type ComponentPosition,
+  createComponentPosition,
 } from '../../domain/entities/component-position.js';
 import type { ComponentPositionRepository } from '../../domain/repositories/component-position-repository.js';
 

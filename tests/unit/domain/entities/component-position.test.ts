@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { ComponentPosition } from '@domain/entities/component-position.js';
+import { describe, expect, it } from 'vitest';
 
 describe('ComponentPosition Entity', () => {
   it('should create with valid data', () => {
