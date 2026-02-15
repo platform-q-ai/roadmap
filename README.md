@@ -207,6 +207,10 @@ The API server runs at `https://roadmap-5vvp.onrender.com` (production) or `http
 | `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` |
 | `POST` | `/api/admin/seed-features` | Re-seed features from filesystem (admin scope) | `200` | `403` `500` |
 | `POST` | `/api/admin/export-features` | Export features to filesystem (optional `?component=` filter, admin scope) | `200` | `400` `403` `500` |
+| `GET` | `/api/component-positions` | List all component positions (public) | `200 [...]` | — |
+| `GET` | `/api/component-positions/:id` | Get position for a component | `200` | `404` not found |
+| `POST` | `/api/component-positions` | Save/update a component position | `201` | `400` invalid |
+| `DELETE` | `/api/component-positions/:id` | Delete a component position | `204` | `404` not found |
 
 ### Example: Create a component
 
@@ -276,6 +280,26 @@ curl "https://roadmap-5vvp.onrender.com/api/features/search?q=rate+limiting&vers
 ```
 
 Returns an array of matching features. Each result includes `node_id`, `filename`, `version`, `title`, `step_count`, and a `snippet` field showing context around the match. The full `content` field is excluded to keep payloads small. The `q` parameter is required (max 200 characters). Results are capped at 100.
+
+### Example: Component positions (drag-and-drop)
+
+```bash
+# List all saved component positions
+curl https://roadmap-5vvp.onrender.com/api/component-positions
+
+# Get position for a specific component
+curl https://roadmap-5vvp.onrender.com/api/component-positions/worker
+
+# Save a component position
+curl -X POST https://roadmap-5vvp.onrender.com/api/component-positions \
+  -H "Content-Type: application/json" \
+  -d '{"componentId":"worker","x":300,"y":400}'
+
+# Delete a component position (reset to default layout)
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/component-positions/worker
+```
+
+Component positions enable drag-and-drop customization of the progression tree layout. Positions are persisted in the database and restored on page reload. Components without saved positions use the default dagre layout. The `POST` endpoint accepts `componentId` (string, required), `x` (number, required), and `y` (number, required). All coordinates are validated as finite numbers.
 
 ### Example: List and filter edges
 

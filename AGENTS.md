@@ -31,7 +31,7 @@ Adapters (CLI, API, MCP)  -->  Use Cases  -->  Domain (entities + interfaces)
 ```
 src/
 ├── domain/                     # Entities + repository interfaces (zero deps)
-│   ├── entities/               # Node, Edge, Version, Feature
+│   ├── entities/               # Node, Edge, Version, Feature, ComponentPosition
 │   │   └── index.ts            # Barrel export
 │   ├── repositories/           # TypeScript interfaces (contracts only)
 │   │   └── index.ts            # Barrel export
@@ -53,6 +53,9 @@ src/
 │   ├── get-dependency-tree.ts  # Recursive DEPENDS_ON tree traversal
 │   ├── get-dependents.ts       # Reverse DEPENDS_ON lookup
 │   ├── get-component-context.ts # Rich component context aggregation
+│   ├── get-component-position.ts # Get saved position for drag-and-drop layout
+│   ├── save-component-position.ts # Save position for drag-and-drop layout
+│   ├── delete-component-position.ts # Delete saved position for drag-and-drop layout
 │   ├── get-implementation-order.ts # Topological sort with cycle detection
 │   ├── get-components-by-status.ts # Classify components by step coverage
 │   ├── get-next-implementable.ts # Ready-to-implement components
@@ -71,6 +74,7 @@ src/
 │       ├── edge-repository.ts
 │       ├── version-repository.ts
 │       ├── feature-repository.ts
+│       ├── component-position-repository.ts # Drag-and-drop position persistence
 │       └── index.ts            # Barrel export
 └── adapters/                   # Entry points (CLI, API)
     └── cli/
@@ -457,6 +461,7 @@ nodes(id TEXT PK, name, type, layer, color, icon, description, tags TEXT/JSON, s
 edges(id INT PK, source_id FK, target_id FK, type, label, metadata TEXT/JSON)
 node_versions(id INT PK, node_id FK, version, content, progress INT 0-100, status, updated_at)
 features(id INT PK, node_id FK, version, filename, title, content, step_count INT DEFAULT 0, updated_at)
+component_positions(component_id TEXT PK, x REAL NOT NULL, y REAL NOT NULL, updated_at DATETIME)
 ```
 
 Edge types: `CONTAINS`, `CONTROLS`, `DEPENDS_ON`, `READS_FROM`, `WRITES_TO`, `DISPATCHES_TO`, `ESCALATES_TO`, `PROXIES`, `SANITISES`, `GATES`, `SEQUENCE`.
@@ -511,6 +516,10 @@ All endpoints return JSON. Mutating endpoints accept JSON bodies (except `PUT /a
 | `POST` | `/api/bulk/delete/components` | Batch delete up to 100 components | `200` | `400` invalid body or limit exceeded |
 | `POST` | `/api/admin/seed-features` | Re-seed features from filesystem (admin scope) | `200` | `403` forbidden, `500` internal |
 | `POST` | `/api/admin/export-features` | Export features to filesystem (optional `?component=` filter, admin scope) | `200` | `400` invalid component, `403` forbidden, `500` internal |
+| `GET` | `/api/component-positions` | List all component positions (public, no auth) | `200 [...]` | — |
+| `GET` | `/api/component-positions/:id` | Get position for a specific component | `200 { componentId, x, y }` | `404` not found |
+| `POST` | `/api/component-positions` | Save/update a component position | `201 { componentId, x, y }` | `400` invalid coordinates |
+| `DELETE` | `/api/component-positions/:id` | Delete a component position | `204` | `404` not found |
 
 ### POST /api/components body
 
@@ -765,7 +774,23 @@ curl -X POST https://roadmap-5vvp.onrender.com/api/admin/export-features \
 # Export features for a single component
 curl -X POST "https://roadmap-5vvp.onrender.com/api/admin/export-features?component=worker" \
   -H "Authorization: Bearer <admin-api-key>"
+
+# List all saved component positions
+curl https://roadmap-5vvp.onrender.com/api/component-positions
+
+# Get position for a specific component
+curl https://roadmap-5vvp.onrender.com/api/component-positions/worker
+
+# Save a component position
+curl -X POST https://roadmap-5vvp.onrender.com/api/component-positions \
+  -H "Content-Type: application/json" \
+  -d '{"componentId":"worker","x":300,"y":400}'
+
+# Delete a component position (reset to default layout)
+curl -X DELETE https://roadmap-5vvp.onrender.com/api/component-positions/worker
 ```
+
+Component positions enable drag-and-drop customization of the progression tree layout. Positions are persisted in the `component_positions` table and restored on page reload. Components without saved positions use the default dagre layout. The `POST` endpoint accepts `componentId` (string, required), `x` (number, required), and `y` (number, required). All coordinates are validated as finite numbers. The `GET /api/component-positions` endpoint is public (no authentication required) so the web view can load positions on startup.
 
 ## Adding New Features (BDD Workflow)
 
