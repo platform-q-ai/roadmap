@@ -83,6 +83,7 @@ export { DeleteComponentPosition } from './delete-component-position.js';
 // re-exports these to enable typed dependency injection and validation.
 export type {
   ApiKeyScope,
+  ComponentPositionRepository,
   IApiKeyRepository,
   IEdgeRepository,
   IFeatureRepository,

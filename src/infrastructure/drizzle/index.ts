@@ -1,5 +1,5 @@
 export { DrizzleApiKeyRepository } from './api-key-repository.js';
-export { applySchema, createDrizzleConnection } from './connection.js';
+export { applySchema, createDrizzleConnection, createRawConnection } from './connection.js';
 export { DrizzleEdgeRepository } from './edge-repository.js';
 export { DrizzleFeatureRepository } from './feature-repository.js';
 export { DrizzleNodeRepository } from './node-repository.js';
