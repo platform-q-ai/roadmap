@@ -50,7 +50,7 @@ Given(
 
 Given(
   'component {string} is at position {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
+  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
     // Position persistence not implemented yet - will fail
     throw new Error(`Position persistence not implemented for ${componentId} at (${x}, ${y})`);
   }
@@ -107,7 +107,7 @@ When(
 
 When(
   'the user completes dragging {string} to position {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
+  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
     // API save on drag end not implemented - will fail
     throw new Error(`Drag-end save not implemented for ${componentId} at (${x}, ${y})`);
   }
@@ -143,7 +143,7 @@ When('the user attempts to drag another component', function (this: WebDragDropW
 
 Then(
   'component {string} should be at the new position {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
+  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
     throw new Error(`Position verification not implemented for ${componentId} at (${x}, ${y})`);
   }
 );
@@ -170,8 +170,8 @@ Then('a GET request should be made to {string}', function (this: WebDragDropWorl
 
 Then(
   'component {string} should be positioned at {float} {float}',
-  function (this: WebDragDropWorld, componentId: string, _x: number, _y: number) {
-    throw new Error(`Position verification not implemented for ${componentId}`);
+  function (this: WebDragDropWorld, componentId: string, x: number, y: number) {
+    throw new Error(`Position verification not implemented for ${componentId} at (${x}, ${y})`);
   }
 );
 

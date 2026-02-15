@@ -86,7 +86,24 @@ function extractApiKey(req: http.IncomingMessage): string | undefined {
 }
 
 /** Read-only endpoints that do not require authentication. */
-const PUBLIC_ENDPOINTS = new Set(['/api/health', '/api/architecture']);
+const PUBLIC_ENDPOINTS = new Set(['/api/health', '/api/architecture', '/api/component-positions']);
+
+/** Check if URL matches a public endpoint pattern (exact match or /prefix/*). */
+function isPublicEndpoint(url: string): boolean {
+  if (PUBLIC_ENDPOINTS.has(url)) {
+    return true;
+  }
+  // Match /api/component-positions/* patterns
+  for (const endpoint of PUBLIC_ENDPOINTS) {
+    if (endpoint.includes('/')) {
+      const basePath = endpoint.endsWith('/') ? endpoint : endpoint + '/';
+      if (url.startsWith(basePath)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 /**
  * Create an auth middleware function.
@@ -105,7 +122,7 @@ export function createAuthMiddleware(deps: AuthMiddlewareDeps) {
     const url = rawUrl.split('?')[0];
     const method = req.method ?? 'GET';
 
-    if (PUBLIC_ENDPOINTS.has(url)) {
+    if (isPublicEndpoint(url)) {
       return true;
     }
 
