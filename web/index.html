@@ -104,6 +104,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .md-content th,.md-content td{border:1px solid var(--border);padding:4px 8px;font-size:0.9em;text-align:left;}
 .md-content th{background:var(--surface-2);font-weight:600;}
 
+/* ─── Drag and Drop Cursor Styles ───────────────────── */
+#progression-container .grab{cursor:grab!important;}
+#progression-container .grabbing{cursor:grabbing!important;}
+
 /* ─── Responsive ──────────────────────────────────────── */
 @media(max-width:900px){
   .canvas{padding:18px 12px 60px;}
@@ -321,8 +325,90 @@ function renderProgressionTree() {
     userZoomingEnabled: false,
     userPanningEnabled: false,
     boxSelectionEnabled: false,
-    autoungrabify: true,
+    autoungrabify: false,
   });
+
+  // Load saved positions before layout
+  loadComponentPositions().then(positions => {
+    if (positions && positions.length > 0) {
+      positions.forEach(pos => {
+        const node = cy.getElementById(pos.componentId);
+        if (node.length > 0) {
+          node.position({ x: pos.x, y: pos.y });
+        }
+      });
+    }
+  });
+
+  // Drag event handlers
+  cy.on('grab', 'node', function(e) {
+    const node = e.target;
+    node.addClass('grabbing');
+    document.body.style.cursor = 'grabbing';
+  });
+
+  cy.on('drag', 'node', function(e) {
+    // Node is being dragged - position updates automatically
+  });
+
+  cy.on('free', 'node', function(e) {
+    const node = e.target;
+    node.removeClass('grabbing');
+    document.body.style.cursor = 'default';
+    
+    // Save the new position
+    const position = node.position();
+    const nodeId = node.id();
+    saveComponentPosition(nodeId, position.x, position.y);
+  });
+
+  // Hover effects
+  cy.on('mouseover', 'node', function(e) {
+    if (!e.target.hasClass('grabbing')) {
+      e.target.addClass('grab');
+      document.body.style.cursor = 'grab';
+    }
+  });
+
+  cy.on('mouseout', 'node', function(e) {
+    e.target.removeClass('grab');
+    if (!e.target.hasClass('grabbing')) {
+      document.body.style.cursor = 'default';
+    }
+  });
+
+  // Helper functions for position persistence
+  async function loadComponentPositions() {
+    try {
+      const response = await fetch('/api/component-positions');
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.error('Error loading positions:', error);
+    }
+    return [];
+  }
+
+  async function saveComponentPosition(componentId, x, y) {
+    try {
+      // Clamp coordinates to reasonable bounds
+      const clampedX = Math.max(0, Math.min(x, 5000));
+      const clampedY = Math.max(0, Math.min(y, 5000));
+      
+      const response = await fetch('/api/component-positions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ componentId, x: clampedX, y: clampedY })
+      });
+      
+      if (!response.ok) {
+        console.error('Error saving position:', await response.text());
+      }
+    } catch (error) {
+      console.error('Error saving position:', error);
+    }
+  }
 
   // Fit tree to container after layout completes
   cy.on('layoutstop', function() {
