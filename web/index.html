@@ -228,7 +228,8 @@ async function renderProgressionTree() {
   if (!DATA || !DATA.progression_tree) return;
 
   // Load saved positions BEFORE creating Cytoscape so they can be
-  // applied synchronously in the layoutstop callback.
+  // applied immediately after the constructor returns (dagre runs
+  // synchronously during construction, so layoutstop has already fired).
   const savedPositions = await loadComponentPositions();
 
   const tree = DATA.progression_tree;
@@ -398,18 +399,17 @@ async function renderProgressionTree() {
     }
   });
 
-  // Apply saved positions after dagre layout completes, then fit
-  cy.once('layoutstop', function() {
-    if (savedPositions && savedPositions.length > 0) {
-      savedPositions.forEach(function(pos) {
-        const node = cy.getElementById(pos.componentId);
-        if (node.length > 0) {
-          node.position({ x: pos.x, y: pos.y });
-        }
-      });
-    }
-    cy.fit();
-  });
+  // Apply saved positions synchronously — dagre runs inside the
+  // cytoscape() constructor so the layout-complete event already fired.
+  if (savedPositions && savedPositions.length > 0) {
+    savedPositions.forEach(function(pos) {
+      const node = cy.getElementById(pos.componentId);
+      if (node.length > 0) {
+        node.position({ x: pos.x, y: pos.y });
+      }
+    });
+  }
+  cy.fit();
 
   // Click node to open detail dialog
   cy.on('tap', 'node', function(e) {

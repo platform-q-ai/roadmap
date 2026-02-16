@@ -39,3 +39,10 @@ Feature: Drag and Drop Position Persistence
     When the tree renders and applies saved positions
     Then the operation log should show fit after apply
     And the rendered position of "app1" should be x 450 and y 300
+
+  Scenario: Positions are applied synchronously after dagre, not via deferred event
+    Given a stored position for "app1" at x 450 and y 300
+    When the dagre layout completes synchronously during construction
+    And saved positions are applied immediately after construction
+    Then the rendered position of "app1" should be x 450 and y 300
+    And position application should not depend on a deferred event listener

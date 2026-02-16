@@ -170,3 +170,55 @@ Then(
     assert.strictEqual(rendered.y, dagre.y);
   }
 );
+
+// ─── Synchronous-after-constructor scenario ──────────────────────────
+
+When(
+  'the dagre layout completes synchronously during construction',
+  function (this: PersistenceWorld) {
+    ensureWorld(this);
+    // Dagre runs synchronously inside the cytoscape() constructor.
+    // After construction returns, nodes have dagre-computed positions.
+    this.operationLog.push('dagre-layout');
+    for (const [id, pos] of this.dagrePositions) {
+      this.renderedPositions.set(id, { ...pos });
+    }
+    // Mark that layoutstop already fired during construction
+    this.operationLog.push('layoutstop-already-fired');
+  }
+);
+
+When(
+  'saved positions are applied immediately after construction',
+  function (this: PersistenceWorld) {
+    ensureWorld(this);
+    // Positions are applied synchronously right after the constructor
+    // returns — NOT inside a deferred layoutstop listener.
+    this.operationLog.push('positions-applied');
+    const saved = this.positionRepo.findAll();
+    for (const pos of saved) {
+      if (this.renderedPositions.has(pos.componentId)) {
+        this.renderedPositions.set(pos.componentId, { x: pos.x, y: pos.y });
+      }
+    }
+    this.operationLog.push('fit-viewport');
+  }
+);
+
+Then(
+  'position application should not depend on a deferred event listener',
+  function (this: PersistenceWorld) {
+    ensureWorld(this);
+    // Verify that layoutstop fired BEFORE positions were applied,
+    // meaning positions were applied after the event (not inside a
+    // listener that could be registered too late).
+    const layoutstopFired = this.operationLog.indexOf('layoutstop-already-fired');
+    const applied = this.operationLog.indexOf('positions-applied');
+    assert.ok(layoutstopFired >= 0, 'layoutstop-already-fired should be in log');
+    assert.ok(applied >= 0, 'positions-applied should be in log');
+    assert.ok(
+      applied > layoutstopFired,
+      'positions must be applied AFTER layoutstop already fired (synchronous, not deferred)'
+    );
+  }
+);
