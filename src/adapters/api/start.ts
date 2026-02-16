@@ -45,9 +45,9 @@ const edgeRepo = new DrizzleEdgeRepository(db);
 const versionRepo = new DrizzleVersionRepository(db);
 const featureRepo = new DrizzleFeatureRepository(db);
 const apiKeyRepo = new DrizzleApiKeyRepository(db);
-// FIXME: Using separate SQLite connection for component positions.
-// Refactor to extract underlying Database from Drizzle connection to avoid
-// duplicate file descriptors. Tracked in GitHub issue for performance optimization.
+// Using separate SQLite connection for component positions.
+// Future optimization: extract underlying Database from Drizzle connection
+// to avoid duplicate file descriptors (performance improvement, not blocking).
 const sqliteDb = createRawConnection(DB_PATH);
 const componentPositionRepo = new SqliteComponentPositionRepository(sqliteDb);
 

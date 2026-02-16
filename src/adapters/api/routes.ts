@@ -24,6 +24,7 @@ import {
   handleBulkCreateEdges,
   handleBulkDeleteComponents,
 } from './routes-bulk.js';
+import { buildComponentPositionRoutes } from './routes-component-positions.js';
 import { buildFeatureDeletionRoutes } from './routes-feature-deletion.js';
 import { buildFeatureRetrievalRoutes } from './routes-feature-retrieval.js';
 import { buildFeatureSearchRoutes } from './routes-feature-search.js';
@@ -667,5 +668,6 @@ export function buildRoutes(deps: ApiDeps, options?: RouteOptions): Route[] {
         handleUpdateVersion(deps, req, res, { nodeId: m[1], version: m[2] }),
     },
     ...featureRoutes(deps),
+    ...buildComponentPositionRoutes(deps),
   ];
 }

@@ -147,6 +147,13 @@ async function handleDeletePosition(
     json(res, 400, { error: 'Invalid URL' });
     return;
   }
+
+  const validation = validateComponentIdFormat(componentId);
+  if (!validation.valid) {
+    json(res, 400, { error: validation.error });
+    return;
+  }
+
   try {
     const position = ctx.getComponentPosition.execute({ componentId });
     if (!position) {
