@@ -31,7 +31,7 @@ Given('a fresh database connection with schema applied', function (this: SchemaW
   ensureWorld(this);
 });
 
-Given('a node {string} exists in the database', function (this: SchemaWorld, nodeId: string) {
+Given('a node {string} exists for position testing', function (this: SchemaWorld, nodeId: string) {
   ensureWorld(this);
   this.sqlite
     .prepare("INSERT OR IGNORE INTO nodes (id, name, type) VALUES (?, ?, 'app')")
