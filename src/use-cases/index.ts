@@ -15,6 +15,7 @@ export type { CreateLayerInput } from './create-layer.js';
 export { CreateLayer } from './create-layer.js';
 export { DeleteAllVersions } from './delete-all-versions.js';
 export { DeleteComponent } from './delete-component.js';
+export { DeleteComponentPosition } from './delete-component-position.js';
 export { DeleteEdge } from './delete-edge.js';
 export { DeleteFeature } from './delete-feature.js';
 export { DeleteFeatureVersionScoped } from './delete-feature-version-scoped.js';
@@ -41,6 +42,7 @@ export type {
 } from './get-architecture.js';
 export { GetArchitecture } from './get-architecture.js';
 export { GetComponentContext } from './get-component-context.js';
+export { GetComponentPosition } from './get-component-position.js';
 export { GetComponentsByStatus } from './get-components-by-status.js';
 export { GetDependencyTree } from './get-dependency-tree.js';
 export { GetDependents } from './get-dependents.js';
@@ -60,6 +62,7 @@ export type { VersionWithSteps } from './list-versions.js';
 export { ListVersions } from './list-versions.js';
 export { MoveComponent } from './move-component.js';
 export { RevokeApiKey } from './revoke-api-key.js';
+export { SaveComponentPosition } from './save-component-position.js';
 export type { SearchResult } from './search-features.js';
 export { SearchFeatures } from './search-features.js';
 export type { FeatureFileInput } from './seed-features.js';
@@ -80,6 +83,7 @@ export { ValidateApiKey } from './validate-api-key.js';
 // re-exports these to enable typed dependency injection and validation.
 export type {
   ApiKeyScope,
+  ComponentPositionRepository,
   IApiKeyRepository,
   IEdgeRepository,
   IFeatureRepository,

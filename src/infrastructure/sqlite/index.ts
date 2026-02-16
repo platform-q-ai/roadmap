@@ -1,3 +1,4 @@
+export { SqliteComponentPositionRepository } from './component-position-repository.js';
 export { createConnection } from './connection.js';
 export { SqliteEdgeRepository } from './edge-repository.js';
 export { SqliteFeatureRepository } from './feature-repository.js';

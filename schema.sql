@@ -60,6 +60,14 @@ CREATE TABLE IF NOT EXISTS features (
     updated_at  TEXT DEFAULT (datetime('now'))
 );
 
+-- ─── Component Positions (drag-and-drop) ─────────────────────────────
+CREATE TABLE IF NOT EXISTS component_positions (
+    component_id TEXT PRIMARY KEY REFERENCES nodes(id) ON DELETE CASCADE,
+    x REAL NOT NULL,
+    y REAL NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
 -- ─── Indexes ─────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_edges_source ON edges(source_id);
 CREATE INDEX IF NOT EXISTS idx_edges_target ON edges(target_id);

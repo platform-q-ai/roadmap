@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import type {
+  ComponentPositionRepository,
   CreateComponentInput,
   IEdgeRepository,
   IFeatureRepository,
@@ -21,6 +22,7 @@ export interface ApiDeps {
   edgeRepo: IEdgeRepository;
   versionRepo: IVersionRepository;
   featureRepo: IFeatureRepository;
+  componentPositionRepo: ComponentPositionRepository;
 }
 
 export interface Route {

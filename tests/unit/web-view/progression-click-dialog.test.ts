@@ -33,14 +33,14 @@ describe('Progression click dialog — click not hover', () => {
     expect(hasClick).toBe(true);
   });
 
-  it('should NOT have mouseover handler on nodes for showing details', () => {
+  it('should have mouseover handler on nodes for drag cursor feedback', () => {
     const mouseoverNode = /cy\.on\(\s*['"]mouseover['"]\s*,\s*['"]node['"]/;
-    expect(mouseoverNode.test(html)).toBe(false);
+    expect(mouseoverNode.test(html)).toBe(true);
   });
 
-  it('should NOT have mouseout handler on nodes', () => {
+  it('should have mouseout handler on nodes for drag cursor feedback', () => {
     const mouseoutNode = /cy\.on\(\s*['"]mouseout['"]\s*,\s*['"]node['"]/;
-    expect(mouseoutNode.test(html)).toBe(false);
+    expect(mouseoutNode.test(html)).toBe(true);
   });
 });
 

@@ -9,12 +9,14 @@ import { fileURLToPath } from 'url';
 
 import {
   createDrizzleConnection,
+  createRawConnection,
   DrizzleApiKeyRepository,
   DrizzleEdgeRepository,
   DrizzleFeatureRepository,
   DrizzleNodeRepository,
   DrizzleVersionRepository,
 } from '../../infrastructure/index.js';
+import { SqliteComponentPositionRepository } from '../../infrastructure/sqlite/component-position-repository.js';
 import { GenerateApiKey, ValidateApiKey } from '../../use-cases/index.js';
 
 import type { RequestLogEntry } from './index.js';
@@ -43,6 +45,11 @@ const edgeRepo = new DrizzleEdgeRepository(db);
 const versionRepo = new DrizzleVersionRepository(db);
 const featureRepo = new DrizzleFeatureRepository(db);
 const apiKeyRepo = new DrizzleApiKeyRepository(db);
+// Using separate SQLite connection for component positions.
+// Future optimization: extract underlying Database from Drizzle connection
+// to avoid duplicate file descriptors (performance improvement, not blocking).
+const sqliteDb = createRawConnection(DB_PATH);
+const componentPositionRepo = new SqliteComponentPositionRepository(sqliteDb);
 
 // Use cases
 const validateApiKey = new ValidateApiKey({ apiKeyRepo });
@@ -92,7 +99,7 @@ await seedApiKeys({
 });
 
 const server = createApp(
-  { nodeRepo, edgeRepo, versionRepo, featureRepo },
+  { nodeRepo, edgeRepo, versionRepo, featureRepo, componentPositionRepo },
   {
     staticDir: WEB_DIR,
     packageVersion,
