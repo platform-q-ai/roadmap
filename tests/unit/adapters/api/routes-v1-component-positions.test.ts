@@ -512,5 +512,22 @@ describe('Component Position Routes', () => {
 
       server.close();
     });
+
+    it('handles database errors during deletion', async () => {
+      const data = seedData();
+      data.positions = [new ComponentPosition({ componentId: 'comp-a', x: 100, y: 200 })];
+      const repos = buildTestRepos(data);
+      repos.componentPositionRepo.delete = vi.fn(() => {
+        throw new Error('Database error');
+      });
+      const server = createApp(repos, { staticDir: '' }).listen(0);
+
+      const res = await request(server, 'DELETE', '/api/component-positions/comp-a');
+
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.body).toHaveProperty('error');
+
+      server.close();
+    });
   });
 });
