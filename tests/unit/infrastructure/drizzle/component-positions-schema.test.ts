@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { describe, expect, it, beforeEach } from 'vitest';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { applySchema } from '../../../../src/infrastructure/drizzle/connection.js';
 
