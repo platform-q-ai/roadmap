@@ -4,40 +4,38 @@ Feature: Drag and Drop Position Persistence
   So that my custom layout is preserved across sessions
 
   Background:
-    Given the system has components with positions in the database
+    Given components exist in the position database
 
-  Scenario: Saved positions are applied after dagre layout completes
-    Given component "app1" has a saved position of x 450 and y 300
-    When the progression tree renders with dagre layout
-    And saved positions are loaded and applied
-    Then component "app1" should display at x 450 and y 300
-    And component "app1" should not be at its dagre-computed position
+  Scenario: Saved positions override dagre layout after render
+    Given a stored position for "app1" at x 450 and y 300
+    When the tree renders and applies saved positions
+    Then the rendered position of "app1" should be x 450 and y 300
+    And "app1" rendered position should differ from its dagre default
 
-  Scenario: Positions load and apply before the tree is considered ready
-    Given component "app1" has a saved position of x 450 and y 300
-    When the progression tree renders
-    Then positions should be applied after layout completes
-    And the tree should not revert positions after fitting
+  Scenario: Layout then apply then fit ordering is correct
+    Given a stored position for "app1" at x 450 and y 300
+    When the tree renders and applies saved positions
+    Then the operation log should show layout before apply
+    And the operation log should show fit after apply
+    And the rendered position of "app1" should be x 450 and y 300
 
-  Scenario: Saving a position writes to the repository
-    When the user drags component "app1" to position x 500 and y 600
-    Then the position repository should contain x 500 and y 600 for "app1"
+  Scenario: Drag persists position to the repository
+    When a drag of "app1" saves position x 500 and y 600 via use case
+    Then the repository should have x 500 and y 600 for "app1"
 
-  Scenario: Positions survive a full reload cycle
-    Given component "app1" has a saved position of x 200 and y 350
-    When the tree is torn down and re-rendered
-    And saved positions are loaded and applied
-    Then component "app1" should display at x 200 and y 350
+  Scenario: Positions survive a full destroy and re-render cycle
+    Given a stored position for "app1" at x 200 and y 350
+    When the rendered tree is destroyed and rebuilt
+    And the tree renders and applies saved positions
+    Then the rendered position of "app1" should be x 200 and y 350
 
-  Scenario: Components without saved positions keep dagre layout
-    Given component "app1" has no saved position
-    When the progression tree renders with dagre layout
-    And saved positions are loaded and applied
-    Then component "app1" should remain at its dagre-computed position
+  Scenario: Unsaved components keep dagre defaults
+    Given no stored position for "app1"
+    When the tree renders and applies saved positions
+    Then "app1" rendered position should match its dagre default
 
-  Scenario: cy.fit is called after positions are applied
-    Given component "app1" has a saved position of x 450 and y 300
-    When the progression tree renders with dagre layout
-    And saved positions are loaded and applied
-    Then cy.fit should be called after position application
-    And component "app1" should still be at the saved coordinates
+  Scenario: Fit does not revert saved positions
+    Given a stored position for "app1" at x 450 and y 300
+    When the tree renders and applies saved positions
+    Then the operation log should show fit after apply
+    And the rendered position of "app1" should be x 450 and y 300
