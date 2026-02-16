@@ -53,16 +53,13 @@ describe('Progression tree design update — zoom removal', () => {
 describe('Progression tree design update — full-width fit', () => {
   it('should call fit() after layout completes', () => {
     // Either via layoutstop event or direct cy.fit() call
-    const hasFit = /on\(\s*['"]layoutstop['"]/.test(html) || /\.fit\s*\(/.test(html);
+    const hasFit = /once?\(\s*['"]layoutstop['"]/.test(html) || /\.fit\s*\(/.test(html);
     expect(hasFit).toBe(true);
   });
 
-  it('should have a window resize listener', () => {
-    expect(html).toMatch(/addEventListener\(\s*['"]resize['"]/);
-  });
-
-  it('should call fit on resize', () => {
-    // The resize handler should trigger a fit on the cytoscape instance
-    expect(html).toMatch(/\.fit\s*\(/);
+  it('should call fit in the layoutstop handler', () => {
+    // fit() is called in layoutstop after positions are applied,
+    // rather than in a separate resize handler that would reset positions
+    expect(html).toMatch(/layoutstop[\s\S]*?\.fit\s*\(/);
   });
 });

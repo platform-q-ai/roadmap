@@ -31,6 +31,6 @@ Feature: Progression tree design update — hexagonal nodes and full-width layou
     Given the web view HTML
     Then the cytoscape instance should call fit after layout completes
 
-  Scenario: Progression tree re-fits on window resize
+  Scenario: Progression tree fits after positions are applied
     Given the web view HTML
-    Then there should be a resize listener that calls fit on the cytoscape instance
+    Then fit should be called after saved positions are applied in layoutstop
