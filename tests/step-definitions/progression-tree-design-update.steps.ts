@@ -90,7 +90,7 @@ Then('the cytoscape instance should call fit after layout completes', function (
   const html = this.html || readWebView();
   // After layout completes, cy.fit() should be called
   // Look for a layoutstop event handler or direct cy.fit() call after layout
-  const hasFitOnLayout = /on\(\s*['"]layoutstop['"]/.test(html) || /\.fit\s*\(/.test(html);
+  const hasFitOnLayout = /once?\(\s*['"]layoutstop['"]/.test(html) || /\.fit\s*\(/.test(html);
   assert.ok(
     hasFitOnLayout,
     'Cytoscape should call fit() after layout completes (via layoutstop event or direct call)'

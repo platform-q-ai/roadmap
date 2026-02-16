@@ -1,9 +1,7 @@
 import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
-import { DeleteComponentPosition } from '@use-cases/delete-component-position.js';
-import { GetComponentPosition } from '@use-cases/get-component-position.js';
-import { SaveComponentPosition } from '@use-cases/save-component-position.js';
+import { DeleteComponentPosition, SaveComponentPosition } from '@use-cases/index.js';
 
 import { InMemoryComponentPositionRepository } from '../../tests/helpers/in-memory-component-position-repository.js';
 
@@ -18,7 +16,6 @@ import { InMemoryComponentPositionRepository } from '../../tests/helpers/in-memo
 interface PersistenceWorld {
   positionRepo: InMemoryComponentPositionRepository;
   saveUseCase: SaveComponentPosition;
-  getUseCase: GetComponentPosition;
   deleteUseCase: DeleteComponentPosition;
   renderedPositions: Map<string, { x: number; y: number }>;
   dagrePositions: Map<string, { x: number; y: number }>;
@@ -30,9 +27,6 @@ function ensureWorld(world: PersistenceWorld): void {
   if (!world.positionRepo) {
     world.positionRepo = new InMemoryComponentPositionRepository();
     world.saveUseCase = new SaveComponentPosition({
-      positionRepo: world.positionRepo,
-    });
-    world.getUseCase = new GetComponentPosition({
       positionRepo: world.positionRepo,
     });
     world.deleteUseCase = new DeleteComponentPosition({

@@ -56,9 +56,9 @@ describe('Web Position Persistence — Race Condition Fix', () => {
     //   2. then calls cy.fit()
     // This ensures fit() runs AFTER positions are final.
     //
-    // Pattern: cy.on('layoutstop', ...) containing both position application and fit
+    // Pattern: cy.once('layoutstop', ...) containing both position application and fit
     const layoutStopBlock =
-      /cy\.on\(\s*['"]layoutstop['"][\s\S]*?position[\s\S]*?cy\.fit\(\)/s.test(html);
+      /cy\.once\(\s*['"]layoutstop['"][\s\S]*?position[\s\S]*?cy\.fit\(\)/s.test(html);
     expect(layoutStopBlock).toBe(true);
   });
 

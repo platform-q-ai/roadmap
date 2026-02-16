@@ -53,7 +53,7 @@ describe('Progression tree design update — zoom removal', () => {
 describe('Progression tree design update — full-width fit', () => {
   it('should call fit() after layout completes', () => {
     // Either via layoutstop event or direct cy.fit() call
-    const hasFit = /on\(\s*['"]layoutstop['"]/.test(html) || /\.fit\s*\(/.test(html);
+    const hasFit = /once?\(\s*['"]layoutstop['"]/.test(html) || /\.fit\s*\(/.test(html);
     expect(hasFit).toBe(true);
   });
 

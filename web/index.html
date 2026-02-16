@@ -399,7 +399,7 @@ async function renderProgressionTree() {
   });
 
   // Apply saved positions after dagre layout completes, then fit
-  cy.on('layoutstop', function() {
+  cy.once('layoutstop', function() {
     if (savedPositions && savedPositions.length > 0) {
       savedPositions.forEach(function(pos) {
         const node = cy.getElementById(pos.componentId);
@@ -530,7 +530,7 @@ async function init() {
     const resp = await fetch('/api/architecture');
     if (!resp.ok) throw new Error(`API returned ${resp.status}`);
     DATA = await resp.json();
-    renderProgressionTree();
+    await renderProgressionTree();
   } catch (e) {
     document.getElementById('progression-container').innerHTML =
       '<p style="color:var(--red);text-align:center;margin-top:40px;">Failed to load architecture data from API</p>';
