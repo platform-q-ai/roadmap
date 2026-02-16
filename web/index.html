@@ -372,10 +372,6 @@ async function renderProgressionTree() {
     document.body.style.cursor = 'grabbing';
   });
 
-  cy.on('drag', 'node', function(e) {
-    // Node is being dragged - position updates automatically
-  });
-
   cy.on('free', 'node', function(e) {
     const node = e.target;
     node.removeClass('grabbing');

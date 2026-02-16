@@ -19,11 +19,10 @@ describe('Web Drag and Drop Functionality', () => {
     expect(hasGrabbingCursor).toBe(true);
   });
 
-  it('should have drag event handlers in Cytoscape config', () => {
+  it('should have grab and free event handlers for drag lifecycle', () => {
     const html = readWebView();
 
     expect(html).toContain('grab');
-    expect(html).toContain('drag');
     expect(html).toContain('free');
   });
 
