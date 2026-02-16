@@ -75,6 +75,13 @@ export function applySchema(db: BetterSQLite3Database): void {
     is_active INTEGER NOT NULL DEFAULT 1
   )`);
 
+  db.run(sql`CREATE TABLE IF NOT EXISTS component_positions (
+    component_id TEXT PRIMARY KEY REFERENCES nodes(id) ON DELETE CASCADE,
+    x REAL NOT NULL,
+    y REAL NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+  )`);
+
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_source ON edges(source_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_target ON edges(target_id)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_edges_type ON edges(type)`);
