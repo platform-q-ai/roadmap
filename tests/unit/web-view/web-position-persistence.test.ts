@@ -49,17 +49,40 @@ describe('Web Position Persistence — Race Condition Fix', () => {
     expect(awaitLoadIdx).toBeLessThan(cyCreateIdx);
   });
 
-  it('should apply positions inside the layoutstop callback then fit', () => {
+  it('should NOT apply positions inside a deferred layoutstop listener', () => {
     const html = readWebView();
-    // The fix should have a layoutstop handler that:
-    //   1. applies saved positions to nodes
-    //   2. then calls cy.fit()
-    // This ensures fit() runs AFTER positions are final.
-    //
-    // Pattern: cy.once('layoutstop', ...) containing both position application and fit
-    const layoutStopBlock =
+    // Bug: cy.once('layoutstop', ...) registered AFTER the cytoscape()
+    // constructor returns never fires because dagre is synchronous and
+    // layoutstop already fired during construction.
+    // Fix: apply positions synchronously after the constructor, not via
+    // a deferred event listener.
+    const hasDeferredLayoutstop =
       /cy\.once\(\s*['"]layoutstop['"][\s\S]*?position[\s\S]*?cy\.fit\(\)/s.test(html);
-    expect(layoutStopBlock).toBe(true);
+    expect(hasDeferredLayoutstop).toBe(false);
+  });
+
+  it('should apply saved positions synchronously after cytoscape constructor', () => {
+    const html = readWebView();
+    // After the constructor returns (dagre already ran), the code must
+    // iterate savedPositions and call node.position() directly, then cy.fit().
+    // This block must appear AFTER "cy = cytoscape(" and NOT be wrapped
+    // in any event listener.
+    const cyCreateIdx = html.indexOf('cy = cytoscape(');
+    expect(cyCreateIdx).toBeGreaterThanOrEqual(0);
+
+    // Find the synchronous position-application block after construction
+    const afterConstruction = html.slice(cyCreateIdx);
+    const hasSyncApply =
+      /savedPositions[\s\S]*?\.forEach[\s\S]*?\.position\(\s*\{[\s\S]*?cy\.fit\(\)/s.test(
+        afterConstruction
+      );
+    expect(hasSyncApply).toBe(true);
+
+    // Ensure this block is NOT inside a layoutstop listener
+    const hasLayoutstopWrapper = /cy\.once\(\s*['"]layoutstop['"][\s\S]*?savedPositions/s.test(
+      afterConstruction
+    );
+    expect(hasLayoutstopWrapper).toBe(false);
   });
 
   it('should NOT have a detached async .then position loader', () => {
