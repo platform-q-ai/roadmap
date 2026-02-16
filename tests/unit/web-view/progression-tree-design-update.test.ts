@@ -57,12 +57,9 @@ describe('Progression tree design update — full-width fit', () => {
     expect(hasFit).toBe(true);
   });
 
-  it('should have a window resize listener', () => {
-    expect(html).toMatch(/addEventListener\(\s*['"]resize['"]/);
-  });
-
-  it('should call fit on resize', () => {
-    // The resize handler should trigger a fit on the cytoscape instance
-    expect(html).toMatch(/\.fit\s*\(/);
+  it('should call fit in the layoutstop handler', () => {
+    // fit() is called in layoutstop after positions are applied,
+    // rather than in a separate resize handler that would reset positions
+    expect(html).toMatch(/layoutstop[\s\S]*?\.fit\s*\(/);
   });
 });

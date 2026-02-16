@@ -98,18 +98,11 @@ Then('the cytoscape instance should call fit after layout completes', function (
 });
 
 Then(
-  'there should be a resize listener that calls fit on the cytoscape instance',
+  'fit should be called after saved positions are applied in layoutstop',
   function (this: World) {
     const html = this.html || readWebView();
-    // Look for window resize handler that calls cy.fit()
-    const hasResizeListener =
-      /addEventListener\(\s*['"]resize['"]/.test(html) ||
-      /onresize/.test(html) ||
-      /window\s*\.\s*onresize/.test(html);
-    assert.ok(hasResizeListener, 'There should be a window resize listener');
-
-    // Verify that fit is called somewhere in the context of resize
-    const hasFit = /\.fit\s*\(/.test(html);
-    assert.ok(hasFit, 'The resize handler should call fit() on the cytoscape instance');
+    // The layoutstop handler should apply saved positions then call fit()
+    const hasLayoutStopWithFit = /layoutstop[\s\S]*?position[\s\S]*?\.fit\s*\(/s.test(html);
+    assert.ok(hasLayoutStopWithFit, 'layoutstop handler should apply positions then call fit()');
   }
 );

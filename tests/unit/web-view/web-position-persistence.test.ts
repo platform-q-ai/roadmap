@@ -42,12 +42,8 @@ describe('Web Position Persistence — Race Condition Fix', () => {
     // can be followed by synchronous position application.
     //
     // Evidence: "await loadComponentPositions" appears BEFORE "cy = cytoscape("
-    const scriptMatch = html.match(/<script[^>]*>([\s\S]*?)<\/script>/);
-    expect(scriptMatch).not.toBeNull();
-    const script = scriptMatch![1];
-
-    const awaitLoadIdx = script.indexOf('await loadComponentPositions');
-    const cyCreateIdx = script.indexOf('cy = cytoscape(');
+    const awaitLoadIdx = html.indexOf('await loadComponentPositions');
+    const cyCreateIdx = html.indexOf('cy = cytoscape(');
     expect(awaitLoadIdx).toBeGreaterThanOrEqual(0);
     expect(cyCreateIdx).toBeGreaterThanOrEqual(0);
     expect(awaitLoadIdx).toBeLessThan(cyCreateIdx);
@@ -61,13 +57,8 @@ describe('Web Position Persistence — Race Condition Fix', () => {
     // This ensures fit() runs AFTER positions are final.
     //
     // Pattern: cy.on('layoutstop', ...) containing both position application and fit
-    const scriptMatch = html.match(/<script[^>]*>([\s\S]*?)<\/script>/);
-    expect(scriptMatch).not.toBeNull();
-    const script = scriptMatch![1];
-
-    // Find layoutstop handler that contains position application AND fit
     const layoutStopBlock =
-      /cy\.on\(\s*['"]layoutstop['"][\s\S]*?position[\s\S]*?cy\.fit\(\)/s.test(script);
+      /cy\.on\(\s*['"]layoutstop['"][\s\S]*?position[\s\S]*?cy\.fit\(\)/s.test(html);
     expect(layoutStopBlock).toBe(true);
   });
 

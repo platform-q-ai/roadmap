@@ -191,8 +191,45 @@ DOMPurify.addHook('afterSanitizeAttributes', function (node) {
 // ─── Progression Tree (Cytoscape.js) ─────────────────────
 let cy = null;
 
-function renderProgressionTree() {
+// Helper functions for position persistence (defined before renderProgressionTree)
+async function loadComponentPositions() {
+  try {
+    const response = await fetch('/api/component-positions');
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error('Error loading positions:', error);
+  }
+  return [];
+}
+
+async function saveComponentPosition(componentId, x, y) {
+  try {
+    // Clamp coordinates to reasonable bounds
+    const clampedX = Math.max(0, Math.min(x, 5000));
+    const clampedY = Math.max(0, Math.min(y, 5000));
+
+    const response = await fetch('/api/component-positions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ componentId, x: clampedX, y: clampedY })
+    });
+
+    if (!response.ok) {
+      console.error('Error saving position:', await response.text());
+    }
+  } catch (error) {
+    console.error('Error saving position:', error);
+  }
+}
+
+async function renderProgressionTree() {
   if (!DATA || !DATA.progression_tree) return;
+
+  // Load saved positions BEFORE creating Cytoscape so they can be
+  // applied synchronously in the layoutstop callback.
+  const savedPositions = await loadComponentPositions();
 
   const tree = DATA.progression_tree;
   const elements = [];
@@ -328,18 +365,6 @@ function renderProgressionTree() {
     autoungrabify: false,
   });
 
-  // Load saved positions before layout
-  loadComponentPositions().then(positions => {
-    if (positions && positions.length > 0) {
-      positions.forEach(pos => {
-        const node = cy.getElementById(pos.componentId);
-        if (node.length > 0) {
-          node.position({ x: pos.x, y: pos.y });
-        }
-      });
-    }
-  });
-
   // Drag event handlers
   cy.on('grab', 'node', function(e) {
     const node = e.target;
@@ -377,47 +402,17 @@ function renderProgressionTree() {
     }
   });
 
-  // Helper functions for position persistence
-  async function loadComponentPositions() {
-    try {
-      const response = await fetch('/api/component-positions');
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (error) {
-      console.error('Error loading positions:', error);
-    }
-    return [];
-  }
-
-  async function saveComponentPosition(componentId, x, y) {
-    try {
-      // Clamp coordinates to reasonable bounds
-      const clampedX = Math.max(0, Math.min(x, 5000));
-      const clampedY = Math.max(0, Math.min(y, 5000));
-      
-      const response = await fetch('/api/component-positions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ componentId, x: clampedX, y: clampedY })
-      });
-      
-      if (!response.ok) {
-        console.error('Error saving position:', await response.text());
-      }
-    } catch (error) {
-      console.error('Error saving position:', error);
-    }
-  }
-
-  // Fit tree to container after layout completes
+  // Apply saved positions after dagre layout completes, then fit
   cy.on('layoutstop', function() {
+    if (savedPositions && savedPositions.length > 0) {
+      savedPositions.forEach(function(pos) {
+        const node = cy.getElementById(pos.componentId);
+        if (node.length > 0) {
+          node.position({ x: pos.x, y: pos.y });
+        }
+      });
+    }
     cy.fit();
-  });
-
-  // Re-fit on window resize so the tree always fills the width
-  window.addEventListener('resize', function() {
-    if (cy) cy.fit();
   });
 
   // Click node to open detail dialog
