@@ -152,10 +152,6 @@ When('the user reloads the page', function (this: DragDropWorld) {
   // Repository persists, so positions are already available
 });
 
-When('the progression tree is rendered', function (this: DragDropWorld) {
-  // Positions are fetched when needed
-});
-
 When(
   'the user resets component {string} position',
   function (this: DragDropWorld, componentId: string) {

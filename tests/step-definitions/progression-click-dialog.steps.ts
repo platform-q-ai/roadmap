@@ -74,12 +74,27 @@ Then(
 Then(
   'there should be no {string} handler for showing node details',
   function (this: World, eventName: string) {
-    // Ensure no mouseover handler that shows tooltip/dialog content
-    const mouseoverNodePattern = /cy\.on\(\s*['"]mouseover['"]\s*,\s*['"]node['"]/;
-    assert.ok(
-      !mouseoverNodePattern.test(this.html),
-      `Should not have a "${eventName}" handler on cytoscape nodes for showing details`
-    );
+    // Ensure no mouseover handler that shows tooltip/dialog/popup content
+    // The drag-drop feature adds mouseover for cursor feedback (grab/grabbing)
+    // which is acceptable - we just want to ensure no dialog-showing mouseover handlers
+    const mouseoverHandlerPattern = /cy\.on\(\s*['"]mouseover['"]\s*,\s*['"]node['"]/;
+    const handlers = this.html.match(mouseoverHandlerPattern) || [];
+
+    // Check each mouseover handler - cursor feedback is ok, dialogs are not
+    for (const handler of handlers) {
+      // Get the index of this handler
+      const index = this.html.indexOf(handler);
+      // Get the next 500 characters to check the handler body
+      const handlerBody = this.html.slice(index, index + 500);
+
+      // If the handler body contains dialog/tip/popup words, it's for showing details - not allowed
+      const isForShowingDetails =
+        /(showDialog|showTooltip|tooltip|\.dialog|\.popup|\.modal|tip\()/.test(handlerBody);
+      assert.ok(
+        !isForShowingDetails,
+        `Should not have a "${eventName}" handler on cytoscape nodes for showing details`
+      );
+    }
   }
 );
 
