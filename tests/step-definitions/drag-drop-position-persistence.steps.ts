@@ -1,9 +1,9 @@
 import { strict as assert } from 'node:assert';
 
 import { Given, Then, When } from '@cucumber/cucumber';
-import { SaveComponentPosition } from '@use-cases/save-component-position.js';
-import { GetComponentPosition } from '@use-cases/get-component-position.js';
 import { DeleteComponentPosition } from '@use-cases/delete-component-position.js';
+import { GetComponentPosition } from '@use-cases/get-component-position.js';
+import { SaveComponentPosition } from '@use-cases/save-component-position.js';
 
 import { InMemoryComponentPositionRepository } from '../../tests/helpers/in-memory-component-position-repository.js';
 
