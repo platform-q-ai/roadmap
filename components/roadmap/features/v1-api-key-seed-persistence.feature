@@ -71,19 +71,19 @@ Feature: API key seed persistence across deploys
     Then the seed log for "secret" shows a masked key
     And the seed log for "secret" does not contain the full plaintext "rmap_abcdef1234567890abcdef1234567890"
 
-  Scenario: Random key is shown in full in seed logs
+  Scenario: Random key is also masked in seed logs
     Given an API_KEY_SEED entry with name "random-key" and no explicit key
     When the seed runs
-    Then the seed log for "random-key" shows the full plaintext
+    Then the seed log for "random-key" shows a masked key
 
-  Scenario: Mixed seed logs mask deterministic and show random
+  Scenario: Mixed seed logs mask both deterministic and random keys
     Given an API_KEY_SEED with entries:
       | name       | key                               | scopes     |
       | fixed-log  | rmap_aabb11223344ccdd5566eeff7788  | read       |
       | random-log |                                   | read,write |
     When the seed runs
     Then the seed log for "fixed-log" shows a masked key
-    And the seed log for "random-log" shows the full plaintext
+    And the seed log for "random-log" shows a masked key
 
   # ── Parse format ────────────────────────────────────────────────
 

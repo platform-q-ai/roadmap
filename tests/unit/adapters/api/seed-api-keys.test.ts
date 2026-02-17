@@ -88,7 +88,7 @@ describe('seedApiKeys', () => {
     expect(generate.execute).not.toHaveBeenCalled();
   });
 
-  it('generates keys and logs plaintext for new entries', async () => {
+  it('generates keys and logs masked output for new entries', async () => {
     const results = new Map([
       ['admin', 'rmap_abc123'],
       ['reader', 'rmap_def456'],
@@ -103,8 +103,8 @@ describe('seedApiKeys', () => {
     await seedApiKeys({ rawEnv, generate, log });
 
     expect(generate.execute).toHaveBeenCalledTimes(2);
-    expect(log).toHaveBeenCalledWith('  Seeded key "admin": rmap_abc123');
-    expect(log).toHaveBeenCalledWith('  Seeded key "reader": rmap_def456');
+    expect(log).toHaveBeenCalledWith('  Seeded key "admin": rmap_******');
+    expect(log).toHaveBeenCalledWith('  Seeded key "reader": rmap_******');
   });
 
   it('silently skips existing keys (ValidationError)', async () => {
@@ -119,9 +119,9 @@ describe('seedApiKeys', () => {
     await seedApiKeys({ rawEnv, generate, log });
 
     expect(generate.execute).toHaveBeenCalledTimes(2);
-    // Only the new key should be logged
+    // Only the new key should be logged (masked)
     expect(log).toHaveBeenCalledTimes(1);
-    expect(log).toHaveBeenCalledWith('  Seeded key "new-key": rmap_new123');
+    expect(log).toHaveBeenCalledWith('  Seeded key "new-key": rmap_******');
   });
 
   it('re-throws non-ValidationError exceptions', async () => {
@@ -207,7 +207,7 @@ describe('seedApiKeys', () => {
     expect(logMsg).not.toContain('rmap_short');
   });
 
-  it('shows full plaintext in log for random keys', async () => {
+  it('masks random keys in log output (never shows plaintext)', async () => {
     const generate = {
       execute: vi.fn().mockResolvedValue({ plaintext: 'rmap_random_key_full_value' }),
     };
@@ -218,7 +218,8 @@ describe('seedApiKeys', () => {
 
     expect(log).toHaveBeenCalledTimes(1);
     const logMsg = log.mock.calls[0][0] as string;
-    expect(logMsg).toContain('rmap_random_key_full_value');
+    expect(logMsg).not.toContain('rmap_random_key_full_value');
+    expect(logMsg).toMatch(/rmap_random\.\.\._value/);
   });
 
   it('rejects seed entries with invalid key format', async () => {
