@@ -4,6 +4,8 @@ import { join } from 'node:path';
 
 import { Given, Then } from '@cucumber/cucumber';
 
+import { detectSpdxId, SPDX_PATTERNS } from '../helpers/spdx-detection.js';
+
 const ROOT = join(import.meta.dirname, '..', '..');
 
 interface World {
@@ -12,30 +14,8 @@ interface World {
   [key: string]: unknown;
 }
 
-// Well-known SPDX identifiers that appear in license file text
-const SPDX_PATTERNS: Array<{ id: string; pattern: RegExp }> = [
-  { id: 'MIT', pattern: /\bMIT License\b/i },
-  { id: 'Apache-2.0', pattern: /\bApache License.*Version 2\.0\b/i },
-  { id: 'BSD-2-Clause', pattern: /\bBSD 2-Clause\b/i },
-  { id: 'BSD-3-Clause', pattern: /\bBSD 3-Clause\b/i },
-  { id: 'ISC', pattern: /\bISC License\b/i },
-  { id: 'GPL-3.0', pattern: /\bGNU GENERAL PUBLIC LICENSE.*Version 3\b/i },
-  { id: 'GPL-2.0', pattern: /\bGNU GENERAL PUBLIC LICENSE.*Version 2\b/i },
-  { id: 'LGPL-3.0', pattern: /\bGNU LESSER GENERAL PUBLIC LICENSE.*Version 3\b/i },
-  { id: 'MPL-2.0', pattern: /\bMozilla Public License.*2\.0\b/i },
-  { id: 'AGPL-3.0', pattern: /\bGNU AFFERO GENERAL PUBLIC LICENSE.*Version 3\b/i },
-  { id: 'Unlicense', pattern: /\bThis is free and unencumbered software\b/i },
-];
-
 function readProjectFile(relativePath: string): string {
   return readFileSync(join(ROOT, relativePath), 'utf-8');
-}
-
-function detectSpdxId(content: string): string | null {
-  for (const { id, pattern } of SPDX_PATTERNS) {
-    if (pattern.test(content)) return id;
-  }
-  return null;
 }
 
 // ─── Given ────────────────────────────────────────────────
