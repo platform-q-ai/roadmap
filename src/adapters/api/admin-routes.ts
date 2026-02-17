@@ -4,6 +4,7 @@ import type { ApiKeyScope, IApiKeyRepository } from '../../use-cases/index.js';
 import { GenerateApiKey, ListApiKeys, RevokeApiKey } from '../../use-cases/index.js';
 
 import type { RequestWithId, Route } from './routes.js';
+import { readBody } from './routes-shared.js';
 
 interface AdminDeps {
   apiKeyRepo: IApiKeyRepository;
@@ -23,17 +24,6 @@ function json(res: ServerResponse, status: number, data: unknown, req?: Incoming
   }
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(payload));
-}
-
-async function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk: Buffer) => {
-      body += chunk.toString();
-    });
-    req.on('end', () => resolve(body));
-    req.on('error', reject);
-  });
 }
 
 const VALID_SCOPES: readonly string[] = ['read', 'write', 'admin'];
