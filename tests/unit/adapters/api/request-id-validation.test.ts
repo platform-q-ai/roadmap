@@ -138,7 +138,7 @@ describe('X-Request-Id validation', () => {
 
   it('replaces a request ID with unsafe characters with a UUID', async () => {
     const res = await httpGet(port, '/api/health', {
-      'X-Request-Id': 'bad\nvalue<script>',
+      'X-Request-Id': 'bad value<script>',
     });
     expect(res.headers['x-request-id']).toMatch(UUID_RE);
   });

@@ -160,9 +160,20 @@ async function tryApiRoute(routes: Route[], ctx: RequestContext): Promise<boolea
   return false;
 }
 
+/** Max length for client-supplied X-Request-Id. */
+const MAX_REQUEST_ID_LEN = 128;
+
+/** Allowed characters: alphanumeric, hyphens, underscores, dots, colons. */
+const SAFE_REQUEST_ID_RE = /^[a-zA-Z0-9\-_.:]+$/;
+
 function resolveRequestId(req: http.IncomingMessage): string {
   const clientId = req.headers['x-request-id'];
-  if (typeof clientId === 'string' && clientId.length > 0) {
+  if (
+    typeof clientId === 'string' &&
+    clientId.length > 0 &&
+    clientId.length <= MAX_REQUEST_ID_LEN &&
+    SAFE_REQUEST_ID_RE.test(clientId)
+  ) {
     return clientId;
   }
   return randomUUID();
