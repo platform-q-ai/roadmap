@@ -97,11 +97,24 @@ function setCorsHeaders(
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
 }
 
-function setSecurityHeaders(res: http.ServerResponse, requestId: string): void {
+const WEB_CSP = [
+  "default-src 'none'",
+  "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  'font-src https://fonts.gstatic.com',
+  "connect-src 'self'",
+  "img-src 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+
+const API_CSP = "default-src 'none'; frame-ancestors 'none'";
+
+function setSecurityHeaders(res: http.ServerResponse, requestId: string, url: string): void {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  res.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
+  const csp = url.startsWith('/api/') ? API_CSP : WEB_CSP;
+  res.setHeader('Content-Security-Policy', csp);
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   res.setHeader('Cache-Control', 'no-store');
@@ -218,7 +231,7 @@ export function createApp(deps: ApiDeps, options?: AppOptions): http.Server {
     };
 
     setCorsHeaders(req, res, allowedOrigins);
-    setSecurityHeaders(res, ctx.requestId);
+    setSecurityHeaders(res, ctx.requestId, ctx.url);
     (req as RequestWithId).requestId = ctx.requestId;
 
     if (ctx.method === 'OPTIONS') {
