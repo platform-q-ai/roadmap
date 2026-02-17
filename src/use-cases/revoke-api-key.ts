@@ -1,6 +1,5 @@
-import type { IApiKeyRepository } from '../domain/index.js';
-
 import { ValidationError } from '../domain/errors.js';
+import type { IApiKeyRepository } from '../domain/index.js';
 
 interface Deps {
   apiKeyRepo: IApiKeyRepository;

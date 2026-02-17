@@ -1,7 +1,7 @@
+import { ValidationError } from '../domain/errors.js';
 import type { IEdgeRepository, INodeRepository } from '../domain/index.js';
 import { Edge } from '../domain/index.js';
 
-import { ValidationError } from '../domain/errors.js';
 import { EdgeExistsError } from './errors.js';
 
 export interface CreateEdgeInput {

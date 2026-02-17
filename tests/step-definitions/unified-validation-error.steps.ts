@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readdirSync,readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Then } from '@cucumber/cucumber';

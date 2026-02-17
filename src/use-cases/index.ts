@@ -1,3 +1,4 @@
+export { ValidationError } from '../domain/errors.js';
 export type {
   BatchFeatureEntry,
   BatchFeatureError,
@@ -28,7 +29,6 @@ export {
   NodeTypeError,
   VersionNotFoundError,
 } from './errors.js';
-export { ValidationError } from '../domain/errors.js';
 export { ExportArchitecture } from './export-architecture.js';
 export type { ExportFeaturesResult } from './export-features.js';
 export { ExportFeatures } from './export-features.js';

@@ -1,7 +1,7 @@
+import { ValidationError } from '../domain/errors.js';
 import type { INodeRepository, IVersionRepository, VersionStatus } from '../domain/index.js';
 import { Version } from '../domain/index.js';
 
-import { ValidationError } from '../domain/errors.js';
 import { NodeNotFoundError } from './errors.js';
 
 export interface UpdateVersionInput {
