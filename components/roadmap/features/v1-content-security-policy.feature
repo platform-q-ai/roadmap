@@ -8,17 +8,17 @@ Feature: Content Security Policy Headers
 
     Scenario: Response includes Content-Security-Policy header
       Given an API server is running with security headers
-      When I send a GET request to "/api/health"
-      Then the response includes header "Content-Security-Policy"
+      When I send a GET request to the "/api/health" endpoint
+      Then the response contains header "Content-Security-Policy"
       And the "Content-Security-Policy" header value contains "default-src"
 
     Scenario: Response includes Referrer-Policy header
       Given an API server is running with security headers
-      When I send a GET request to "/api/health"
-      Then the response includes header "Referrer-Policy"
+      When I send a GET request to the "/api/health" endpoint
+      Then the response contains header "Referrer-Policy"
       And the "Referrer-Policy" header value is "no-referrer"
 
     Scenario: Response includes Permissions-Policy header
       Given an API server is running with security headers
-      When I send a GET request to "/api/health"
-      Then the response includes header "Permissions-Policy"
+      When I send a GET request to the "/api/health" endpoint
+      Then the response contains header "Permissions-Policy"
