@@ -16,7 +16,9 @@ export const SPDX_PATTERNS: ReadonlyArray<{ id: string; pattern: RegExp }> = [
 /** Detect the SPDX license identifier from the full text of a LICENSE file. */
 export function detectSpdxId(content: string): string | null {
   for (const { id, pattern } of SPDX_PATTERNS) {
-    if (pattern.test(content)) return id;
+    if (pattern.test(content)) {
+      return id;
+    }
   }
   return null;
 }
