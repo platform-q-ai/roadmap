@@ -3,6 +3,7 @@
   "version": "1.18.3",
   "type": "module",
   "description": "Living documentation for the Open Autonomous Runtime architecture",
+  "license": "MIT",
   "scripts": {
     "build:ts": "tsc && tsc-alias",
     "build": "npm run build:ts",
