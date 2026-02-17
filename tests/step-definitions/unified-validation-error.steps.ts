@@ -52,10 +52,13 @@ Then('no use-case file imports ValidationError from {string}', function (importP
     (f: string) => f.endsWith('.ts') && f !== 'index.ts' && f !== 'errors.ts'
   );
 
+  const importPattern = new RegExp(
+    `import\\s+\\{[^}]*ValidationError[^}]*\\}\\s+from\\s+'${importPath.replace(/\./g, '\\.')}'`
+  );
   const offenders: string[] = [];
   for (const file of files) {
     const content = readFileSync(join(useCasesDir, file), 'utf-8');
-    if (content.includes('ValidationError') && content.includes(`from '${importPath}'`)) {
+    if (importPattern.test(content)) {
       offenders.push(file);
     }
   }

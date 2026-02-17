@@ -1,7 +1,8 @@
 import type { IFeatureRepository, INodeRepository } from '../domain/index.js';
 import { Feature } from '../domain/index.js';
 
-import { NodeNotFoundError, ValidationError } from './errors.js';
+import { ValidationError } from '../domain/errors.js';
+import { NodeNotFoundError } from './errors.js';
 
 const MAX_BATCH_SIZE = 50;
 const FILENAME_UNSAFE = /[/\\]|\.\./;

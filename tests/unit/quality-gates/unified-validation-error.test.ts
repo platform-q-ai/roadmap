@@ -36,10 +36,11 @@ describe('Unified ValidationError', () => {
       f => f.endsWith('.ts') && f !== 'index.ts' && f !== 'errors.ts'
     );
 
+    const importPattern = /import\s+\{[^}]*ValidationError[^}]*\}\s+from\s+'\.\/errors\.js'/;
     const offenders: string[] = [];
     for (const file of files) {
       const content = readFileSync(join(useCasesDir, file), 'utf-8');
-      if (content.includes('ValidationError') && content.includes("from './errors.js'")) {
+      if (importPattern.test(content)) {
         offenders.push(file);
       }
     }

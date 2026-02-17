@@ -1,7 +1,8 @@
 import type { INodeRepository, IVersionRepository } from '../domain/index.js';
 import { Node, Version } from '../domain/index.js';
 
-import { NodeNotFoundError, ValidationError } from './errors.js';
+import { ValidationError } from '../domain/errors.js';
+import { NodeNotFoundError } from './errors.js';
 
 export interface UpdateComponentInput {
   name?: string;

@@ -55,9 +55,5 @@ export class VersionNotFoundError extends Error {
   }
 }
 
-export class ValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ValidationError';
-  }
-}
+// ValidationError is defined in ../domain/errors.ts (single source of truth).
+// Use-case files should import it from '../domain/errors.js'.

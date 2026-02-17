@@ -3,7 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { ApiKeyScope, IApiKeyRepository } from '../domain/index.js';
 import { ApiKey } from '../domain/index.js';
 
-import { ValidationError } from './errors.js';
+import { ValidationError } from '../domain/errors.js';
 
 export interface GenerateApiKeyInput {
   name: string;

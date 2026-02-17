@@ -26,9 +26,9 @@ export {
   NodeExistsError,
   NodeNotFoundError,
   NodeTypeError,
-  ValidationError,
   VersionNotFoundError,
 } from './errors.js';
+export { ValidationError } from '../domain/errors.js';
 export { ExportArchitecture } from './export-architecture.js';
 export type { ExportFeaturesResult } from './export-features.js';
 export { ExportFeatures } from './export-features.js';
