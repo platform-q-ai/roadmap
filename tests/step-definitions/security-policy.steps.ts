@@ -14,10 +14,10 @@ function readProjectFile(relativePath: string): string {
 
 Then(
   'the {string} file contains a section titled {string}',
-  function (_filename: string, heading: string) {
-    const content = readProjectFile('SECURITY.md');
+  function (filename: string, heading: string) {
+    const content = readProjectFile(filename);
     const pattern = new RegExp(`^#+\\s+${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
-    assert.ok(pattern.test(content), `SECURITY.md does not contain a section titled "${heading}"`);
+    assert.ok(pattern.test(content), `${filename} does not contain a section titled "${heading}"`);
   }
 );
 
