@@ -4,6 +4,23 @@
   "type": "module",
   "description": "Living documentation for the Open Autonomous Runtime architecture",
   "license": "MIT",
+  "private": true,
+  "author": "Platform Q AI",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/platform-q-ai/roadmap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/platform-q-ai/roadmap/issues"
+  },
+  "homepage": "https://github.com/platform-q-ai/roadmap#readme",
+  "keywords": [
+    "roadmap",
+    "architecture",
+    "clean-architecture",
+    "bdd",
+    "sqlite"
+  ],
   "scripts": {
     "build:ts": "tsc && tsc-alias",
     "build": "npm run build:ts",
