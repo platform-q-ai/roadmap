@@ -3,7 +3,6 @@ import { strict as assert } from 'node:assert';
 import { Given, Then, When } from '@cucumber/cucumber';
 
 import { seedApiKeys } from '../../src/adapters/api/index.js';
-import { ValidationError } from '../../src/use-cases/index.js';
 
 interface MaskingWorld {
   seedEntry: { name: string; scopes: string[]; key?: string };
