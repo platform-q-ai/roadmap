@@ -1,13 +1,9 @@
 import { strict as assert } from 'node:assert';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { Readable } from 'node:stream';
 
 import { Given, Then, When } from '@cucumber/cucumber';
 
 import { readBody } from '../../src/adapters/api/routes-shared.js';
-
-const ROOT = join(import.meta.dirname, '..', '..');
 
 interface BodyLimitWorld {
   bodySize: number;
