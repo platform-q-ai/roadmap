@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { ValidationError } from '../domain/errors.js';
 import type { ApiKeyScope, IApiKeyRepository } from '../domain/index.js';
+import { ValidationError } from '../domain/index.js';
 import { ApiKey } from '../domain/index.js';
 
 export interface GenerateApiKeyInput {

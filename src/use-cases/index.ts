@@ -1,4 +1,4 @@
-export { ValidationError } from '../domain/errors.js';
+export { ValidationError } from '../domain/index.js';
 export type {
   BatchFeatureEntry,
   BatchFeatureError,

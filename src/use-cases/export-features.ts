@@ -1,5 +1,5 @@
-import { ValidationError } from '../domain/errors.js';
 import type { IFeatureRepository } from '../domain/index.js';
+import { ValidationError } from '../domain/index.js';
 
 type WriteFeatureFileFn = (dir: string, filename: string, content: string) => Promise<void>;
 type EnsureDirFn = (dir: string) => Promise<void>;

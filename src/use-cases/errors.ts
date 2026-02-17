@@ -56,4 +56,4 @@ export class VersionNotFoundError extends Error {
 }
 
 // ValidationError is defined in ../domain/errors.ts (single source of truth).
-// Use-case files should import it from '../domain/errors.js'.
+// Use-case files should import it from '../domain/index.js' (the barrel).

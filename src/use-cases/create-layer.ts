@@ -1,5 +1,5 @@
-import { ValidationError } from '../domain/errors.js';
 import type { INodeRepository } from '../domain/index.js';
+import { ValidationError } from '../domain/index.js';
 import { Node } from '../domain/index.js';
 
 import { NodeExistsError } from './errors.js';

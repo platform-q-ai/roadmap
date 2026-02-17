@@ -1,5 +1,5 @@
-import { ValidationError } from '../domain/errors.js';
 import type { IEdgeRepository, INodeRepository } from '../domain/index.js';
+import { ValidationError } from '../domain/index.js';
 import { Edge, Node } from '../domain/index.js';
 
 import { NodeNotFoundError } from './errors.js';

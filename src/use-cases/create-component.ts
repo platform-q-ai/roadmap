@@ -1,10 +1,10 @@
-import { ValidationError } from '../domain/errors.js';
 import type {
   IEdgeRepository,
   INodeRepository,
   IVersionRepository,
   NodeType,
 } from '../domain/index.js';
+import { ValidationError } from '../domain/index.js';
 import { Edge, Node, Version } from '../domain/index.js';
 
 import { NodeExistsError, NodeTypeError } from './errors.js';

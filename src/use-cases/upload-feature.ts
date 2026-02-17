@@ -1,5 +1,5 @@
-import { ValidationError } from '../domain/errors.js';
 import type { IFeatureRepository, INodeRepository } from '../domain/index.js';
+import { ValidationError } from '../domain/index.js';
 import { Feature } from '../domain/index.js';
 
 import { NodeNotFoundError } from './errors.js';
