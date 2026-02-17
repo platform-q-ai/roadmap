@@ -39,9 +39,8 @@ function httpGetWithRequestId(
         agent: false,
       },
       res => {
-        let data = '';
-        res.on('data', chunk => {
-          data += chunk;
+        res.on('data', () => {
+          /* drain */
         });
         res.on('end', () => {
           const respHeaders: Record<string, string> = {};
