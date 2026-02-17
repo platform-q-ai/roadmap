@@ -58,7 +58,7 @@ export async function seedApiKeys(deps: SeedApiKeysDeps): Promise<void> {
   for (const entry of entries) {
     try {
       const result = await deps.generate.execute(entry);
-      const displayed = entry.plaintext ? maskKey(result.plaintext) : result.plaintext;
+      const displayed = maskKey(result.plaintext);
       deps.log(`  Seeded key "${entry.name}": ${displayed}`);
     } catch (err: unknown) {
       if (err instanceof ValidationError && /already exists/i.test(err.message)) {

@@ -2,7 +2,7 @@
 
 Living documentation for the **Open Autonomous Runtime** architecture. Every component in the system is a node in a SQLite graph database with versioned specs (MVP / v1 / v2), Gherkin feature files, and progress tracking. A REST API provides full CRUD access to components, features, and the architecture graph. A web view renders the architecture as an interactive progression tree (Cytoscape.js) where clicking any node opens a dialog with documentation, build status, and BDD specs.
 
-**Live:** [roadmap-5vvp.onrender.com](https://roadmap-5vvp.onrender.com)
+**Live:** [roadmap-5vvp.onrender.com](https://roadmap-5vvp.onrender.com) | **License:** [MIT](LICENSE)
 
 Built in the open.
 
@@ -32,6 +32,7 @@ Prerequisites: Node.js (>=18).
 git clone https://github.com/platform-q-ai/roadmap.git
 cd roadmap
 npm install
+cp .env.example .env          # configure local environment
 npm run build
 ```
 
@@ -59,6 +60,11 @@ The codebase follows Clean Architecture. Dependencies point inward: adapters -> 
 ```
 roadmap/
 ├── schema.sql                  # SQLite graph schema (4 tables, 6 indexes)
+├── .env.example                # Environment variable template (copy to .env)
+├── LICENSE                     # MIT license
+├── SECURITY.md                 # Vulnerability reporting policy
+├── CONTRIBUTING.md             # Contribution guidelines
+├── CODE_OF_CONDUCT.md          # Contributor Covenant code of conduct
 ├── db/                         # Runtime database directory (gitignored)
 ├── src/
 │   ├── domain/                 # Entities + repository interfaces (zero deps)
@@ -418,7 +424,7 @@ The application is deployed on Render as a Docker-based web service. On every pu
 
 **Live URL:** https://roadmap-5vvp.onrender.com
 
-The Render blueprint (`render.yaml`) defines the service configuration including a 1 GB persistent disk mounted at `/data`. The `Dockerfile` compiles TypeScript only (`npm run build:ts`) — it does not rebuild the database or seed features at build time. The database is created and managed at runtime via the API (API-first persistence). The `DB_PATH` environment variable points to `/data/architecture.db` so that data survives redeployments. The production server uses `node dist/adapters/api/start.js`.
+The Render blueprint (`render.yaml`) defines the service configuration including a 1 GB persistent disk mounted at `/data`. The `Dockerfile` compiles TypeScript only (`npm run build:ts`) — it does not rebuild the database or seed features at build time. The database is created and managed at runtime via the API (API-first persistence). The `DB_PATH` environment variable points to `/data/architecture.db` so that data survives redeployments. The `ALLOWED_ORIGINS` environment variable restricts CORS to the production hostname. The production server uses `node dist/adapters/api/start.js`.
 
 ## Tech Stack
 

@@ -5,6 +5,7 @@ reports/
 *.tsbuildinfo
 .env
 .env.*
+!.env.example
 .opencode/
 opencode.json
 db/architecture.db

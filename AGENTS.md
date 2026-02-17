@@ -416,7 +416,12 @@ npm run pre-commit       # Full pre-commit pipeline
 | `vitest.config.ts` | Vitest config | Rarely |
 | `scripts/check-code-quality.sh` | Code quality gate | Yes -- add new checks |
 | `Dockerfile` | Production Docker image (TypeScript compile only, no DB build) | Yes -- deployment changes |
-| `render.yaml` | Render deployment blueprint (persistent disk, DB_PATH) | Yes -- deployment config |
+| `render.yaml` | Render deployment blueprint (persistent disk, DB_PATH, ALLOWED_ORIGINS) | Yes -- deployment config |
+| `.env.example` | Environment variable template (DB_PATH, PORT, ALLOWED_ORIGINS, API_KEY_SEED) | Yes -- new env vars |
+| `LICENSE` | MIT license | Rarely |
+| `SECURITY.md` | Vulnerability reporting policy | Yes -- policy changes |
+| `CONTRIBUTING.md` | Contribution guidelines | Yes -- workflow changes |
+| `CODE_OF_CONDUCT.md` | Contributor Covenant code of conduct | Rarely |
 
 ## How to Add a New Component
 

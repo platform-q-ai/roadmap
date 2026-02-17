@@ -4,9 +4,10 @@ import type {
   IVersionRepository,
   NodeType,
 } from '../domain/index.js';
+import { ValidationError } from '../domain/index.js';
 import { Edge, Node, Version } from '../domain/index.js';
 
-import { NodeExistsError, NodeTypeError, ValidationError } from './errors.js';
+import { NodeExistsError, NodeTypeError } from './errors.js';
 
 export interface CreateComponentInput {
   id: string;

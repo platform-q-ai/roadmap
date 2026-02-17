@@ -13,3 +13,5 @@ services:
         value: '3000'
       - key: DB_PATH
         value: /data/architecture.db
+      - key: ALLOWED_ORIGINS
+        value: 'https://roadmap-5vvp.onrender.com'

@@ -1,7 +1,8 @@
 import type { IEdgeRepository, INodeRepository } from '../domain/index.js';
+import { ValidationError } from '../domain/index.js';
 import { Edge, Node } from '../domain/index.js';
 
-import { NodeNotFoundError, ValidationError } from './errors.js';
+import { NodeNotFoundError } from './errors.js';
 
 interface Deps {
   nodeRepo: INodeRepository;

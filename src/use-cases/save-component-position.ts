@@ -2,7 +2,7 @@ import {
   type ComponentPosition,
   createComponentPosition,
 } from '../domain/entities/component-position.js';
-import { ValidationError } from '../domain/errors.js';
+import { ValidationError } from '../domain/index.js';
 import type { ComponentPositionRepository } from '../domain/repositories/component-position-repository.js';
 
 interface SaveComponentPositionDeps {

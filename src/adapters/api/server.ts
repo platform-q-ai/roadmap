@@ -101,6 +101,9 @@ function setSecurityHeaders(res: http.ServerResponse, requestId: string): void {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Request-Id', requestId);
 }
@@ -157,9 +160,20 @@ async function tryApiRoute(routes: Route[], ctx: RequestContext): Promise<boolea
   return false;
 }
 
+/** Max length for client-supplied X-Request-Id. */
+const MAX_REQUEST_ID_LEN = 128;
+
+/** Allowed characters: alphanumeric, hyphens, underscores, dots, colons. */
+const SAFE_REQUEST_ID_RE = /^[a-zA-Z0-9\-_.:]+$/;
+
 function resolveRequestId(req: http.IncomingMessage): string {
   const clientId = req.headers['x-request-id'];
-  if (typeof clientId === 'string' && clientId.length > 0) {
+  if (
+    typeof clientId === 'string' &&
+    clientId.length > 0 &&
+    clientId.length <= MAX_REQUEST_ID_LEN &&
+    SAFE_REQUEST_ID_RE.test(clientId)
+  ) {
     return clientId;
   }
   return randomUUID();
@@ -258,22 +272,25 @@ function handleRateLimit(rateLimiter: RateLimiter | undefined, ctx: RequestConte
 }
 
 /** Public read-only endpoints that share a dedicated rate-limit bucket. */
-const PUBLIC_RATE_LIMIT_PATHS = new Set(['/api/health', '/api/architecture']);
+const PUBLIC_RATE_LIMIT_PATHS = new Set(['/api/architecture']);
 
 function checkRateLimit(rateLimiter: RateLimiter, ctx: RequestContext): boolean {
   const authReq = ctx.req as AuthenticatedRequest;
   const keyName = authReq.apiKey?.name ?? '__anonymous__';
   const pathname = ctx.url.split('?')[0];
 
-  if (PUBLIC_RATE_LIMIT_PATHS.has(pathname)) {
-    const result = rateLimiter.check('__public__');
+  /* Health endpoint is always exempt (handled by __health__ key in RateLimiter). */
+  if (pathname === '/api/health') {
+    const result = rateLimiter.check('__health__');
     setRateLimitHeaders(ctx.res, result);
     return true;
   }
 
-  const result = isWriteMethod(ctx.method)
-    ? rateLimiter.checkWrite(keyName)
-    : rateLimiter.check(keyName);
+  const result = PUBLIC_RATE_LIMIT_PATHS.has(pathname)
+    ? rateLimiter.check('__public__')
+    : isWriteMethod(ctx.method)
+      ? rateLimiter.checkWrite(keyName)
+      : rateLimiter.check(keyName);
 
   setRateLimitHeaders(ctx.res, result);
 

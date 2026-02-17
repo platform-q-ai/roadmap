@@ -1,6 +1,5 @@
 import type { IFeatureRepository } from '../domain/index.js';
-
-import { ValidationError } from './errors.js';
+import { ValidationError } from '../domain/index.js';
 
 interface Deps {
   featureRepo: IFeatureRepository;
